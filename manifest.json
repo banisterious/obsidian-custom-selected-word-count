@@ -6,7 +6,6 @@
 	"description": "Advanced word counting for selected text with customizable path exclusion, UI options, and history tracking.",
 	"author": "John Banister",
 	"authorUrl": "https://github.com/banisterious",
-	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false,
 	"main": "main.js",
 	"dependencies": {
