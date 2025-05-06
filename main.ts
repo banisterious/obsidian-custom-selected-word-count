@@ -23,9 +23,14 @@ interface MyPluginSettings {
 	// Ribbon button setting
 	showRibbonButton: boolean;       // Toggle for ribbon button visibility
 	enableDebugLogging: boolean;     // Toggle for debug logging
+	// Advanced Regex
+	enableAdvancedRegex?: boolean;   // Toggle for advanced regex (default: false)
+	customWordRegex?: string;        // User-defined regex pattern
 }
 
 const DEFAULT_EXCLUSION_LIST = '.jpg, .jpeg, .png, .gif, .svg, .md, .pdf, .docx, .xlsx, .pptx, .zip, .mp3, .mp4, .wav, .ogg, .webm, .mov, .avi, .exe, .dll, .bat, .sh, .ps1, .js, .ts, .json, .csv, .yml, .yaml, .html, .css, .scss, .xml, .ini, .log, .tmp, .bak, .db, .sqlite, .7z, .rar, .tar, .gz, .bz2, .iso, .img, .bin, .apk, .app, .dmg, .pkg, .deb, .rpm, .msi, .sys, .dat, .sav, .bak, .old, .swp, .lock, .cache, .part, .crdownload, .torrent, .ics, .eml, .msg, .vcf, .txt';
+
+const DEFAULT_WORD_REGEX = '[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*';
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default',
@@ -33,11 +38,11 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	history: [],
 	exclusionList: DEFAULT_EXCLUSION_LIST,
 	// Path exclusion defaults
-	excludePaths: false,           // Off by default as per specification
-	excludeWindowsPaths: true,     // On by default when excludePaths is enabled
-	excludeUnixPaths: true,        // On by default when excludePaths is enabled
-	excludeUNCPaths: true,         // On by default when excludePaths is enabled
-	excludeEnvironmentPaths: true,  // On by default when excludePaths is enabled
+	excludePaths: false,           // Master toggle for path exclusion (disabled)
+	excludeWindowsPaths: false,    // Disabled by default
+	excludeUnixPaths: false,       // Disabled by default
+	excludeUNCPaths: false,        // Disabled by default
+	excludeEnvironmentPaths: false, // Disabled by default
 	// Status bar defaults
 	showStatusBar: false,            // Status bar hidden by default
 	enableLiveCount: false,          // Live updates disabled by default
@@ -46,6 +51,9 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	// Ribbon button default
 	showRibbonButton: false,        // Hidden by default
 	enableDebugLogging: false,       // Debug logging disabled by default
+	// Advanced Regex
+	enableAdvancedRegex: false,
+	customWordRegex: DEFAULT_WORD_REGEX,
 }
 
 interface WordCountHistoryEntry {
@@ -262,26 +270,22 @@ function countSelectedWords(
 		selectedText = selectedText.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '');
 	}
 
-	// Final word counting
-	const words: string[] = [];
-	
-	// First find decimal numbers
-	const decimalPattern = /\b\d+\.\d+\b/g;
-	let match;
-	while ((match = decimalPattern.exec(selectedText)) !== null) {
-		words.push(match[0]);
-		// Replace the matched decimal with a space to avoid double-counting
-		selectedText = selectedText.slice(0, match.index) + ' ' + selectedText.slice(match.index + match[0].length);
+	// Use advanced regex if enabled and valid
+	let wordRegex: RegExp;
+	if (settings?.enableAdvancedRegex && settings.customWordRegex) {
+		try {
+			wordRegex = new RegExp(settings.customWordRegex, 'giu');
+		} catch (e) {
+			console.warn('Invalid custom regex, falling back to default:', e);
+			wordRegex = /[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/giu;
+		}
+	} else {
+		wordRegex = /[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/giu;
 	}
 
-	// Then find remaining words
-	const wordPattern = /[A-Za-z0-9]+(?:[\-_'][A-Za-z0-9]+)*/g;
-	while ((match = wordPattern.exec(selectedText)) !== null) {
-		words.push(match[0]);
-	}
-
-	console.log('Final words:', words);
-	return words.length;
+	// At the end, use wordRegex to match words
+	const matches = selectedText.match(wordRegex);
+	return matches ? matches.length : 0;
 }
 
 // Helper function to format date as yyyy-mm-dd HH:MM:SS
@@ -713,6 +717,45 @@ class WordCountModal extends Modal {
 	}
 }
 
+// Helper function for exclusion info
+function addExclusionInfo(
+	container: HTMLElement,
+	title: string,
+	regex: string,
+	explanation: string,
+	matches: string[],
+	nonMatches: string[]
+) {
+	const section = container.createDiv({ cls: 'swc-exclusion-section' });
+	section.createEl('strong', { text: title });
+
+	// Regex row with copy button
+	const regexRow = section.createDiv({ cls: 'swc-regex-row' });
+	regexRow.createEl('span', { text: `Regex: ${regex}` });
+	const copyBtn = regexRow.createEl('button', { text: 'Copy Regex' });
+	copyBtn.onclick = () => {
+		navigator.clipboard.writeText(regex);
+		copyBtn.textContent = 'Copied!';
+		setTimeout(() => (copyBtn.textContent = 'Copy Regex'), 1200);
+	};
+
+	// Collapsible details
+	const details = section.createEl('details', { cls: 'swc-exclusion-details' });
+	details.createEl('summary', { text: 'Show Explanation & Examples' });
+
+	details.createEl('div', { text: explanation, cls: 'swc-explanation' });
+
+	// Example matches
+	const matchList = details.createEl('ul');
+	matchList.createEl('li', { text: 'Example matches:' });
+	matches.forEach(example => matchList.createEl('li', { text: example, cls: 'swc-match' }));
+
+	// Example non-matches
+	const nonMatchList = details.createEl('ul');
+	nonMatchList.createEl('li', { text: 'Example non-matches:' });
+	nonMatches.forEach(example => nonMatchList.createEl('li', { text: example, cls: 'swc-nonmatch' }));
+}
+
 // Settings tab for plugin options
 class WordCounterSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
@@ -830,14 +873,16 @@ class WordCounterSettingTab extends PluginSettingTab {
 					updatePathSettingsVisibility();
 				}));
 
-		// Individual path type settings (only shown when excludePaths is enabled)
+		// Indented container for sub-settings (cosmetic tweak)
 		const pathSettingsContainer = containerEl.createDiv();
+		pathSettingsContainer.style.paddingLeft = '20px'; // Indent to match status bar children
 		const updatePathSettingsVisibility = () => {
 			pathSettingsContainer.style.display = this.plugin.settings.excludePaths ? 'block' : 'none';
 		};
 		updatePathSettingsVisibility();
 
-		new Setting(pathSettingsContainer)
+		// Sub-settings for each path type
+		const windowsSetting = new Setting(pathSettingsContainer)
 			.setName('Exclude Windows Paths')
 			.setDesc('Exclude paths starting with drive letters (e.g., C:\\)')
 			.addToggle(toggle => toggle
@@ -845,19 +890,53 @@ class WordCounterSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.excludeWindowsPaths = value;
 					await this.plugin.saveSettings();
+					updateWindowsExclusionInfo();
 				}));
 
-		new Setting(pathSettingsContainer)
+		const windowsExclusionInfoContainer = pathSettingsContainer.createDiv();
+		const updateWindowsExclusionInfo = () => {
+			windowsExclusionInfoContainer.empty();
+			if (this.plugin.settings.excludeWindowsPaths) {
+				addExclusionInfo(
+					windowsExclusionInfoContainer,
+					'Windows Paths',
+					'^[A-Za-z]:[\/\\]',
+					'Matches any path that starts with a drive letter followed by a colon and a slash or backslash.',
+					['C:\\Users\\file.txt', 'D:/Music/song.mp3'],
+					['/usr/local/bin', '\\server\\share', '%USERPROFILE%\\Documents']
+				);
+			}
+		};
+		updateWindowsExclusionInfo();
+
+		const uncSetting = new Setting(pathSettingsContainer)
 			.setName('Exclude UNC Paths')
-			.setDesc('Exclude network paths (e.g., \\\\server\\share)')
+			.setDesc('Exclude network paths (e.g., \\server\\share)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.excludeUNCPaths)
 				.onChange(async (value) => {
 					this.plugin.settings.excludeUNCPaths = value;
 					await this.plugin.saveSettings();
+					updateUNCExclusionInfo();
 				}));
 
-		new Setting(pathSettingsContainer)
+		const uncExclusionInfoContainer = pathSettingsContainer.createDiv();
+		const updateUNCExclusionInfo = () => {
+			uncExclusionInfoContainer.empty();
+			if (this.plugin.settings.excludeUNCPaths) {
+				addExclusionInfo(
+					uncExclusionInfoContainer,
+					'UNC Paths (Network)',
+					'^\\[^\\]+\\[^\\]+',
+					'Matches any path that starts with two backslashes, followed by a server name and a share name.',
+					['\\server\\share\\file.txt', '\\NAS\\Music\\song.mp3'],
+					['C:\\Users\\file.txt', '/usr/local/bin']
+				);
+			}
+		};
+		updateUNCExclusionInfo();
+
+		const unixSetting = new Setting(pathSettingsContainer)
 			.setName('Exclude Unix Paths')
 			.setDesc('Exclude paths starting with forward slash (e.g., /usr/local)')
 			.addToggle(toggle => toggle
@@ -865,9 +944,26 @@ class WordCounterSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.excludeUnixPaths = value;
 					await this.plugin.saveSettings();
+					updateUnixExclusionInfo();
 				}));
 
-		new Setting(pathSettingsContainer)
+		const unixExclusionInfoContainer = pathSettingsContainer.createDiv();
+		const updateUnixExclusionInfo = () => {
+			unixExclusionInfoContainer.empty();
+			if (this.plugin.settings.excludeUnixPaths) {
+				addExclusionInfo(
+					unixExclusionInfoContainer,
+					'Unix Paths',
+					'^\/[^\/]',
+					'Matches any path that starts with a single forward slash (not double), indicating a Unix-style absolute path.',
+					['/usr/local/bin', '/home/user/file.txt'],
+					['C:\\Users\\file.txt', '\\server\\share']
+				);
+			}
+		};
+		updateUnixExclusionInfo();
+
+		const envSetting = new Setting(pathSettingsContainer)
 			.setName('Exclude Environment Paths')
 			.setDesc('Exclude paths with environment variables (e.g., %USERPROFILE%, $HOME)')
 			.addToggle(toggle => toggle
@@ -875,9 +971,26 @@ class WordCounterSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.excludeEnvironmentPaths = value;
 					await this.plugin.saveSettings();
+					updateEnvExclusionInfo();
 				}));
 
-		// File extension exclusion list (part of path settings)
+		const envExclusionInfoContainer = pathSettingsContainer.createDiv();
+		const updateEnvExclusionInfo = () => {
+			envExclusionInfoContainer.empty();
+			if (this.plugin.settings.excludeEnvironmentPaths) {
+				addExclusionInfo(
+					envExclusionInfoContainer,
+					'Environment Variable Paths',
+					'^(?:%[^%]+%|\$[A-Za-z_][A-Za-z0-9_]*)',
+					'Matches any path that starts with a Windows-style environment variable (e.g., %USERPROFILE%) or a Unix-style variable (e.g., $HOME).',
+					['%USERPROFILE%\\Documents', '$HOME/Documents/file.txt'],
+					['C:\\Users\\file.txt', '/usr/local/bin']
+				);
+			}
+		};
+		updateEnvExclusionInfo();
+
+		// File Extension Exclusion
 		new Setting(pathSettingsContainer)
 			.setName('File Extension Exclusion List')
 			.setDesc('Comma-separated list of file extensions to exclude from word counting (e.g., .jpg, .png, .md)')
@@ -887,7 +1000,41 @@ class WordCounterSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.exclusionList = value;
 					await this.plugin.saveSettings();
+					updateFileExtExclusionInfo();
 				}));
+
+		const fileExtExclusionInfoContainer = pathSettingsContainer.createDiv();
+		const updateFileExtExclusionInfo = () => {
+			fileExtExclusionInfoContainer.empty();
+			if (this.plugin.settings.excludePaths) { // Always show if parent is enabled
+				addExclusionInfo(
+					fileExtExclusionInfoContainer,
+					'File Extension Exclusion',
+					'\.ext$ (e.g., \.jpg$)',
+					'Excludes any word/segment that ends with a file extension from the exclusion list (e.g., .jpg, .png, .md).',
+					['photo.jpg', 'document.md'],
+					['notes.txt (if .txt is not in the exclusion list)', 'C:\\Users\\file.txt (if .txt is not in the exclusion list)']
+				);
+			}
+		};
+		updateFileExtExclusionInfo();
+
+		// file:/// Protocol (always shown if parent is enabled)
+		const fileProtocolExclusionInfoContainer = pathSettingsContainer.createDiv();
+		const updateFileProtocolExclusionInfo = () => {
+			fileProtocolExclusionInfoContainer.empty();
+			if (this.plugin.settings.excludePaths) {
+				addExclusionInfo(
+					fileProtocolExclusionInfoContainer,
+					'file:/// Protocol',
+					'^file:\/\/[^ -\s]+',
+					'Matches any path that starts with file:///, which is a URL-style file path.',
+					['file:///C:/Users/file.txt', 'file:///home/user/file.txt'],
+					['C:\\Users\\file.txt', '/usr/local/bin']
+				);
+			}
+		};
+		updateFileProtocolExclusionInfo();
 
 		// Other Settings
 		containerEl.createEl('h3', { text: 'Other Settings' });
@@ -915,5 +1062,132 @@ class WordCounterSettingTab extends PluginSettingTab {
 					this.plugin.settings.enableDebugLogging = value;
 					await this.plugin.saveSettings();
 				}));
+
+		// --- Separator and spacing before Advanced section ---
+		const advSep = containerEl.createEl('hr');
+		advSep.style.marginTop = '2em';
+		advSep.style.marginBottom = '1.5em';
+
+		// Advanced Settings Section (collapsible, consistent style)
+		const advancedSection = containerEl.createEl('details', { cls: 'cwc-advanced-section' });
+		advancedSection.style.marginLeft = '20px'; // Indent to match other sub-settings
+		advancedSection.style.marginBottom = '2em';
+		const advSummary = advancedSection.createEl('summary', { text: '⚠️ Advanced: Custom Word Detection Regex (Expert Only)' });
+		advSummary.style.fontWeight = 'bold';
+		advSummary.style.fontSize = '1em';
+		const advDesc = advancedSection.createDiv();
+		advDesc.createEl('p', { text: 'Enable and define a custom regex for word detection. Incorrect regex may cause inaccurate counts or performance issues. Use with caution.' });
+		// Enable toggle
+		const advToggle = new Setting(advDesc)
+			.setName('Enable Advanced Regex (Expert Only)')
+			.setDesc('Allow custom regex for word detection. For advanced users only.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableAdvancedRegex ?? false)
+				.onChange(async (value) => {
+					this.plugin.settings.enableAdvancedRegex = value;
+					await this.plugin.saveSettings();
+					displayRegexFields();
+				})
+			);
+		// Regex input, test, and reset
+		const regexFieldsContainer = advDesc.createDiv();
+		regexFieldsContainer.style.marginLeft = '0';
+		const displayRegexFields = () => {
+			regexFieldsContainer.empty();
+			if (!this.plugin.settings.enableAdvancedRegex) return;
+			// Regex input
+			const regexInputSetting = new Setting(regexFieldsContainer)
+				.setName('Custom Regex Pattern')
+				.setDesc('Enter your custom regex for word detection. Default: ' + DEFAULT_WORD_REGEX)
+				.addText(text => text
+					.setValue(this.plugin.settings.customWordRegex || DEFAULT_WORD_REGEX)
+					.onChange(async (value) => {
+						this.plugin.settings.customWordRegex = value;
+						await this.plugin.saveSettings();
+						updateRegexTest();
+					})
+				);
+			// Move Reset to Default Regex button just below the input
+			const regexInput = regexInputSetting.controlEl.querySelector('input');
+			const resetBtn = regexFieldsContainer.createEl('button', { text: 'Reset to Default Regex', cls: 'mod-cta' });
+			resetBtn.style.alignSelf = 'flex-start';
+			resetBtn.style.marginTop = '0.3em';
+			resetBtn.style.marginBottom = '0.8em';
+			resetBtn.style.fontSize = '0.85em';
+			resetBtn.style.padding = '2px 10px';
+			resetBtn.onclick = async () => {
+				this.plugin.settings.customWordRegex = DEFAULT_WORD_REGEX;
+				await this.plugin.saveSettings();
+				if (regexInput) regexInput.value = DEFAULT_WORD_REGEX;
+				updateRegexTest();
+			};
+			// Add small text below the reset button
+			const resetBtnDesc = regexFieldsContainer.createEl('div', { text: 'This will reset your custom regex pattern to the default.' });
+			resetBtnDesc.style.fontSize = '0.8em';
+			resetBtnDesc.style.color = '#888';
+			resetBtnDesc.style.marginBottom = '0.8em';
+			// Test area (left-aligned)
+			const testArea = regexFieldsContainer.createDiv();
+			testArea.style.display = 'flex';
+			testArea.style.flexDirection = 'column';
+			testArea.style.alignItems = 'flex-start';
+			testArea.style.marginTop = '0.5em';
+			testArea.style.marginBottom = '0.5em';
+			testArea.style.width = '100%';
+			const testLabel = testArea.createEl('label', { text: 'Test Your Regex:', attr: { style: 'margin-bottom: 0.2em; font-weight: 500;' } });
+			// Add descriptive text in tiny letters
+			const testDesc = testArea.createEl('div', { text: 'Use the box below to see exactly which text fragments your custom regex will match, as well as a word count, making it easier to debug or refine your pattern.' });
+			testDesc.style.fontSize = '0.8em';
+			testDesc.style.color = '#888';
+			testDesc.style.marginBottom = '0.3em';
+			const sampleInput = testArea.createEl('textarea', { cls: 'cwc-regex-sample', placeholder: 'Enter sample text to test your regex...' });
+			sampleInput.rows = 3;
+			sampleInput.style.width = '100%';
+			sampleInput.style.marginBottom = '0.5em';
+			const wordCountDisplay = testArea.createEl('div', { cls: 'cwc-regex-wordcount' });
+			wordCountDisplay.style.fontWeight = 'bold';
+			wordCountDisplay.style.marginBottom = '0.2em';
+			const matchDisplay = testArea.createEl('div', { cls: 'cwc-regex-matches' });
+			const warningDisplay = testArea.createEl('div', { cls: 'cwc-regex-warning' });
+			const updateRegexTest = () => {
+				const pattern = this.plugin.settings.customWordRegex || DEFAULT_WORD_REGEX;
+				let regex: RegExp;
+				try {
+					regex = new RegExp(pattern, 'giu');
+					warningDisplay.setText('');
+				} catch (e) {
+					warningDisplay.setText('⚠️ Invalid regex: ' + e.message);
+					matchDisplay.setText('');
+					wordCountDisplay.setText('');
+					return;
+				}
+				const sample = sampleInput.value;
+				if (!sample) {
+					matchDisplay.setText('');
+					wordCountDisplay.setText('');
+					return;
+				}
+				const matches = sample.match(regex);
+				if (matches) {
+					wordCountDisplay.setText('Word count: ' + matches.length);
+					matchDisplay.setText('Matches: ' + matches.join(', '));
+				} else {
+					wordCountDisplay.setText('Word count: 0');
+					matchDisplay.setText('No matches.');
+				}
+			};
+			sampleInput.addEventListener('input', updateRegexTest);
+			// Add Reset Test button below the test area
+			const resetTestBtn = testArea.createEl('button', { text: 'Reset Test' });
+			resetTestBtn.style.alignSelf = 'flex-start';
+			resetTestBtn.style.fontSize = '0.85em';
+			resetTestBtn.style.padding = '2px 10px';
+			resetTestBtn.style.marginTop = '0.3em';
+			resetTestBtn.onclick = () => {
+				sampleInput.value = '';
+				updateRegexTest();
+			};
+		};
+		displayRegexFields();
 	}
 }

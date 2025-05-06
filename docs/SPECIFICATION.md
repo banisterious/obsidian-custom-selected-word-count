@@ -48,8 +48,9 @@ Custom Selected Word Count is an Obsidian plugin that provides advanced word cou
   - Each match (as defined above) counts as one word.
 
 ### 3.1.1. Word Recognition Algorithm
+
 - The plugin uses a sophisticated regex pattern to recognize words:
-  - **Pattern:** `[A-Za-z0-9]+(?>[-_][A-Za-z0-9]+)*`
+  - **Default Pattern:** `[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*`
   - **Matches:**
     * Standard words
     * Contractions (e.g., "I'm", "don't")
@@ -60,6 +61,12 @@ Custom Selected Word Count is an Obsidian plugin that provides advanced word cou
   - **All straight and curly quotation marks (single and double) are stripped.**
   - **All emojis and other non-alphanumeric symbols are stripped.**
   - Each match counts as one word.
+- **Advanced Regex (Expert Only):**
+  - Users may enable a setting to define their own custom regex pattern for word detection.
+  - The custom pattern is used in place of the default for all word counting.
+  - The settings UI provides a test area for custom regex, showing live matches and word count.
+  - "Reset to Default Regex" and "Reset Test" buttons are provided for safe experimentation.
+  - Helper texts explain the feature and warn about potential pitfalls.
 
 ### 3.2. User Interface
 
@@ -107,6 +114,15 @@ Custom Selected Word Count is an Obsidian plugin that provides advanced word cou
 #### 3.2.4. Commands & Hotkeys
 - Provide a command to trigger the word count modal (assignable to a hotkey).
 - The command should also be available in the command palette.
+
+#### 3.2.5. Advanced: Custom Word Detection Regex (Expert Only)
+- Accessible in the plugin settings under an "Advanced" collapsible section.
+- **Enable Advanced Regex**: Toggle to allow custom regex for word detection.
+- **Custom Regex Pattern**: Input for user-defined regex (default provided).
+- **Reset to Default Regex**: Button to instantly revert to the default pattern, with helper text.
+- **Test Your Regex**: Interactive area to enter sample text, see which fragments match, and view the resulting word count.
+- **Reset Test**: Button to clear the test input box.
+- Helper texts explain each feature and guide users through safe and effective usage.
 
 ### 3.3. Clipboard Integration
 - The "Copy to Clipboard" button in the modal copies the current word count.
@@ -171,6 +187,11 @@ All settings should be grouped in a dedicated plugin settings tab:
   - Updates in real-time when changed
 
 ### 5.2 Path Detection Settings
+- **Exclude Paths from Word Count:** Toggle to enable/disable path exclusion (**disabled by default**)
+- **Exclude Windows Paths:** Toggle to exclude Windows-style paths (C:\) (**disabled by default**)
+- **Exclude UNC Paths:** Toggle to exclude network paths (\\server) (**disabled by default**)
+- **Exclude Unix Paths:** Toggle to exclude Unix-style paths (/usr/local) (**disabled by default**)
+- **Exclude Environment Paths:** Toggle to exclude environment variable paths (**disabled by default**)
 - **Ribbon Button Toggle:** Enable/disable the ribbon button.
 - **Navigation Bar Live Update Toggle:**
   - When enabled (default), the navigation bar updates live as the selection changes.
@@ -186,6 +207,30 @@ All settings should be grouped in a dedicated plugin settings tab:
 - **(Optional/Future) Enable/Disable Navigation Bar Display.**
 - **Show Date/Time in History:**
   - Toggle to display the date and time of each word count in the history (default: off).
+
+### 5.3 Advanced: Custom Word Detection Regex (Expert Only)
+- **Enable Advanced Regex**: Toggle to allow custom regex for word detection (off by default).
+- **Custom Regex Pattern**: Input for user-defined regex (default provided).
+- **Reset to Default Regex**: Button to instantly revert to the default pattern, with helper text.
+- **Test Your Regex**: Interactive area to enter sample text, see which fragments match, and view the resulting word count.
+- **Reset Test**: Button to clear the test input box.
+- Helper texts explain each feature and guide users through safe and effective usage.
+
+## Exclusion Logic Details in Settings
+
+The plugin's settings page now includes a detailed "Exclusion Logic Details" section. For each exclusion type (Windows Paths, UNC Paths, Unix Paths, Environment Variable Paths, File Extension Exclusion, file:/// Protocol), the following are displayed:
+
+- The regex pattern used for detection
+- A plain-English explanation of the logic
+- Example matches and non-matches
+- A "Copy Regex" button for advanced users
+- All details are shown in a collapsible section for clarity
+
+This helps users understand exactly what is being excluded and why, and makes the plugin more transparent and user-friendly.
+
+### Cosmetic Tweak
+
+The sub-settings for "Exclude Paths" are now indented to match the style of the "Show Count in Status Bar" children, ensuring a consistent and visually appealing settings UI.
 
 ## 6. Out of Scope
 
