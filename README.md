@@ -80,6 +80,10 @@ This makes it easy to understand what is being excluded and why.
 
 If you encounter any issues or have feature requests, please file them in the [GitHub issues](https://github.com/yourusername/obsidian-selected-word-counter/issues).
 
+## Mobile Compatibility
+
+This plugin is primarily developed and tested for Obsidian Desktop. While it may work on Obsidian Mobile, mobile support is currently untested. Some features—such as the ribbon button and status bar integration—are not available on mobile. If you use this plugin on mobile and encounter any issues or have suggestions, please report them on GitHub. Your feedback is appreciated and will help improve mobile compatibility in future updates.
+
 ## License
 
 [MIT License](LICENSE.md) 
