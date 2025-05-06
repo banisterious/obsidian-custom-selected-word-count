@@ -72,3 +72,30 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
 .swc-nonmatch {
     color: var(--text-faint);
 }
+
+/* Make modals and plugin UI more mobile-friendly */
+@media (max-width: 600px) {
+  .modal, .swc-label, .swc-count, .swc-buttons, .swc-history, .cwc-advanced-section {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    min-width: 0 !important;
+    padding: 1em !important;
+    font-size: 1.05em;
+  }
+  .swc-buttons button, .cwc-advanced-section button {
+    width: 100%;
+    min-height: 44px;
+    font-size: 1.1em;
+    margin-bottom: 0.5em;
+  }
+  .swc-label, .swc-count {
+    font-size: 1.2em;
+  }
+  .cwc-regex-sample {
+    font-size: 1.1em;
+    min-height: 60px;
+  }
+  .swc-history-list {
+    font-size: 1em;
+  }
+}
