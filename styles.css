@@ -1,0 +1,52 @@
+/*
+@settings
+name: Custom Selected Word Count
+id: custom-selected-word-count
+settings:
+    -   id: test-toggle
+        title: Test Toggle
+        type: class-toggle
+        default: false
+*/
+
+/* Core styles for the plugin */
+body {
+    --custom-word-count-status-padding: 8px;
+    --custom-word-count-ribbon-opacity: 0.8;
+    --status-bar-color: var(--status-bar-color, #007AFF);
+}
+
+/* Status bar styling */
+.custom-word-count-status {
+    padding: var(--custom-word-count-status-padding);
+    color: var(--status-bar-color);
+    font-weight: 500;
+}
+
+/* Hide core word count when enabled */
+body.custom-word-count-hide-core .status-bar-item.plugin-word-count {
+    display: none;
+}
+
+/* Ribbon button styling */
+.custom-word-count-ribbon {
+    opacity: var(--custom-word-count-ribbon-opacity);
+    transition: opacity 0.2s ease-in-out;
+    color: var(--status-bar-color);
+}
+
+.custom-word-count-ribbon:hover {
+    opacity: 1;
+}
+
+/* Show/hide based on settings */
+body:not(.custom-word-count-show-status) .custom-word-count-status {
+    display: none;
+}
+
+/* Live update indicator */
+body.custom-word-count-live-updates .custom-word-count-status::after {
+    content: " (live)";
+    opacity: 0.7;
+    font-size: 0.9em;
+}
