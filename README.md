@@ -28,11 +28,11 @@ A plugin for [Obsidian](https://obsidian.md) that provides advanced word countin
 ## Usage
 
 1. Select text in any view mode
-2. Either:
-   - Use the command palette and search for "Count Selected Words"
-   - Click the ribbon button (if enabled)
-   - Click the status bar count (if enabled)
-3. View the word count in the popup modal
+2. View the word count:
+  - Use the command palette and search for "Count Selected Words"
+  - Click the ribbon button (if enabled)
+  - Click the status bar count (if enabled)
+  - View the real time count in the status bar (if enabled)
 
 ## Settings
 
