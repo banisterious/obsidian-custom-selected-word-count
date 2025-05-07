@@ -20,3 +20,14 @@ data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+# Documentation working files
+docs/SCREENSHOT_CHECKLIST.md
+docs/images/temp/
+*.psd
+*.xcf
+*.ai
+*.pdn
+# Temporary screenshot files
+docs/images/*.tmp
+docs/images/*.temp
