@@ -3,6 +3,8 @@
 ## 1. Overview
 Custom Selected Word Count is an Obsidian plugin that provides advanced word counting functionality for selected text, regardless of view mode (Reading, Live Preview, or Edit). Going beyond basic counting, it offers customizable path exclusion, multiple UI integration options, and detailed history tracking. The word count is displayed in a modal dialog (with history and copy features) and optionally in the status bar. The plugin is accessible via hotkey, ribbon button, and command palette.
 
+For end-user documentation and usage instructions, see [USAGE.md](USAGE.md).
+
 ## 2. Versioning
 - The plugin must use semantic versioning (e.g., 1.0.0) and display its version in the plugin settings.
 

@@ -34,6 +34,8 @@ A plugin for [Obsidian](https://obsidian.md) that provides advanced word countin
   - Click the status bar count (if enabled)
   - View the real time count in the status bar (if enabled)
 
+For detailed instructions and examples, see the [User Documentation](docs/USAGE.md).
+
 ## Settings
 
 ### UI Elements
