@@ -1,11 +1,11 @@
-// TEST BUILD: 2025-05-05
+// BUILD: 2025-05-05
 
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
-	mySetting: string;
+interface WordCountPluginSettings {
+	setting: string;
 	showDateTimeInHistory: boolean;
 	history?: { count: number; date: string }[]; // Persisted as ISO strings
 	exclusionList: string; // Comma-separated list of file extensions
@@ -32,8 +32,8 @@ const DEFAULT_EXCLUSION_LIST = '.jpg, .jpeg, .png, .gif, .svg, .md, .pdf, .docx,
 
 const DEFAULT_WORD_REGEX = '[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*';
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default',
+const DEFAULT_SETTINGS: WordCountPluginSettings = {
+	setting: 'default',
 	showDateTimeInHistory: false,
 	history: [],
 	exclusionList: DEFAULT_EXCLUSION_LIST,
@@ -61,6 +61,12 @@ interface WordCountHistoryEntry {
 	date: Date;
 }
 
+function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...args: any[]) {
+	if (plugin.settings.enableDebugLogging) {
+		console.log(`[Word Count Debug] ${message}`, ...args);
+	}
+}
+
 /**
  * Counts words in the selected text according to the plugin specification.
  * @param selectedText The text to analyze.
@@ -73,12 +79,12 @@ function countSelectedWords(
 	selectedText: string,
 	excludedExtensions: string[] = [],
 	stripEmojis: boolean = true,
-	settings?: MyPluginSettings
+	settings?: WordCountPluginSettings
 ): number {
 	if (!selectedText) return 0;
 
 	// Debug logging
-	console.log('Initial text:', selectedText);
+	debugLog(this, 'Initial text:', selectedText);
 
 	// Strip backticks before any other processing
 	selectedText = selectedText.replace(/`/g, '');
@@ -93,16 +99,16 @@ function countSelectedWords(
 		if (!settings?.excludePaths) return false;
 
 		// Debug logging
-		console.log('Checking path:', str);
+		debugLog(this, 'Checking path:', str);
 
 		// Check each path type with its original format
 		// Windows drive letter paths (C:\ or C:/)
 		if (/^[A-Za-z]:[\/\\]/.test(str)) {
 			if (settings.excludeWindowsPaths) {
-				console.log('Matched Windows drive path');
+				debugLog(this, 'Matched Windows drive path');
 				return true;
 			}
-			console.log('Windows path detected but exclusion disabled');
+			debugLog(this, 'Windows path detected but exclusion disabled');
 			return false;
 		}
 
@@ -111,28 +117,28 @@ function countSelectedWords(
 			// Check if this is a Windows path with an environment variable
 			if (/^%[^%]+%[\/\\]/.test(str)) {
 				if (settings.excludeWindowsPaths) {
-					console.log('Matched Windows path with environment variable');
+					debugLog(this, 'Matched Windows path with environment variable');
 					return true;
 				}
-				console.log('Windows path with environment variable detected but exclusion disabled');
+				debugLog(this, 'Windows path with environment variable detected but exclusion disabled');
 				return false;
 			}
 			
 			if (settings.excludeEnvironmentPaths) {
-				console.log('Matched environment variable');
+				debugLog(this, 'Matched environment variable');
 				return true;
 			}
-			console.log('Environment variable detected but exclusion disabled');
+			debugLog(this, 'Environment variable detected but exclusion disabled');
 			return false;
 		}
 
 		// UNC paths (\\server\share) - check original string
 		if (/^\\\\[^\\]+\\[^\\]+/.test(str)) {
 			if (settings.excludeUNCPaths) {
-				console.log('Matched UNC path');
+				debugLog(this, 'Matched UNC path');
 				return true;
 			}
-			console.log('UNC path detected but exclusion disabled');
+			debugLog(this, 'UNC path detected but exclusion disabled');
 			return false;
 		}
 
@@ -141,17 +147,17 @@ function countSelectedWords(
 
 		// file:/// protocol
 		if (/^file:\/\/\//.test(normalizedStr)) {
-			console.log('Matched file:/// protocol');
+			debugLog(this, 'Matched file:/// protocol');
 			return true;
 		}
 
 		// Unix paths (/usr/local)
 		if (/^\/[^\/]/.test(normalizedStr)) {
 			if (settings.excludeUnixPaths) {
-				console.log('Matched Unix path');
+				debugLog(this, 'Matched Unix path');
 				return true;
 			}
-			console.log('Unix path detected but exclusion disabled');
+			debugLog(this, 'Unix path detected but exclusion disabled');
 			return false;
 		}
 
@@ -195,7 +201,7 @@ function countSelectedWords(
 
 	// Split into words but preserve decimal points in numbers
 	const rawSegments = selectedText.split(/\s+/);
-	console.log('Raw segments:', rawSegments);
+	debugLog(this, 'Raw segments:', rawSegments);
 
 	for (let i = 0; i < rawSegments.length; i++) {
 		const segment = rawSegments[i];
@@ -221,9 +227,9 @@ function countSelectedWords(
 			const isValidPath = looksLikePath(buffer);
 			
 			if (isValidPath) {
-				console.log('Path continues with:', segment);
+				debugLog(this, 'Path continues with:', segment);
 			} else {
-				console.log('Path continuation check failed, reverting');
+				debugLog(this, 'Path continuation check failed, reverting');
 				segments.push(...buffer.split(/\s+/));
 				inPath = false;
 				buffer = '';
@@ -240,13 +246,13 @@ function countSelectedWords(
 		const isValidPath = looksLikePath(buffer);
 		
 		if (inPath && isValidPath) {
-			console.log('Excluding final path:', buffer);
+			debugLog(this, 'Excluding final path:', buffer);
 		} else {
 			segments.push(...buffer.split(/\s+/));
 		}
 	}
 
-	console.log('Processed segments:', segments);
+	debugLog(this, 'Processed segments:', segments);
 
 	// Filter out paths and handle extensions
 	const filteredWords = segments.filter(word => {
@@ -261,7 +267,7 @@ function countSelectedWords(
 		return true;
 	});
 
-	console.log('Filtered words:', filteredWords);
+	debugLog(this, 'Filtered words:', filteredWords);
 	selectedText = filteredWords.join(' ');
 
 	// Strip quotes and emojis
@@ -295,8 +301,8 @@ function formatDateISO(date: Date): string {
 		`${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class CustomSelectedWordCountPlugin extends Plugin {
+	settings: WordCountPluginSettings;
 	history: WordCountHistoryEntry[] = [];
 	public statusBarItem: HTMLElement | null = null;
 	public debounceTimer: NodeJS.Timeout | null = null;
@@ -304,6 +310,9 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+
+		// Add permanent styling class
+		document.body.addClass('custom-word-count-plugin');
 
 		// Add necessary classes based on settings
 		this.updateClasses();
@@ -331,7 +340,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		// Register the settings tab
-		this.addSettingTab(new WordCounterSettingTab(this.app, this));
+		this.addSettingTab(new WordCountSettingTab(this.app, this));
 	}
 
 	private updateClasses() {
@@ -365,14 +374,14 @@ export default class MyPlugin extends Plugin {
 		}
 		
 		this.statusBarItem = this.addStatusBarItem();
-		this.statusBarItem.setText('');  // Start empty
-		this.statusBarItem.style.cursor = 'pointer';  // Show it's clickable
-		this.statusBarItem.setAttribute('aria-label', 'Selected Word Count');
-		this.statusBarItem.setAttribute('title', 'Click to show word count details and history');
+		this.statusBarItem.addClass('plugin-word-count');
 		
-		// Handle clicks on status bar
-		this.statusBarItem.onClickEvent(async () => {
-			await this.handleWordCount();
+		if (this.settings.hideCoreWordCount) {
+			this.statusBarItem.addClass('hide-core-count');
+		}
+		
+		this.statusBarItem.addEventListener('click', () => {
+			this.handleWordCount();
 		});
 
 		// Register for selection changes if live updates are enabled
@@ -531,6 +540,9 @@ export default class MyPlugin extends Plugin {
 		if (styleElement) {
 			styleElement.remove();
 		}
+
+		// Remove permanent styling class
+		document.body.removeClass('custom-word-count-plugin');
 	}
 
 	private updateStatusBar(count?: number) {
@@ -626,8 +638,8 @@ class WordCountModal extends Modal {
 	wordCount: number;
 	history: WordCountHistoryEntry[];
 	showDateTime: boolean;
-	plugin: MyPlugin | null;
-	constructor(app: App, wordCount: number, history: WordCountHistoryEntry[], showDateTime: boolean, plugin: MyPlugin | null = null) {
+	plugin: CustomSelectedWordCountPlugin | null;
+	constructor(app: App, wordCount: number, history: WordCountHistoryEntry[], showDateTime: boolean, plugin: CustomSelectedWordCountPlugin | null = null) {
 		super(app);
 		this.wordCount = wordCount;
 		this.history = history;
@@ -636,83 +648,68 @@ class WordCountModal extends Modal {
 	}
 
 	onOpen() {
-		const { contentEl } = this;
+		const {contentEl} = this;
 		contentEl.empty();
+		contentEl.addClass('word-count-modal');
 
-		// Main label
-		const label = contentEl.createEl('div', { text: 'Custom Selected Word Count:', cls: 'swc-label' });
-		label.style.fontWeight = 'bold';
-		label.style.marginBottom = '0.5em';
-
-		// Word count value
-		const count = contentEl.createEl('div', { text: this.wordCount.toString(), cls: 'swc-count' });
-		count.style.fontSize = '2em';
-		count.style.marginBottom = '1em';
-
-		// Button section
-		const buttonSection = contentEl.createEl('div', { cls: 'swc-buttons' });
-		buttonSection.style.display = 'flex';
-		buttonSection.style.gap = '0.5em';
-		buttonSection.style.marginBottom = '1em';
-
-		// Copy to Clipboard button
-		const copyBtn = buttonSection.createEl('button', { text: 'Copy to Clipboard' });
-		copyBtn.onclick = () => {
-			navigator.clipboard.writeText(this.wordCount.toString());
-			copyBtn.textContent = 'Copied!';
-			setTimeout(() => (copyBtn.textContent = 'Copy to Clipboard'), 1200);
-		};
-		copyBtn.title = 'Copy the current word count to the clipboard';
-
-		// Clear History button
-		const clearBtn = buttonSection.createEl('button', { text: 'Clear History' });
-		clearBtn.onclick = async () => {
-			if (this.plugin) {
-				this.plugin.history = [];
-				await this.plugin.saveHistory();
-			}
-			this.history.length = 0;
-			this.onOpen(); // Refresh modal
-		};
-		clearBtn.title = 'Clear the word count history';
-
-		// OK button
-		const okBtn = buttonSection.createEl('button', { text: 'OK' });
-		okBtn.onclick = () => this.close();
-		okBtn.title = 'Close this dialog';
+		// Current count section
+		const currentCountEl = contentEl.createDiv({cls: 'current-count'});
+		currentCountEl.createSpan({text: `Selected word count: ${this.wordCount}`});
+		
+		const copyButton = currentCountEl.createEl('button', {
+			cls: 'copy-button',
+			text: 'Copy'
+		});
+		
+		copyButton.addEventListener('click', async () => {
+			await navigator.clipboard.writeText(this.wordCount.toString());
+			new Notice('Word count copied to clipboard');
+		});
 
 		// History section
-		const historySection = contentEl.createEl('div', { cls: 'swc-history' });
-		const historyLabel = historySection.createEl('div', { text: 'History:', cls: 'swc-history-label' });
-		historyLabel.style.fontWeight = 'bold';
-		historyLabel.style.marginTop = '1em';
-		historyLabel.style.marginBottom = '0.5em';
-
-		if (this.history.length === 0) {
-			historySection.createEl('div', { text: 'No history yet.' });
-		} else {
-			const list = historySection.createEl('ul', { cls: 'swc-history-list' });
-			this.history.slice(0, 50).forEach(entry => {
-				const item = list.createEl('li', { cls: 'swc-history-item' });
-				item.createSpan({ text: entry.count.toString(), cls: 'swc-history-count' });
-				if (this.showDateTime) {
-					item.createSpan({ text: '  (' + formatDateISO(entry.date) + ')', cls: 'swc-history-date' });
+		if (this.history.length > 0) {
+			const historySection = contentEl.createDiv({cls: 'history-section'});
+			
+			const historyHeader = historySection.createDiv({cls: 'history-header'});
+			historyHeader.createSpan({text: 'History'});
+			
+			const clearButton = historyHeader.createEl('button', {
+				cls: 'copy-button',
+				text: 'Clear History'
+			});
+			
+			clearButton.addEventListener('click', () => {
+				if (this.plugin) {
+					this.plugin.history = [];
+					this.plugin.saveHistory();
+					this.close();
 				}
-				// Copy button for each history entry
-				const copyHistoryBtn = item.createEl('button', { text: 'Copy', cls: 'swc-history-copy-btn' });
-				copyHistoryBtn.style.marginLeft = '0.5em';
-				copyHistoryBtn.onclick = () => {
-					navigator.clipboard.writeText(entry.count.toString());
-					copyHistoryBtn.textContent = 'Copied!';
-					setTimeout(() => (copyHistoryBtn.textContent = 'Copy'), 1200);
-				};
-				copyHistoryBtn.title = 'Copy this word count to the clipboard';
+			});
+
+			this.history.slice().reverse().forEach(entry => {
+				const historyEntry = historySection.createDiv({cls: 'history-entry'});
+				
+				const countText = this.showDateTime 
+					? `${entry.count} words (${entry.date.toLocaleString()})`
+					: `${entry.count} words`;
+				
+				historyEntry.createSpan({text: countText});
+				
+				const entryCopyButton = historyEntry.createEl('button', {
+					cls: 'copy-button',
+					text: 'Copy'
+				});
+				
+				entryCopyButton.addEventListener('click', async () => {
+					await navigator.clipboard.writeText(entry.count.toString());
+					new Notice('Word count copied to clipboard');
+				});
 			});
 		}
 	}
 
 	onClose() {
-		const { contentEl } = this;
+		const {contentEl} = this;
 		contentEl.empty();
 	}
 }
@@ -757,17 +754,18 @@ function addExclusionInfo(
 }
 
 // Settings tab for plugin options
-class WordCounterSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+class WordCountSettingTab extends PluginSettingTab {
+	plugin: CustomSelectedWordCountPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: CustomSelectedWordCountPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
 
 	display(): void {
-		const { containerEl } = this;
+		const {containerEl} = this;
 		containerEl.empty();
+		containerEl.addClass('word-count-settings');
 
 		containerEl.createEl('h2', { text: 'Custom Selected Word Count Settings' });
 
@@ -784,10 +782,11 @@ class WordCounterSettingTab extends PluginSettingTab {
 					this.plugin.settings.showRibbonButton = value;
 					await this.plugin.saveSettings();
 					new Notice('Restart Obsidian for ribbon button changes to take effect');
-				}));
+				}))
+			.settingEl.addClass('swc-settings-group');
 
 		// Status Bar Settings
-		const statusBarContainer = containerEl.createDiv();
+		const statusBarContainer = containerEl.createDiv({ cls: 'swc-settings-group swc-status-settings' });
 		new Setting(statusBarContainer)
 			.setName('Show Count in Status Bar')
 			.setDesc('Show the selected word count in the status bar next to Obsidian\'s built-in word count.')
@@ -811,7 +810,7 @@ class WordCounterSettingTab extends PluginSettingTab {
 				}));
 
 		// Live Update Setting (indented and initially hidden if status bar is disabled)
-		const liveUpdateContainer = statusBarContainer.createDiv();
+		const liveUpdateContainer = statusBarContainer.createDiv({ cls: 'swc-settings-group swc-live-update-settings' });
 		liveUpdateContainer.style.paddingLeft = '20px';
 		liveUpdateContainer.style.display = this.plugin.settings.showStatusBar ? 'block' : 'none';
 		
@@ -827,7 +826,7 @@ class WordCounterSettingTab extends PluginSettingTab {
 				}));
 
 		// Hide Core Word Count Setting (indented and initially hidden if status bar is disabled)
-		const hideWordCountContainer = statusBarContainer.createDiv();
+		const hideWordCountContainer = statusBarContainer.createDiv({ cls: 'swc-settings-group swc-hide-core-settings' });
 		hideWordCountContainer.style.paddingLeft = '20px';
 		hideWordCountContainer.style.display = this.plugin.settings.showStatusBar ? 'block' : 'none';
 
@@ -843,7 +842,7 @@ class WordCounterSettingTab extends PluginSettingTab {
 				}));
 
 		// Status Bar Label Setting (indented and initially hidden if status bar is disabled)
-		const labelContainer = statusBarContainer.createDiv();
+		const labelContainer = statusBarContainer.createDiv({ cls: 'swc-settings-group swc-label-settings' });
 		labelContainer.style.paddingLeft = '20px';
 		labelContainer.style.display = this.plugin.settings.showStatusBar ? 'block' : 'none';
 
@@ -871,10 +870,11 @@ class WordCounterSettingTab extends PluginSettingTab {
 					this.plugin.settings.excludePaths = value;
 					await this.plugin.saveSettings();
 					updatePathSettingsVisibility();
-				}));
+				}))
+			.settingEl.addClass('swc-settings-group');
 
 		// Indented container for sub-settings (cosmetic tweak)
-		const pathSettingsContainer = containerEl.createDiv();
+		const pathSettingsContainer = containerEl.createDiv({ cls: 'swc-settings-group swc-path-settings' });
 		pathSettingsContainer.style.paddingLeft = '20px'; // Indent to match status bar children
 		const updatePathSettingsVisibility = () => {
 			pathSettingsContainer.style.display = this.plugin.settings.excludePaths ? 'block' : 'none';
@@ -1048,7 +1048,8 @@ class WordCounterSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.showDateTimeInHistory = value;
 					await this.plugin.saveSettings();
-				}));
+				}))
+			.settingEl.addClass('swc-settings-group');
 
 		// Debug Settings
 		containerEl.createEl('h3', { text: 'Debug Settings' });
@@ -1061,7 +1062,8 @@ class WordCounterSettingTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.enableDebugLogging = value;
 					await this.plugin.saveSettings();
-				}));
+				}))
+			.settingEl.addClass('swc-settings-group');
 
 		// --- Separator and spacing before Advanced section ---
 		const advSep = containerEl.createEl('hr');
