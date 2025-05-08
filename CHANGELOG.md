@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1] - 2025-05-05
+### Changed
+- **Code Quality Improvements**
+  - Renamed generic class names to more descriptive ones for better debugging
+  - Moved all inline styles to dedicated CSS file for better maintainability
+  - Improved CSS organization with proper class naming and documentation
+  - Added responsive design improvements for mobile devices
+  - Enhanced theme compatibility using CSS variables
+- **Developer Experience**
+  - Implemented proper debug logging system with toggle in settings
+  - Removed direct console.log calls to reduce console noise
+  - Added comprehensive CSS comments for easier styling customization
+
 ## [1.0.0] - 2025-05-07
 - Initial release of **Custom Selected Word Count** for Obsidian.
 - Provides advanced word counting features for selected text.
@@ -17,4 +30,4 @@
 
 ---
 
-*This is the initial public release. Future updates and improvements will be documented here.*
+*The changelog is maintained with each release. For the latest updates, please check the [releases page](https://github.com/banisterious/obsidian-custom-selected-word-count/releases).*
