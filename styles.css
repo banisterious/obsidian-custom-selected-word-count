@@ -51,6 +51,10 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
     font-size: 0.9em;
 }
 
+/* Property Window Styles
+   Handles all styling for the plugin's settings/property windows
+   including exclusion sections, regex testing, and configuration panels */
+
 .swc-exclusion-section {
     margin-bottom: 1.5em;
     padding: 0.5em 1em;
@@ -98,4 +102,265 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
   .swc-history-list {
     font-size: 1em;
   }
+}
+
+/* Settings styling - using our custom classes */
+.swc-settings-group {
+    border: 1px solid var(--background-modifier-border);
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    transition: border-color 0.15s ease;
+}
+
+.swc-settings-group:hover {
+    border-color: var(--interactive-accent);
+}
+
+/* Word Count Modal Styles */
+.word-count-modal {
+    padding: 20px;
+}
+
+.word-count-modal .current-count {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+    border-radius: 5px;
+}
+
+.word-count-modal .copy-button {
+    margin-left: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    cursor: pointer;
+}
+
+.word-count-modal .copy-button:hover {
+    background-color: var(--interactive-accent-hover);
+}
+
+.word-count-modal .history-section {
+    margin-top: 20px;
+    border-top: 1px solid var(--background-modifier-border);
+    padding-top: 10px;
+}
+
+.word-count-modal .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.word-count-modal .history-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.word-count-modal .history-entry:hover {
+    background-color: var(--background-secondary);
+}
+
+/* Status Bar Styles */
+.status-bar-item.plugin-word-count {
+    cursor: pointer;
+    padding: 0 8px;
+    border-radius: 4px;
+}
+
+.status-bar-item.plugin-word-count:hover {
+    background-color: var(--interactive-hover);
+}
+
+/* Settings Styles */
+.word-count-settings .setting-item {
+    border-top: 1px solid var(--background-modifier-border);
+    padding: 12px 0;
+}
+
+.word-count-settings .setting-item-heading {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.word-count-settings .setting-item-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin-bottom: 8px;
+}
+
+.word-count-settings .exclusion-info {
+    background-color: var(--background-secondary);
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.word-count-settings .regex-test-area {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+}
+
+.word-count-settings .regex-test-input {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.word-count-settings .regex-test-results {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+}
+
+/* Hide Core Word Count (when enabled) */
+.status-bar-item.plugin-word-count.hide-core-count {
+    display: none;
+}
+
+/* Settings UI Styles */
+.word-count-settings .container-indented {
+    padding-left: 20px;
+}
+
+.word-count-settings .hidden {
+    display: none;
+}
+
+.word-count-settings .visible {
+    display: block;
+}
+
+.word-count-settings .advanced-section {
+    margin-left: 20px;
+    margin-bottom: 2em;
+}
+
+.word-count-settings .advanced-separator {
+    margin-top: 2em;
+    margin-bottom: 1.5em;
+}
+
+.word-count-settings .advanced-summary {
+    font-weight: bold;
+    font-size: 1em;
+}
+
+.word-count-settings .regex-container {
+    margin-left: 0;
+}
+
+.word-count-settings .reset-button {
+    align-self: flex-start;
+    margin-top: 0.3em;
+    margin-bottom: 0.8em;
+    font-size: 0.85em;
+    padding: 2px 10px;
+}
+
+.word-count-settings .reset-description {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-bottom: 0.8em;
+}
+
+.word-count-settings .test-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    width: 100%;
+}
+
+.word-count-settings .test-description {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-bottom: 0.3em;
+}
+
+.word-count-settings .test-input {
+    width: 100%;
+    margin-bottom: 0.5em;
+}
+
+.word-count-settings .word-count-display {
+    font-weight: bold;
+    margin-bottom: 0.2em;
+}
+
+.word-count-settings .test-reset-button {
+    align-self: flex-start;
+    font-size: 0.85em;
+    padding: 2px 10px;
+    margin-top: 0.3em;
+}
+
+/* Advanced Section Styles */
+.cwc-advanced-section {
+    margin-left: 20px;
+    margin-bottom: 2em;
+}
+
+.cwc-regex-sample {
+    width: 100%;
+    margin-bottom: 0.5em;
+    min-height: 60px;
+}
+
+.cwc-regex-wordcount {
+    font-weight: bold;
+    margin-bottom: 0.2em;
+}
+
+.cwc-regex-warning {
+    color: var(--text-error);
+    margin-top: 0.5em;
+}
+
+/* Example Section Styles */
+.swc-example-section {
+    margin-top: 1em;
+    padding: 0.5em;
+    background: var(--background-secondary);
+    border-radius: 4px;
+}
+
+.swc-example-title {
+    font-weight: bold;
+    margin-bottom: 0.5em;
+}
+
+.swc-example-list {
+    margin-left: 1em;
+}
+
+.swc-example-item {
+    margin: 0.2em 0;
+    font-family: var(--font-monospace);
+}
+
+/* Path Settings Styles */
+.swc-path-settings {
+    padding-left: 20px;
+    margin-top: 1em;
+}
+
+/* Core Word Count Hide Style */
+#selected-word-counter-core-hide {
+    display: none;
+}
+
+#selected-word-counter-core-hide.active {
+    display: block;
 }
