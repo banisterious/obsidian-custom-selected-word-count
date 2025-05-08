@@ -1,4 +1,4 @@
-// BUILD: 2025-05-05
+// BUILD: 2025-05-07
 
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
