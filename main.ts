@@ -77,12 +77,13 @@ function countSelectedWords(
 	selectedText: string,
 	excludedExtensions: string[] = [],
 	stripEmojis: boolean = true,
-	settings?: WordCountPluginSettings
+	settings?: WordCountPluginSettings,
+	plugin?: CustomSelectedWordCountPlugin
 ): number {
 	if (!selectedText) return 0;
 
 	// Debug logging
-	debugLog(this, 'Initial text:', selectedText);
+	if (plugin) debugLog(plugin, 'Initial text:', selectedText);
 
 	// Strip backticks before any other processing
 	selectedText = selectedText.replace(/`/g, '');
@@ -97,16 +98,16 @@ function countSelectedWords(
 		if (!settings?.excludePaths) return false;
 
 		// Debug logging
-		debugLog(this, 'Checking path:', str);
+		if (plugin) debugLog(plugin, 'Checking path:', str);
 
 		// Check each path type with its original format
 		// Windows drive letter paths (C:\ or C:/)
 		if (/^[A-Za-z]:[\/\\]/.test(str)) {
 			if (settings.excludeWindowsPaths) {
-				debugLog(this, 'Matched Windows drive path');
+				if (plugin) debugLog(plugin, 'Matched Windows drive path');
 				return true;
 			}
-			debugLog(this, 'Windows path detected but exclusion disabled');
+			if (plugin) debugLog(plugin, 'Windows path detected but exclusion disabled');
 			return false;
 		}
 
@@ -115,28 +116,28 @@ function countSelectedWords(
 			// Check if this is a Windows path with an environment variable
 			if (/^%[^%]+%[\/\\]/.test(str)) {
 				if (settings.excludeWindowsPaths) {
-					debugLog(this, 'Matched Windows path with environment variable');
+					if (plugin) debugLog(plugin, 'Matched Windows path with environment variable');
 					return true;
 				}
-				debugLog(this, 'Windows path with environment variable detected but exclusion disabled');
+				if (plugin) debugLog(plugin, 'Windows path with environment variable detected but exclusion disabled');
 				return false;
 			}
 			
 			if (settings.excludeEnvironmentPaths) {
-				debugLog(this, 'Matched environment variable');
+				if (plugin) debugLog(plugin, 'Matched environment variable');
 				return true;
 			}
-			debugLog(this, 'Environment variable detected but exclusion disabled');
+			if (plugin) debugLog(plugin, 'Environment variable detected but exclusion disabled');
 			return false;
 		}
 
 		// UNC paths (\\server\share) - check original string
 		if (/^\\\\[^\\]+\\[^\\]+/.test(str)) {
 			if (settings.excludeUNCPaths) {
-				debugLog(this, 'Matched UNC path');
+				if (plugin) debugLog(plugin, 'Matched UNC path');
 				return true;
 			}
-			debugLog(this, 'UNC path detected but exclusion disabled');
+			if (plugin) debugLog(plugin, 'UNC path detected but exclusion disabled');
 			return false;
 		}
 
@@ -145,17 +146,17 @@ function countSelectedWords(
 
 		// file:/// protocol
 		if (/^file:\/\/\//.test(normalizedStr)) {
-			debugLog(this, 'Matched file:/// protocol');
+			if (plugin) debugLog(plugin, 'Matched file:/// protocol');
 			return true;
 		}
 
 		// Unix paths (/usr/local)
 		if (/^\/[^\/]/.test(normalizedStr)) {
 			if (settings.excludeUnixPaths) {
-				debugLog(this, 'Matched Unix path');
+				if (plugin) debugLog(plugin, 'Matched Unix path');
 				return true;
 			}
-			debugLog(this, 'Unix path detected but exclusion disabled');
+			if (plugin) debugLog(plugin, 'Unix path detected but exclusion disabled');
 			return false;
 		}
 
@@ -199,7 +200,7 @@ function countSelectedWords(
 
 	// Split into words but preserve decimal points in numbers
 	const rawSegments = selectedText.split(/\s+/);
-	debugLog(this, 'Raw segments:', rawSegments);
+	if (plugin) debugLog(plugin, 'Raw segments:', rawSegments);
 
 	for (let i = 0; i < rawSegments.length; i++) {
 		const segment = rawSegments[i];
@@ -225,9 +226,9 @@ function countSelectedWords(
 			const isValidPath = looksLikePath(buffer);
 			
 			if (isValidPath) {
-				debugLog(this, 'Path continues with:', segment);
+				if (plugin) debugLog(plugin, 'Path continues with:', segment);
 			} else {
-				debugLog(this, 'Path continuation check failed, reverting');
+				if (plugin) debugLog(plugin, 'Path continuation check failed, reverting');
 				segments.push(...buffer.split(/\s+/));
 				inPath = false;
 				buffer = '';
@@ -244,13 +245,13 @@ function countSelectedWords(
 		const isValidPath = looksLikePath(buffer);
 		
 		if (inPath && isValidPath) {
-			debugLog(this, 'Excluding final path:', buffer);
+			if (plugin) debugLog(plugin, 'Excluding final path:', buffer);
 		} else {
 			segments.push(...buffer.split(/\s+/));
 		}
 	}
 
-	debugLog(this, 'Processed segments:', segments);
+	if (plugin) debugLog(plugin, 'Processed segments:', segments);
 
 	// Filter out paths and handle extensions
 	const filteredWords = segments.filter(word => {
@@ -265,7 +266,7 @@ function countSelectedWords(
 		return true;
 	});
 
-	debugLog(this, 'Filtered words:', filteredWords);
+	if (plugin) debugLog(plugin, 'Filtered words:', filteredWords);
 	selectedText = filteredWords.join(' ');
 
 	// Strip quotes and emojis
@@ -280,7 +281,7 @@ function countSelectedWords(
 		try {
 			wordRegex = new RegExp(settings.customWordRegex, 'giu');
 		} catch (e) {
-			debugLog(this, 'Invalid custom regex, falling back to default:', e);
+			if (plugin) debugLog(plugin, 'Invalid custom regex, falling back to default:', e);
 			wordRegex = /[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/giu;
 		}
 	} else {
@@ -309,8 +310,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// Add permanent styling class
-		document.body.addClass('custom-word-count-plugin');
+
 
 		// Add necessary classes based on settings
 		this.updateClasses();
@@ -339,37 +339,29 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	}
 
 	private updateClasses() {
-		const body = document.body;
-		
-		// Status bar visibility
-		body.toggleClass('custom-word-count-show-status', this.settings.showStatusBar);
-		
-		// Core word count visibility
-		body.toggleClass('custom-word-count-hide-core', this.settings.hideCoreWordCount);
-		
-		// Live updates
-		body.toggleClass('custom-word-count-live-updates', this.settings.enableLiveCount);
-		
-		// Path exclusion classes
-		body.toggleClass('custom-word-count-exclude-paths', this.settings.excludePaths);
-		body.toggleClass('custom-word-count-exclude-windows', this.settings.excludeWindowsPaths);
-		body.toggleClass('custom-word-count-exclude-unix', this.settings.excludeUnixPaths);
-		body.toggleClass('custom-word-count-exclude-unc', this.settings.excludeUNCPaths);
-		body.toggleClass('custom-word-count-exclude-env', this.settings.excludeEnvironmentPaths);
+		// All styling is now handled directly by individual methods:
+		// - Status bar visibility: handled in setupStatusBar()
+		// - Core word count hiding: handled in addCoreWordCountStyle()
+		// - Live updates indicator: handled in updateStatusBar()
+		// - Path exclusion: handled in word counting logic, no UI styling needed
 	}
 
 	public setupStatusBar() {
+		this.log('Setting up status bar - showStatusBar:', this.settings.showStatusBar, 'enableLiveCount:', this.settings.enableLiveCount);
+		
 		if (this.statusBarItem) {
 			this.statusBarItem.remove();
 		}
 		
 		if (!this.settings.showStatusBar) {
 			this.statusBarItem = null;
+			this.log('Status bar disabled in settings');
 			return;
 		}
 		
 		this.statusBarItem = this.addStatusBarItem();
 		this.statusBarItem.addClass('plugin-word-count');
+		this.log('Status bar item created and added');
 		
 		if (this.settings.hideCoreWordCount) {
 			this.statusBarItem.addClass('hide-core-count');
@@ -385,18 +377,25 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			document.removeEventListener('selectionchange', this.handleSelectionChange);
 			// Add the new listener
 			document.addEventListener('selectionchange', this.handleSelectionChange);
+			this.log('Selection change listener registered for live updates');
+		} else {
+			this.log('Live updates disabled, no selection listener added');
 		}
 
 		// Initial update of the status bar
+		this.log('Performing initial status bar update');
 		this.updateStatusBar();
 	}
 
 	private handleSelectionChange = () => {
+		this.log('Selection changed event triggered');
+		
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer);
 		}
 		
 		this.debounceTimer = setTimeout(() => {
+			this.log('Debounced selection change - updating status bar');
 			this.updateStatusBar();
 		}, 300); // 300ms debounce
 	};
@@ -482,7 +481,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 			this.log('Processing selection:', selectedText);
 			const exclusions = this.settings.exclusionList.split(',').map(e => e.trim()).filter(e => e);
-			const wordCount = countSelectedWords(selectedText, exclusions, true, this.settings);
+			const wordCount = countSelectedWords(selectedText, exclusions, true, this.settings, this);
 
 			// Update status bar if it exists
 			if (this.statusBarItem) {
@@ -524,18 +523,23 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			styleElement.remove();
 		}
 
-		// Remove permanent styling class
-		document.body.removeClass('custom-word-count-plugin');
+
 	}
 
 	private updateStatusBar(count?: number) {
-		if (!this.statusBarItem || !this.settings.showStatusBar) return;
+		if (!this.statusBarItem || !this.settings.showStatusBar) {
+			this.log('Status bar update skipped - statusBarItem:', !!this.statusBarItem, 'showStatusBar:', this.settings.showStatusBar);
+			return;
+		}
 
 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!view) {
 			this.statusBarItem.setText('');
+			this.log('No active markdown view found');
 			return;
 		}
+
+		this.log('Updating status bar for view mode:', view.getMode());
 
 		let selectedText = '';
 		if (view.getMode() === 'source') {
@@ -545,10 +549,16 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			if (selection && selection.toString()) {
 				selectedText = selection.toString();
 			}
+		} else {
+			// Live Preview mode (default case)
+			selectedText = view.editor.getSelection();
 		}
+
+		this.log('Selected text length:', selectedText.length, 'Text preview:', selectedText.substring(0, 50));
 
 		if (!selectedText) {
 			this.statusBarItem.setText('');
+			this.log('No text selected, clearing status bar');
 			return;
 		}
 
@@ -556,10 +566,16 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			selectedText,
 			this.settings.exclusionList.split(',').map(e => e.trim()).filter(e => e),
 			true,
-			this.settings
+			this.settings,
+			this
 		);
 
-		this.statusBarItem.setText(`${this.settings.statusBarLabel}${wordCount}`);
+		// Add live indicator if enabled
+		const liveIndicator = this.settings.enableLiveCount ? ' (live)' : '';
+		const statusText = `${this.settings.statusBarLabel}${wordCount}${liveIndicator}`;
+		
+		this.log('Setting status bar text:', statusText);
+		this.statusBarItem.setText(statusText);
 	}
 
 	public addCoreWordCountStyle() {
@@ -571,7 +587,12 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			if (!styleElement) {
 				styleElement = document.createElement('style');
 				styleElement.id = styleId;
-				styleElement.classList.add('active');
+				styleElement.textContent = `
+					/* Hide Obsidian's core word count, but not our plugin */
+					.status-bar-item.mod-clickable:not(.plugin-word-count) {
+						display: none !important;
+					}
+				`;
 				document.head.appendChild(styleElement);
 			}
 		} else {

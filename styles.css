@@ -4,22 +4,12 @@
 
 /* Core styles for the plugin */
 body {
-    --custom-word-count-status-padding: 8px;
     --custom-word-count-ribbon-opacity: 0.8;
-    --status-bar-color: var(--status-bar-color, #007AFF);
 }
 
-/* Status bar styling */
-.custom-word-count-status {
-    padding: var(--custom-word-count-status-padding);
-    color: var(--status-bar-color);
-    font-weight: 500;
-}
+/* Legacy .custom-word-count-status removed - status bar now uses Obsidian's native status bar items */
 
-/* Hide core word count when enabled */
-body.custom-word-count-hide-core .status-bar-item.plugin-word-count {
-    display: none;
-}
+/* This CSS is now handled dynamically via addCoreWordCountStyle() method */
 
 /* Ribbon button styling */
 .custom-word-count-ribbon {
@@ -32,17 +22,7 @@ body.custom-word-count-hide-core .status-bar-item.plugin-word-count {
     opacity: 1;
 }
 
-/* Show/hide based on settings */
-body:not(.custom-word-count-show-status) .custom-word-count-status {
-    display: none;
-}
-
-/* Live update indicator */
-body.custom-word-count-live-updates .custom-word-count-status::after {
-    content: " (live)";
-    opacity: 0.7;
-    font-size: 0.9em;
-}
+/* Legacy CSS removed - status bar visibility and live indicator now handled directly in TypeScript */
 
 /* Property Window Styles
    Handles all styling for the plugin's settings/property windows
@@ -215,10 +195,10 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
     border-radius: 4px;
 }
 
-/* Hide Core Word Count (when enabled) */
+/* Hide Core Word Count (when enabled) - temporarily disabled
 .status-bar-item.plugin-word-count.hide-core-count {
     display: none;
-}
+} */
 
 /* Settings UI Styles */
 .word-count-settings .container-indented {

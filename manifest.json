@@ -7,8 +7,5 @@
 	"author": "John Banister",
 	"authorUrl": "https://github.com/banisterious",
 	"isDesktopOnly": false,
-	"main": "main.js",
-	"dependencies": {
-		"style-settings": "1.0.9"
-	}
+	"main": "main.js"
 }
