@@ -1,13 +1,6 @@
-/*
-@settings
-name: Custom Selected Word Count
-id: custom-selected-word-count
-settings:
-    -   id: test-toggle
-        title: Test Toggle
-        type: class-toggle
-        default: false
-*/
+/* ==========================================================================
+   Custom Selected Word Count Plugin Stylesheet
+   ========================================================================== */
 
 /* Core styles for the plugin */
 body {
@@ -55,66 +48,65 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
    Handles all styling for the plugin's settings/property windows
    including exclusion sections, regex testing, and configuration panels */
 
-.swc-exclusion-section {
+.word-count-exclusion-section {
     margin-bottom: 1.5em;
     padding: 0.5em 1em;
     background: var(--background-secondary-alt);
     border-radius: 6px;
 }
-.swc-regex-row {
+.word-count-regex-row {
     display: flex;
     align-items: center;
     gap: 0.5em;
     margin-bottom: 0.5em;
 }
-.swc-exclusion-details {
+.word-count-exclusion-details {
     margin-top: 0.5em;
 }
-.swc-match {
+.word-count-match {
     color: var(--text-success);
 }
-.swc-nonmatch {
+.word-count-nonmatch {
     color: var(--text-faint);
 }
 
 /* Make modals and plugin UI more mobile-friendly */
 @media (max-width: 600px) {
-  .modal, .swc-label, .swc-count, .swc-buttons, .swc-history, .cwc-advanced-section {
+  .modal, .word-count-label, .word-count-count, .word-count-buttons, .word-count-history, .word-count-advanced-section {
     width: 95vw !important;
     max-width: 95vw !important;
     min-width: 0 !important;
     padding: 1em !important;
     font-size: 1.05em;
   }
-  .swc-buttons button, .cwc-advanced-section button {
+  .word-count-buttons button, .word-count-advanced-section button {
     width: 100%;
     min-height: 44px;
     font-size: 1.1em;
     margin-bottom: 0.5em;
   }
-  .swc-label, .swc-count {
+  .word-count-label, .word-count-count {
     font-size: 1.2em;
   }
-  .cwc-regex-sample {
+  .word-count-regex-sample {
     font-size: 1.1em;
     min-height: 60px;
   }
-  .swc-history-list {
+  .word-count-history-list {
     font-size: 1em;
   }
 }
 
 /* Settings styling - using our custom classes */
-.swc-settings-group {
-    border: 1px solid var(--background-modifier-border);
-    padding: 10px;
+.word-count-settings-group {
+    /*padding: 10px;
     margin: 10px 0;
     border-radius: 5px;
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease;*/
 }
 
-.swc-settings-group:hover {
-    border-color: var(--interactive-accent);
+.word-count-settings-group:hover {
+    /*border-color: var(--interactive-accent);*/
 }
 
 /* Word Count Modal Styles */
@@ -123,20 +115,20 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
 }
 
 .word-count-modal .current-count {
-    font-size: 1.2em;
     margin-bottom: 20px;
     padding: 10px;
-    background-color: var(--background-secondary);
+    font-size: 1.2em;
     border-radius: 5px;
+    background-color: var(--background-secondary);
 }
 
 .word-count-modal .copy-button {
     margin-left: 10px;
     padding: 4px 8px;
     border-radius: 4px;
-    background-color: var(--interactive-accent);
-    color: var(--text-on-accent);
     cursor: pointer;
+    color: var(--text-on-accent);
+    background-color: var(--interactive-accent);
 }
 
 .word-count-modal .copy-button:hover {
@@ -145,22 +137,22 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
 
 .word-count-modal .history-section {
     margin-top: 20px;
-    border-top: 1px solid var(--background-modifier-border);
     padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border);
 }
 
 .word-count-modal .history-header {
     display: flex;
+    margin-bottom: 10px;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
 }
 
 .word-count-modal .history-entry {
     display: flex;
+    padding: 5px;
     justify-content: space-between;
     align-items: center;
-    padding: 5px;
     border-radius: 4px;
 }
 
@@ -170,8 +162,8 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
 
 /* Status Bar Styles */
 .status-bar-item.plugin-word-count {
-    cursor: pointer;
     padding: 0 8px;
+    cursor: pointer;
     border-radius: 4px;
 }
 
@@ -181,33 +173,33 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
 
 /* Settings Styles */
 .word-count-settings .setting-item {
-    border-top: 1px solid var(--background-modifier-border);
-    padding: 12px 0;
+    /*padding: 12px 0;
+    border-top: 1px solid var(--background-modifier-border);*/
 }
 
 .word-count-settings .setting-item-heading {
-    font-weight: bold;
     margin-bottom: 8px;
+    /*font-weight: bold;*/
 }
 
 .word-count-settings .setting-item-description {
-    color: var(--text-muted);
+    /*margin-bottom: 8px;
     font-size: 0.9em;
-    margin-bottom: 8px;
+    color: var(--text-muted);*/
 }
 
 .word-count-settings .exclusion-info {
-    background-color: var(--background-secondary);
+    margin: 10px 0;
     padding: 10px;
     border-radius: 4px;
-    margin: 10px 0;
+    background-color: var(--background-secondary);
 }
 
 .word-count-settings .regex-test-area {
     margin-top: 10px;
     padding: 10px;
-    background-color: var(--background-secondary);
     border-radius: 4px;
+    background-color: var(--background-secondary);
 }
 
 .word-count-settings .regex-test-input {
@@ -307,51 +299,51 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
 }
 
 /* Advanced Section Styles */
-.cwc-advanced-section {
+.word-count-advanced-section {
     margin-left: 20px;
     margin-bottom: 2em;
 }
 
-.cwc-regex-sample {
+.word-count-regex-sample {
     width: 100%;
     margin-bottom: 0.5em;
     min-height: 60px;
 }
 
-.cwc-regex-wordcount {
+.word-count-regex-wordcount {
     font-weight: bold;
     margin-bottom: 0.2em;
 }
 
-.cwc-regex-warning {
+.word-count-regex-warning {
     color: var(--text-error);
     margin-top: 0.5em;
 }
 
 /* Example Section Styles */
-.swc-example-section {
+.word-count-example-section {
     margin-top: 1em;
     padding: 0.5em;
     background: var(--background-secondary);
     border-radius: 4px;
 }
 
-.swc-example-title {
+.word-count-example-title {
     font-weight: bold;
     margin-bottom: 0.5em;
 }
 
-.swc-example-list {
+.word-count-example-list {
     margin-left: 1em;
 }
 
-.swc-example-item {
+.word-count-example-item {
     margin: 0.2em 0;
     font-family: var(--font-monospace);
 }
 
 /* Path Settings Styles */
-.swc-path-settings {
+.word-count-path-settings {
     padding-left: 20px;
     margin-top: 1em;
 }
@@ -363,4 +355,269 @@ body.custom-word-count-live-updates .custom-word-count-status::after {
 
 #selected-word-counter-core-hide.active {
     display: block;
+}
+
+/* Settings Styles for Custom Selected Word Count Plugin */
+.word-count-settings {
+    /* Base setting item styling */
+    .setting-item {
+        border-top: 1px solid var(--background-modifier-border);
+        padding: 12px 0;
+
+        /* Heading-specific styling */
+        &.setting-item-heading {
+            /*margin-bottom: 8px;
+            margin-top: 1.5em;
+            font-weight: bold;
+            border-top: 2px solid var(--background-modifier-border);*/
+            
+            &:first-child {
+                margin-top: 0;
+                border-top: none;
+            }
+
+            .setting-item-name {
+                /*font-size: 1.1em;
+                color: var(--text-normal);*/
+            }
+        }
+
+        .setting-item-description {
+            /*margin-bottom: 8px;
+            font-size: 0.9em;
+            color: var(--text-muted);*/
+        }
+    }
+
+    /* Grouped settings containers */
+    .word-count-settings-group {
+        margin-bottom: 1em;
+        
+        /* Settings that follow a heading should have reduced top padding */
+        &:has(.setting-item-heading) + .setting-item {
+            padding-top: 8px;
+        }
+    }
+
+    /* Indented/nested settings */
+    .word-count-container-indented {
+        padding-left: 20px;
+        
+        .setting-item {
+            padding: 8px 0;
+            border-top: 1px solid var(--background-modifier-border-focus);
+            
+            &:first-child {
+                border-top: none;
+            }
+        }
+
+        /* Further nested indentation */
+        .word-count-container-indented {
+            padding-left: 15px;
+        }
+    }
+
+    /* Advanced section specific styling */
+    .word-count-advanced-separator {
+        margin: 2em 0 1.5em 0;
+        border: none;
+        border-top: 2px solid var(--background-modifier-border);
+    }
+
+    .word-count-advanced-section {
+        margin-bottom: 2em;
+
+        .word-count-advanced-summary {
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            padding: 8px 0;
+            color: var(--text-warning);
+            
+            &:hover {
+                color: var(--text-normal);
+            }
+        }
+
+        /* Style the content inside the details */
+        > div {
+            margin-top: 1em;
+            padding-left: 1em;
+            border-left: 2px solid var(--background-modifier-border);
+        }
+    }
+
+    /* Test area for regex functionality */
+    .word-count-test-area {
+        margin-top: 10px;
+        padding: 15px;
+        background-color: var(--background-secondary);
+        border-radius: 6px;
+        border: 1px solid var(--background-modifier-border);
+
+        .word-count-test-description {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .word-count-regex-sample {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--background-modifier-border);
+            resize: vertical;
+            font-family: var(--font-monospace);
+            color: var(--text-normal);
+            background: var(--background-primary);
+        }
+
+        .word-count-regex-wordcount,
+        .word-count-regex-matches,
+        .word-count-regex-warning {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: var(--font-monospace);
+            font-size: 0.9em;
+        }
+
+        .word-count-regex-wordcount {
+            border: 1px solid var(--background-modifier-border);
+            background-color: var(--background-primary-alt);
+        }
+
+        .word-count-regex-matches {
+            border: 1px solid var(--color-green);
+            color: var(--text-success);
+            background-color: var(--background-secondary-alt);
+        }
+
+        .word-count-regex-warning {
+            border: 1px solid var(--color-red);
+            color: var(--text-error);
+            background-color: var(--background-modifier-error);
+        }
+
+        .word-count-test-reset-button {
+            margin-top: 10px;
+            padding: 6px 12px;
+            border: 1px solid var(--background-modifier-border);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-normal);
+            background: var(--interactive-normal);
+
+            &:hover {
+                background: var(--interactive-hover);
+            }
+
+            &:active {
+                background: var(--interactive-active);
+            }
+        }
+    }
+
+    /* Exclusion info sections */
+    .word-count-exclusion-info {
+        background-color: var(--background-secondary);
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        
+        .word-count-explanation {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+    }
+
+    /* Path settings specific styling */
+    .word-count-path-settings {
+        border-left: 3px solid var(--background-modifier-border);
+        padding-left: 15px;
+        margin-left: 5px;
+
+        /* Use :has() to style based on parent state */
+        &:has(.setting-item:first-child .checkbox-container input:checked) {
+            border-left-color: var(--color-accent);
+        }
+    }
+
+    /* Exclusion details sections */
+    .word-count-exclusion-details {
+        margin-top: 0.5em;
+
+        .word-count-explanation {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .word-count-match {
+            color: var(--text-success);
+        }
+
+        .word-count-nonmatch {
+            color: var(--text-faint);
+        }
+    }
+
+    /* Exclusion section container */
+    .word-count-exclusion-section {
+        margin-bottom: 1.5em;
+        padding: 0.5em 1em;
+        background: var(--background-secondary-alt);
+        border-radius: 6px;
+    }
+
+    /* Visibility utility classes */
+    .word-count-hidden {
+        display: none !important;
+    }
+
+    .word-count-visible {
+        display: block;
+    }
+
+    /* Settings that depend on other settings - visual indication only */
+    .word-count-settings-group {
+        /* Visually indicate when dependent settings are inactive, but keep them interactive */
+        &:has(.setting-item:first-child .checkbox-container input:not(:checked)) {
+            .word-count-container-indented {
+                opacity: 0.6;
+                /* Removed pointer-events: none to keep settings interactive */
+            }
+        }
+    }
+
+    /* Status bar related settings grouping */
+    .word-count-settings-group:has(.setting-item .setting-item-name[data-setting="status-bar"]) {
+        .word-count-container-indented {
+            background: var(--background-secondary-alt);
+            border-radius: 4px;
+            padding: 15px 20px;
+            margin-top: 8px;
+        }
+    }
+
+    /* Responsive adjustments */
+    @container (max-width: 500px) {
+        .word-count-container-indented {
+            padding-left: 15px;
+        }
+        
+        .word-count-test-area {
+            padding: 10px;
+        }
+    }
+}
+
+/* Global overrides for better integration - scoped to our plugin */
+.word-count-settings .setting-item-heading {
+    .setting-item-control {
+        display: none; /* Hide any controls on heading items */
+    }
 }

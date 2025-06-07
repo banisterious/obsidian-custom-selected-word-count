@@ -20,8 +20,7 @@ interface WordCountPluginSettings {
 	enableLiveCount: boolean;        // Toggle for live word count updates
 	statusBarLabel: string;          // Custom label for status bar
 	hideCoreWordCount: boolean;      // Toggle for hiding core word count
-	// Ribbon button setting
-	showRibbonButton: boolean;       // Toggle for ribbon button visibility
+
 	enableDebugLogging: boolean;     // Toggle for debug logging
 	// Advanced Regex
 	enableAdvancedRegex?: boolean;   // Toggle for advanced regex (default: false)
@@ -48,8 +47,7 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	enableLiveCount: false,          // Live updates disabled by default
 	statusBarLabel: 'Selected: ',    // Default label
 	hideCoreWordCount: false,        // Don't hide core word count by default
-	// Ribbon button default
-	showRibbonButton: false,        // Hidden by default
+
 	enableDebugLogging: false,       // Debug logging disabled by default
 	// Advanced Regex
 	enableAdvancedRegex: false,
@@ -325,10 +323,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		// Apply core word count hiding if enabled
 		this.addCoreWordCountStyle();
 
-		// Set up ribbon button if enabled
-		if (this.settings.showRibbonButton) {
-			this.setupRibbonButton();
-		}
+
 
 		// Add the command
 		this.addCommand({
@@ -412,19 +407,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			this.ribbonButton.remove();
 			this.ribbonButton = null;
 		}
-
-		// Only create if enabled
-		if (this.settings.showRibbonButton) {
-			this.ribbonButton = this.addRibbonIcon(
-				'hash',
-				'Count Selected Words',
-				async () => {
-					await this.handleWordCount();
-				}
-			);
-			this.ribbonButton.addClass('custom-word-count-ribbon');
-			this.ribbonButton.setAttribute('title', 'Count words in selected text');
-		}
+		// Ribbon button functionality removed as per Obsidian guidelines
 	}
 
 	private log(message: string, ...args: any[]) {
@@ -719,11 +702,11 @@ function addExclusionInfo(
 	matches: string[],
 	nonMatches: string[]
 ) {
-	const section = container.createDiv({ cls: 'swc-exclusion-section' });
+	const section = container.createDiv({ cls: 'word-count-exclusion-section' });
 	section.createEl('strong', { text: title });
 
 	// Regex row with copy button
-	const regexRow = section.createDiv({ cls: 'swc-regex-row' });
+	const regexRow = section.createDiv({ cls: 'word-count-regex-row' });
 	regexRow.createEl('span', { text: `Regex: ${regex}` });
 	const copyBtn = regexRow.createEl('button', { text: 'Copy Regex' });
 	copyBtn.onclick = () => {
@@ -733,20 +716,20 @@ function addExclusionInfo(
 	};
 
 	// Collapsible details
-	const details = section.createEl('details', { cls: 'swc-exclusion-details' });
+	const details = section.createEl('details', { cls: 'word-count-exclusion-details' });
 	details.createEl('summary', { text: 'Show Explanation & Examples' });
 
-	details.createEl('div', { text: explanation, cls: 'swc-explanation' });
+	details.createEl('div', { text: explanation, cls: 'word-count-explanation' });
 
 	// Example matches
 	const matchList = details.createEl('ul');
 	matchList.createEl('li', { text: 'Example matches:' });
-	matches.forEach(example => matchList.createEl('li', { text: example, cls: 'swc-match' }));
+	matches.forEach(example => matchList.createEl('li', { text: example, cls: 'word-count-match' }));
 
 	// Example non-matches
 	const nonMatchList = details.createEl('ul');
 	nonMatchList.createEl('li', { text: 'Example non-matches:' });
-	nonMatches.forEach(example => nonMatchList.createEl('li', { text: example, cls: 'swc-nonmatch' }));
+	nonMatches.forEach(example => nonMatchList.createEl('li', { text: example, cls: 'word-count-nonmatch' }));
 }
 
 // Settings tab for plugin options
@@ -764,26 +747,13 @@ class WordCountSettingTab extends PluginSettingTab {
 		containerEl.empty();
 		containerEl.addClass('word-count-settings');
 
-		containerEl.createEl('h2', { text: 'Custom Selected Word Count Settings' });
+
 
 		// UI Elements Settings
-		containerEl.createEl('h3', { text: 'UI Elements' });
-
-		// Ribbon Button Setting
-		new Setting(containerEl)
-			.setName('Show Ribbon Button')
-			.setDesc('Add a button to the ribbon menu for quick access to word counting. Changes take effect after restarting Obsidian.')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showRibbonButton)
-				.onChange(async (value) => {
-					this.plugin.settings.showRibbonButton = value;
-					await this.plugin.saveSettings();
-					new Notice('Restart Obsidian for ribbon button changes to take effect');
-				}))
-			.settingEl.addClass('settings-group');
+		new Setting(containerEl).setName('UI Elements').setHeading();
 
 		// Status Bar Settings
-		const statusBarContainer = containerEl.createDiv({ cls: 'settings-group' });
+		const statusBarContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(statusBarContainer)
 			.setName('Show Count in Status Bar')
 			.setDesc('Show the selected word count in the status bar next to Obsidian\'s built-in word count.')
@@ -801,10 +771,10 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Live Update Setting
-		const liveUpdateContainer = statusBarContainer.createDiv({ cls: 'container-indented' });
+		const liveUpdateContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
 		new Setting(liveUpdateContainer)
 			.setName('Enable Live Updates')
-			.setDesc('Update the status bar count automatically when text is selected.')
+			.setDesc('Update the status bar count automatically when text is selected. (Requires status bar to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableLiveCount)
 				.onChange(async (value) => {
@@ -814,10 +784,10 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Hide Core Word Count Setting
-		const hideWordCountContainer = statusBarContainer.createDiv({ cls: 'container-indented' });
+		const hideWordCountContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
 		new Setting(hideWordCountContainer)
 			.setName('Hide Core Word Count')
-			.setDesc('Hide Obsidian\'s built-in word count when the selected word count is enabled.')
+			.setDesc('Hide Obsidian\'s built-in word count when the selected word count is enabled. (Requires status bar to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.hideCoreWordCount)
 				.onChange(async (value) => {
@@ -827,10 +797,10 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Status Bar Label Setting
-		const labelContainer = statusBarContainer.createDiv({ cls: 'container-indented' });
+		const labelContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
 		new Setting(labelContainer)
 			.setName('Status Bar Label')
-			.setDesc('Customize the label shown before the count in the status bar.')
+			.setDesc('Customize the label shown before the count in the status bar. (Requires status bar to be enabled)')
 			.addText(text => text
 				.setPlaceholder('Selected: ')
 				.setValue(this.plugin.settings.statusBarLabel)
@@ -841,9 +811,10 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Path Exclusion Settings
-		containerEl.createEl('h3', { text: 'Path Exclusion' });
+		new Setting(containerEl).setName('Path Exclusion').setHeading();
 		
-		const pathToggle = new Setting(containerEl)
+		const pathContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(pathContainer)
 			.setName('Exclude Paths from Word Count')
 			.setDesc('When enabled, file paths will not be counted as words.')
 			.addToggle(toggle => toggle
@@ -852,15 +823,14 @@ class WordCountSettingTab extends PluginSettingTab {
 					this.plugin.settings.excludePaths = value;
 					await this.plugin.saveSettings();
 					this.updateSettingsUI();
-				}))
-			.settingEl.addClass('settings-group');
+				}));
 
-		const pathSettingsContainer = containerEl.createDiv({ cls: 'container-indented settings-group swc-path-settings' });
+		const pathSettingsContainer = pathContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-path-settings' });
 
 		// Sub-settings for each path type
 		new Setting(pathSettingsContainer)
 			.setName('Exclude Windows Paths')
-			.setDesc('Exclude paths starting with drive letters (e.g., C:\\)')
+			.setDesc('Exclude paths starting with drive letters (e.g., C:\\). (Requires path exclusion to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.excludeWindowsPaths)
 				.onChange(async (value) => {
@@ -868,12 +838,67 @@ class WordCountSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		new Setting(pathSettingsContainer)
+			.setName('Exclude Unix Paths')
+			.setDesc('Exclude Unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled)')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.excludeUnixPaths)
+				.onChange(async (value) => {
+					this.plugin.settings.excludeUnixPaths = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(pathSettingsContainer)
+			.setName('Exclude UNC Paths')
+			.setDesc('Exclude network paths starting with double backslash (e.g., \\\\server\\share). (Requires path exclusion to be enabled)')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.excludeUNCPaths)
+				.onChange(async (value) => {
+					this.plugin.settings.excludeUNCPaths = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(pathSettingsContainer)
+			.setName('Exclude Environment Paths')
+			.setDesc('Exclude environment variable paths (e.g., %USERPROFILE%, $HOME). (Requires path exclusion to be enabled)')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.excludeEnvironmentPaths)
+				.onChange(async (value) => {
+					this.plugin.settings.excludeEnvironmentPaths = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// History & Debug Settings
+		new Setting(containerEl).setName('History & Debug').setHeading();
+
+		new Setting(containerEl)
+			.setName('Show Date/Time in History')
+			.setDesc('Include timestamps when displaying word count history.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.showDateTimeInHistory)
+				.onChange(async (value) => {
+					this.plugin.settings.showDateTimeInHistory = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Enable Debug Logging')
+			.setDesc('Enable detailed logging for troubleshooting. May impact performance.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableDebugLogging)
+				.onChange(async (value) => {
+					this.plugin.settings.enableDebugLogging = value;
+					await this.plugin.saveSettings();
+				}));
+
 		// Advanced Section
-		const advSep = containerEl.createEl('hr', { cls: 'advanced-separator' });
-		const advancedSection = containerEl.createEl('details', { cls: 'cwc-advanced-section' });
+		new Setting(containerEl).setName('Advanced').setHeading();
+		
+		const advSep = containerEl.createEl('hr', { cls: 'word-count-advanced-separator' });
+		const advancedSection = containerEl.createEl('details', { cls: 'word-count-advanced-section' });
 		const advSummary = advancedSection.createEl('summary', { 
-			text: '⚠️ Advanced: Custom Word Detection Regex (Expert Only)',
-			cls: 'advanced-summary'
+			text: '⚠️ Custom Word Detection Regex (Expert Only)',
+			cls: 'word-count-advanced-summary'
 		});
 
 		const advDesc = advancedSection.createDiv();
@@ -893,36 +918,36 @@ class WordCountSettingTab extends PluginSettingTab {
 			);
 
 		// Test Area
-		const testArea = advDesc.createDiv({ cls: 'test-area' });
+		const testArea = advDesc.createDiv({ cls: 'word-count-test-area' });
 		const testDesc = testArea.createEl('div', {
 			text: 'Use the box below to see exactly which text fragments your custom regex will match.',
-			cls: 'test-description'
+			cls: 'word-count-test-description'
 		});
 
 		const sampleInput = testArea.createEl('textarea', {
-			cls: 'cwc-regex-sample',
+			cls: 'word-count-regex-sample',
 			attr: {
 				placeholder: 'Enter sample text to test your regex...',
 				rows: '3'
 			}
 		});
 
-		const wordCountDisplay = testArea.createEl('div', { cls: 'cwc-regex-wordcount' });
-		const matchDisplay = testArea.createEl('div', { cls: 'cwc-regex-matches' });
-		const warningDisplay = testArea.createEl('div', { cls: 'cwc-regex-warning' });
+		const wordCountDisplay = testArea.createEl('div', { cls: 'word-count-regex-wordcount' });
+		const matchDisplay = testArea.createEl('div', { cls: 'word-count-regex-matches' });
+		const warningDisplay = testArea.createEl('div', { cls: 'word-count-regex-warning' });
 
 		const resetTestBtn = testArea.createEl('button', {
 			text: 'Reset Test',
-			cls: 'test-reset-button'
+			cls: 'word-count-test-reset-button'
 		});
 
 		// Helper method to update UI visibility based on settings
 		this.updateSettingsUI = () => {
-			liveUpdateContainer.toggleClass('hidden', !this.plugin.settings.showStatusBar);
-			hideWordCountContainer.toggleClass('hidden', !this.plugin.settings.showStatusBar);
-			labelContainer.toggleClass('hidden', !this.plugin.settings.showStatusBar);
-			pathSettingsContainer.toggleClass('hidden', !this.plugin.settings.excludePaths);
-			testArea.toggleClass('hidden', !this.plugin.settings.enableAdvancedRegex);
+			liveUpdateContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
+			hideWordCountContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
+			labelContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
+			pathSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludePaths);
+			testArea.toggleClass('word-count-hidden', !this.plugin.settings.enableAdvancedRegex);
 		};
 
 		// Initial UI update
