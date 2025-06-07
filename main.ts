@@ -750,12 +750,12 @@ class WordCountSettingTab extends PluginSettingTab {
 
 
 		// UI Elements Settings
-		new Setting(containerEl).setName('UI Elements').setHeading();
+		new Setting(containerEl).setName('UI elements').setHeading();
 
 		// Status Bar Settings
 		const statusBarContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(statusBarContainer)
-			.setName('Show Count in Status Bar')
+			.setName('Show count in status bar')
 			.setDesc('Show the selected word count in the status bar next to Obsidian\'s built-in word count.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showStatusBar)
@@ -773,7 +773,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Live Update Setting
 		const liveUpdateContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
 		new Setting(liveUpdateContainer)
-			.setName('Enable Live Updates')
+			.setName('Enable live updates')
 			.setDesc('Update the status bar count automatically when text is selected. (Requires status bar to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableLiveCount)
@@ -786,7 +786,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Hide Core Word Count Setting
 		const hideWordCountContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
 		new Setting(hideWordCountContainer)
-			.setName('Hide Core Word Count')
+			.setName('Hide core word count')
 			.setDesc('Hide Obsidian\'s built-in word count when the selected word count is enabled. (Requires status bar to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.hideCoreWordCount)
@@ -799,7 +799,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Status Bar Label Setting
 		const labelContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
 		new Setting(labelContainer)
-			.setName('Status Bar Label')
+			.setName('Status bar label')
 			.setDesc('Customize the label shown before the count in the status bar. (Requires status bar to be enabled)')
 			.addText(text => text
 				.setPlaceholder('Selected: ')
@@ -811,11 +811,11 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Path Exclusion Settings
-		new Setting(containerEl).setName('Path Exclusion').setHeading();
+		new Setting(containerEl).setName('Path exclusion').setHeading();
 		
 		const pathContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(pathContainer)
-			.setName('Exclude Paths from Word Count')
+			.setName('Exclude paths from word count')
 			.setDesc('When enabled, file paths will not be counted as words.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.excludePaths)
@@ -829,7 +829,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Sub-settings for each path type
 		new Setting(pathSettingsContainer)
-			.setName('Exclude Windows Paths')
+			.setName('Exclude Windows paths')
 			.setDesc('Exclude paths starting with drive letters (e.g., C:\\). (Requires path exclusion to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.excludeWindowsPaths)
@@ -839,7 +839,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(pathSettingsContainer)
-			.setName('Exclude Unix Paths')
+			.setName('Exclude Unix paths')
 			.setDesc('Exclude Unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.excludeUnixPaths)
@@ -849,7 +849,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(pathSettingsContainer)
-			.setName('Exclude UNC Paths')
+			.setName('Exclude UNC paths')
 			.setDesc('Exclude network paths starting with double backslash (e.g., \\\\server\\share). (Requires path exclusion to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.excludeUNCPaths)
@@ -859,7 +859,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(pathSettingsContainer)
-			.setName('Exclude Environment Paths')
+			.setName('Exclude environment paths')
 			.setDesc('Exclude environment variable paths (e.g., %USERPROFILE%, $HOME). (Requires path exclusion to be enabled)')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.excludeEnvironmentPaths)
@@ -869,10 +869,10 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// History & Debug Settings
-		new Setting(containerEl).setName('History & Debug').setHeading();
+		new Setting(containerEl).setName('History & debug').setHeading();
 
 		new Setting(containerEl)
-			.setName('Show Date/Time in History')
+			.setName('Show date/time in history')
 			.setDesc('Include timestamps when displaying word count history.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showDateTimeInHistory)
@@ -882,7 +882,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Enable Debug Logging')
+			.setName('Enable debug logging')
 			.setDesc('Enable detailed logging for troubleshooting. May impact performance.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableDebugLogging)
@@ -906,7 +906,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Enable toggle
 		const advToggle = new Setting(advDesc)
-			.setName('Enable Advanced Regex (Expert Only)')
+			.setName('Enable advanced regex (expert only)')
 			.setDesc('Allow custom regex for word detection. For advanced users only.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.enableAdvancedRegex ?? false)
