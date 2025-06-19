@@ -45,6 +45,11 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 
 ## Settings
 
+<p align="center">
+  <img src="docs/images/settings.png" alt="Settings interface" width="800"/>
+</p>
+<p align="center"><em>Settings interface</em></p>
+
 ### UI Elements
 - **Show Ribbon Button**: Add a button to the ribbon menu for quick access (requires restart)
 - **Show Count in Status Bar**: Display the word count in the status bar
