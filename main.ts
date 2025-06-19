@@ -1069,7 +1069,7 @@ class WordCountSettingTab extends PluginSettingTab {
 					timestamp: now.toISOString(),
 					plugin: {
 						name: 'Custom Selected Word Count Plugin',
-						version: '1.0.1',
+						version: '1.1.0',
 						settings: this.plugin.settings
 					},
 					system: {
