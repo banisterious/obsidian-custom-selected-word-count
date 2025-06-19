@@ -31,3 +31,6 @@ docs/images/temp/
 # Temporary screenshot files
 docs/images/*.tmp
 docs/images/*.temp
+
+# Claude instructions file
+CLAUDE.md

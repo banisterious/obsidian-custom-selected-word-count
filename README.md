@@ -46,9 +46,11 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 ## Settings
 
 <p align="center">
-  <img src="docs/images/settings.png" alt="Settings interface" width="800"/>
+  <a href="docs/images/settings.png" target="_blank">
+    <img src="docs/images/settings.png" alt="Settings interface (click to enlarge)" width="400" style="cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"/>
+  </a>
 </p>
-<p align="center"><em>Settings interface</em></p>
+<p align="center"><em>Settings interface (click to enlarge)</em></p>
 
 ### UI Elements
 - **Show Ribbon Button**: Add a button to the ribbon menu for quick access (requires restart)

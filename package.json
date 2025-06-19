@@ -1,6 +1,6 @@
 {
 	"name": "custom-selected-word-count",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Advanced word counting for selected text with customizable path exclusion, UI options, and history tracking",
 	"main": "main.js",
 	"scripts": {
@@ -17,7 +17,7 @@
 	"bugs": {
 		"url": "https://github.com/banisterious/obsidian-custom-selected-word-count/issues"
 	},
-	"keywords": ["obsidian", "plugin", "word-count", "text-analysis"],
+	"keywords": ["obsidian", "plugin", "word-count", "selected-word-count", "text-analysis"],
 	"author": "John Banister",
 	"license": "MIT",
 	"devDependencies": {

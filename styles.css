@@ -1,6 +1,17 @@
-/* ==========================================================================
-   Custom Selected Word Count Plugin Stylesheet
-   ========================================================================== */
+/* Custom Selected Word Count Plugin
+ * An Obsidian plugin that provides advanced word counting for selected text
+ * with customizable path exclusion, UI options, and history tracking.
+ * 
+ * Author: John Banister
+ * GitHub: https://github.com/banisterious
+ *
+ * BUILD INFORMATION:
+ * - Generated: 2025-06-19 21:18:53 UTC
+ * 
+ * Theme Strategy: NO visual styling overrides - structural/functional only
+ * Browser Support: Modern CSS for current Obsidian versions
+ */
+
 
 /* Core styles for the plugin */
 body {
@@ -149,23 +160,6 @@ body {
 
 .status-bar-item.plugin-word-count:hover {
     background-color: var(--interactive-hover);
-}
-
-/* Settings Styles */
-.word-count-settings .setting-item {
-    /*padding: 12px 0;
-    border-top: 1px solid var(--background-modifier-border);*/
-}
-
-.word-count-settings .setting-item-heading {
-    margin-bottom: 8px;
-    /*font-weight: bold;*/
-}
-
-.word-count-settings .setting-item-description {
-    /*margin-bottom: 8px;
-    font-size: 0.9em;
-    color: var(--text-muted);*/
 }
 
 .word-count-settings .exclusion-info {
@@ -341,7 +335,6 @@ body {
 .word-count-settings {
     /* Base setting item styling */
     .setting-item {
-        border-top: 1px solid var(--background-modifier-border);
         padding: 12px 0;
 
         /* Heading-specific styling */
@@ -355,17 +348,6 @@ body {
                 margin-top: 0;
                 border-top: none;
             }
-
-            .setting-item-name {
-                /*font-size: 1.1em;
-                color: var(--text-normal);*/
-            }
-        }
-
-        .setting-item-description {
-            /*margin-bottom: 8px;
-            font-size: 0.9em;
-            color: var(--text-muted);*/
         }
     }
 
@@ -382,14 +364,6 @@ body {
     /* Indented/nested settings */
     .word-count-container-indented {
         padding-left: 20px;
-        
-        .setting-item {
-            padding: 8px 0;
-            border-top: 1px solid var(--background-modifier-border-focus);
-            
-            &:first-child {
-                border-top: none;
-            }
         }
 
         /* Further nested indentation */
@@ -414,10 +388,6 @@ body {
             cursor: pointer;
             padding: 8px 0;
             color: var(--text-warning);
-            
-            &:hover {
-                color: var(--text-normal);
-            }
         }
 
         /* Style the content inside the details */
