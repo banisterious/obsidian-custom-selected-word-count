@@ -34,6 +34,12 @@ A plugin for [Obsidian](https://obsidian.md) that provides advanced word countin
   - Click the status bar count (if enabled)
   - View the real time count in the status bar (if enabled)
 
+## Support My Work
+
+If you find this plugin useful, please consider supporting its development!
+
+<a href="https://www.buymeacoffee.com/banisterious" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 ## Documentation
 
 For comprehensive documentation, visit the [Documentation Hub](docs/README.md) which includes:
