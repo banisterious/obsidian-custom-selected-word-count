@@ -1,9 +1,9 @@
 {
 	"id": "custom-selected-word-count",
 	"name": "Custom Selected Word Count",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"minAppVersion": "0.15.0",
-	"description": "Advanced word counting for selected text with customizable path exclusion, UI options, and history tracking.",
+	"description": "Comprehensive text analysis for selected text including word counting, character counting, and sentence counting with modern UI design.",
 	"author": "John Banister",
 	"authorUrl": "https://github.com/banisterious",
 	"isDesktopOnly": false
