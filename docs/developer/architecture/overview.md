@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Custom Selected Word Count (OCSWC) plugin is an Obsidian plugin that provides comprehensive text analysis functionality for selected text. The plugin works across all view modes (Reading, Live Preview, and Edit) and offers customizable features including word counting, character counting, sentence counting, path exclusion, multiple UI integration options, and detailed history tracking.
+The Custom Selected Word Count plugin is an Obsidian plugin that provides comprehensive text analysis functionality for selected text. The plugin works across all view modes (Reading, Live Preview, and Edit) and offers customizable features including word counting, character counting, sentence counting, path exclusion, multiple UI integration options, and detailed history tracking.
 
 ## Table of Contents
 
