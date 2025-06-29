@@ -1,5 +1,62 @@
 # Changelog
 
+## [1.2.0] - 2025-06-29
+### Added
+- **Character Counting System**
+  - Added character counting functionality with three configurable modes:
+    - All characters (including spaces and punctuation)
+    - All characters excluding spaces
+    - Letters only (alphabetic characters)
+  - Character count visibility toggle in settings
+  - Character count display in modal and history
+  - Individual copy functionality for character counts
+- **Sentence Counting System**
+  - Added sophisticated sentence boundary detection
+  - Advanced handling of abbreviations (Mr., Dr., Prof., etc.)
+  - Smart exclusion of decimal numbers and file extensions
+  - Markdown-aware processing for code blocks and headers
+  - Sentence count visibility toggle in settings
+  - Sentence count display in modal and history
+- **Enhanced Modal Design**
+  - Complete redesign with modern card-based layout
+  - Professional monochrome styling integrated with Obsidian themes
+  - Responsive grid system for multiple metrics
+  - Individual count cards for words, characters, and sentences
+  - Enhanced visual hierarchy with proper typography
+  - Unicode icon replacements for better compatibility
+- **Multi-Metric History**
+  - Expanded history tracking to include words, characters, and sentences
+  - Individual copy buttons for each metric in history entries
+  - Backward compatibility with existing history data
+  - Enhanced history display with improved visual design
+
+### Changed
+- **Architecture Improvements**
+  - Renamed `countSelectedWords` to `countSelectedText` for better semantic clarity
+  - Added `CountResult` interface for structured multi-metric results
+  - Enhanced `WordCountHistoryEntry` to include character and sentence counts
+  - Updated modal class to handle multiple metrics efficiently
+- **User Interface Enhancements**
+  - Improved modal accessibility with better keyboard navigation
+  - Enhanced visual feedback for user actions
+  - Consistent button styling and interaction patterns
+  - Better responsive design for various screen sizes
+- **Settings Organization**
+  - Added dedicated sections for character and sentence counting
+  - Improved settings structure with logical grouping
+  - Enhanced setting descriptions and help text
+
+### Technical
+- **Performance Optimizations**
+  - Efficient multi-metric processing in single pass
+  - Optimized character counting algorithms
+  - Improved sentence detection with minimal regex operations
+- **Code Quality**
+  - Added comprehensive TypeScript interfaces
+  - Enhanced error handling for new features
+  - Improved code documentation and comments
+  - Better separation of concerns in text analysis functions
+
 ## [1.0.1] - 2025-05-05
 ### Changed
 - **Code Quality Improvements**

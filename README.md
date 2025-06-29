@@ -1,21 +1,38 @@
 # Custom Selected Word Count for Obsidian
 
-A plugin for [Obsidian](https://obsidian.md) that provides advanced word counting features for selected text across all view modes. Goes beyond basic word counting with customizable path exclusion, UI integration options, and detailed history tracking.
+A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text analysis for selected text across all view modes. Features advanced word counting, character counting, and sentence counting with customizable path exclusion, modern UI design, and detailed history tracking.
 
 ## Features
 
-- Accurate word counting of selected text in all view modes (Source, Live Preview, and Reading)
-- Path and file extension exclusion to avoid counting URLs and file paths
+### Text Analysis
+- **Advanced word counting** of selected text in all view modes (Source, Live Preview, and Reading)
+- **Character counting** with configurable modes:
+  - All characters (including spaces and punctuation)
+  - All characters excluding spaces
+  - Letters only (alphabetic characters)
+- **Sentence counting** with sophisticated detection:
+  - Advanced boundary detection for periods, exclamation marks, and question marks
+  - Smart handling of abbreviations (Mr., Dr., Prof., etc.)
+  - Context-aware processing that excludes decimal numbers and file extensions
+  - Markdown-aware processing for code blocks and headers
+
+### User Interface
+- **Modern card-based modal design** with professional monochrome styling
+- Individual copy buttons for each metric (words, characters, sentences)
+- **Multi-metric history tracking** with comprehensive display
 - Command palette integration
 - Optional status bar integration showing live word count
 - Optional ribbon button for quick access
-- Word count history with timestamps
 - Customizable status bar label
-- **Advanced: Custom Word Detection Regex**
-  - Define your own regex pattern for word detection (for expert users)
-  - Interactive "Test Your Regex" area: enter sample text, see which fragments match, and view the resulting word count
-  - "Reset to Default Regex" and "Reset Test" buttons for easy experimentation
-  - Helper texts guide you through using and testing your custom pattern
+
+### Advanced Features
+- **Path and file extension exclusion** to avoid counting URLs and file paths
+- **Custom Word Detection Regex** (expert users):
+  - Define your own regex pattern for word detection
+  - Interactive "Test Your Regex" area with live preview
+  - "Reset to Default Regex" and "Reset Test" buttons for experimentation
+  - Helper texts guide you through safe usage
+- **Flexible configuration** for each analysis type with persistent settings
 
 ## Installation
 
@@ -28,11 +45,17 @@ A plugin for [Obsidian](https://obsidian.md) that provides advanced word countin
 ## Usage
 
 1. Select text in any view mode
-2. View the word count:
-  - Use the command palette and search for "Count Selected Words"
-  - Click the ribbon button (if enabled)
-  - Click the status bar count (if enabled)
-  - View the real time count in the status bar (if enabled)
+2. Access the text analysis:
+   - Use the command palette and search for "Count Selected Words"
+   - Click the ribbon button (if enabled)
+   - Click the status bar count (if enabled)
+   - View the real time word count in the status bar (if enabled)
+3. View comprehensive analysis in the modal:
+   - Word count with advanced detection
+   - Character count (if enabled in settings)
+   - Sentence count (if enabled in settings)
+   - Copy individual metrics to clipboard
+   - View historical analysis data
 
 ## Support My Work
 
@@ -64,6 +87,16 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
   - **Enable Live Updates**: Update the count automatically when text is selected
   - **Hide Core Word Count**: Hide Obsidian's built-in word count (CSS-based)
   - **Status Bar Label**: Customize the label shown before the count
+
+### Character Counting
+- **Show Character Count**: Display character count alongside word count in the modal
+- **Character Counting Mode**: Choose how characters are counted:
+  - All characters (including spaces)
+  - All characters (excluding spaces)
+  - Letters only
+
+### Sentence Counting
+- **Show Sentence Count**: Display sentence count alongside word count in the modal
 
 ### Path Exclusion
 - **Exclude Paths from Word Count**: Toggle path exclusion (**disabled by default**)
