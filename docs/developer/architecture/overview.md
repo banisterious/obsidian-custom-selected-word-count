@@ -2,14 +2,14 @@
 
 ## Executive Summary
 
-The Custom Selected Word Count (OCSWC) plugin is an Obsidian plugin that provides advanced word counting functionality for selected text. The plugin works across all view modes (Reading, Live Preview, and Edit) and offers customizable features including path exclusion, multiple UI integration options, and detailed history tracking.
+The Custom Selected Word Count (OCSWC) plugin is an Obsidian plugin that provides comprehensive text analysis functionality for selected text. The plugin works across all view modes (Reading, Live Preview, and Edit) and offers customizable features including word counting, character counting, sentence counting, path exclusion, multiple UI integration options, and detailed history tracking.
 
 ## Table of Contents
 
 - [1. System Overview](#1-system-overview)
 - [2. Core Architecture](#2-core-architecture)
 - [3. Functional Requirements](#3-functional-requirements)
-  - [3.1. Word Counting Logic](#31-word-counting-logic)
+  - [3.1. Text Analysis Logic](#31-text-analysis-logic)
   - [3.2. User Interface Components](#32-user-interface-components)
   - [3.3. Data Management](#33-data-management)
 - [4. Technical Requirements](#4-technical-requirements)
@@ -20,20 +20,23 @@ The Custom Selected Word Count (OCSWC) plugin is an Obsidian plugin that provide
 
 ### 1.1. Plugin Purpose
 
-The Custom Selected Word Count plugin extends Obsidian's built-in word counting capabilities by providing:
+The Custom Selected Word Count plugin extends Obsidian's built-in text analysis capabilities by providing:
 
 - **Advanced word recognition** that handles contractions, decimal numbers, hyphenated words, and underscore-separated terms
-- **Intelligent path exclusion** that filters out file paths and filenames from word counts
+- **Flexible character counting** with configurable modes (all characters, no spaces, letters only)
+- **Sophisticated sentence counting** with advanced detection for abbreviations, decimal numbers, and code blocks
+- **Intelligent path exclusion** that filters out file paths and filenames from text analysis
 - **Multiple access methods** including modal dialog, status bar integration, and ribbon button
-- **Persistent history tracking** of the last 50 word counts with clipboard integration
+- **Persistent history tracking** of the last 50 analyses with clipboard integration for all metrics
 - **Customizable regex patterns** for expert-level word detection customization
 
 ### 1.2. Target Users
 
-- **Academic writers** who need precise word counts excluding references and file paths
-- **Technical writers** who work with code snippets and file names in their documentation
-- **Content creators** who require detailed tracking of word count history across different sections
-- **Researchers** who need flexible word counting rules for various text types
+- **Academic writers** who need precise text analysis excluding references and file paths
+- **Technical writers** who work with code snippets and need character counts for formatting constraints
+- **Content creators** who require detailed tracking of multiple text metrics across different sections
+- **Researchers** who need flexible text analysis rules for various content types
+- **Authors** who need sentence counts for readability analysis and writing structure optimization
 
 ### 1.3. Integration Points
 
@@ -51,20 +54,24 @@ The plugin integrates with Obsidian through:
 
 ```
 OCSWC Plugin
-├── Word Count Engine
+├── Text Analysis Engine
 │   ├── Text Selection Handler
 │   ├── Word Recognition Algorithm
+│   ├── Character Counting System
+│   ├── Sentence Detection Algorithm
 │   └── Path Detection System
 ├── User Interface Layer
-│   ├── Modal Dialog Component
+│   ├── Modal Dialog Component (Card-based Design)
 │   ├── Status Bar Integration
 │   └── Ribbon Button Component
 ├── Data Management
 │   ├── Settings Manager
-│   ├── History Tracker
+│   ├── History Tracker (Multi-metric)
 │   └── Clipboard Integration
 └── Configuration System
     ├── Path Exclusion Rules
+    ├── Character Count Configuration
+    ├── Sentence Count Settings
     ├── UI Customization Options
     └── Advanced Regex Patterns
 ```
@@ -72,15 +79,18 @@ OCSWC Plugin
 ### 2.2. Data Flow
 
 1. **Text Selection** → User selects text in any Obsidian view mode
-2. **Processing** → Word Count Engine processes the selected text
+2. **Processing** → Text Analysis Engine processes the selected text
 3. **Filtering** → Path Detection System applies exclusion rules
-4. **Recognition** → Word Recognition Algorithm identifies countable words
-5. **Display** → Results shown through selected UI components
-6. **Storage** → Count added to history and settings updated
+4. **Analysis** → Multiple algorithms analyze the text:
+   - Word Recognition Algorithm identifies countable words
+   - Character Counting System processes characters based on mode
+   - Sentence Detection Algorithm identifies sentence boundaries
+5. **Display** → Results shown through selected UI components with card-based layout
+6. **Storage** → Multi-metric analysis added to history and settings updated
 
 ## 3. Functional Requirements
 
-### 3.1. Word Counting Logic
+### 3.1. Text Analysis Logic
 
 #### 3.1.1. Word Recognition Algorithm
 
@@ -128,25 +138,94 @@ For expert users, the plugin provides:
 - **Safety Features:** Reset to default options and clear test functionality
 - **Pattern Validation:** Real-time feedback on regex syntax and performance
 
+#### 3.1.4. Character Counting System
+
+The plugin provides flexible character counting with multiple modes:
+
+**Counting Modes:**
+- **All Characters:** Counts every character including spaces, punctuation, and symbols
+- **No Spaces:** Counts all characters except whitespace characters
+- **Letters Only:** Counts only alphabetic characters (A-Z, a-z)
+
+**Implementation Features:**
+- Mode selection through settings interface
+- Unicode-aware character processing
+- Efficient counting algorithms for large text selections
+- Real-time mode switching without requiring text reselection
+
+**Configuration Options:**
+- Toggle character count visibility in modal
+- Persistent mode selection across sessions
+- Character count display in history tracking
+- Copy to clipboard functionality for character counts
+
+#### 3.1.5. Sentence Detection Algorithm
+
+The plugin includes sophisticated sentence boundary detection:
+
+**Detection Capabilities:**
+- Standard sentence endings (periods, exclamation marks, question marks)
+- Multiple punctuation sequences (e.g., "?!", "...")
+- Quotation marks following punctuation
+- Advanced abbreviation handling
+
+**Exclusion Logic:**
+- Common abbreviations (Mr., Dr., Prof., etc.)
+- Decimal numbers (e.g., "3.14", "2.5")
+- File extensions (e.g., ".txt", ".md")
+- Code blocks and inline code snippets
+- Markdown headers and special formatting
+
+**Processing Steps:**
+1. Remove code blocks and inline code
+2. Filter out URLs and file paths
+3. Apply sentence boundary detection regex
+4. Validate against abbreviation patterns
+5. Exclude false positives (decimals, file extensions)
+6. Count valid sentence boundaries
+
+**Accuracy Features:**
+- Context-aware abbreviation detection
+- Handling of complex punctuation patterns
+- Markdown-aware processing
+- Minimum content validation for sentence qualification
+
 ### 3.2. User Interface Components
 
 #### 3.2.1. Modal Dialog
 
-**Primary Display:**
-- Current word count with format: "Selected word count: [integer]"
-- Copy to clipboard functionality
-- OK button to close
+**Modern Card-Based Design:**
+- Professional monochrome styling with Obsidian theme integration
+- Responsive grid layout for multiple metrics
+- Card-based presentation for each text analysis metric
+- Clean typography with proper visual hierarchy
 
-**History Section:**
-- Last 50 word counts with timestamps (optional)
-- Individual copy buttons for each historical count
-- Clear history functionality
-- Keyboard navigation support
+**Count Cards:**
+- **Word Count Card:** Advanced word detection with copy functionality
+- **Character Count Card:** Configurable mode display with subtitle explanation
+- **Sentence Count Card:** Sophisticated boundary detection with copy functionality
+- Individual copy buttons for each metric
+- Visual indicators for counting methodology
+
+**Enhanced History Section:**
+- Multi-metric history tracking (words, characters, sentences)
+- Individual copy buttons for each metric in history entries
+- Timestamp display options
+- Efficient scrollable list with visual enhancements
+- Clear history functionality with confirmation
+
+**Improved User Experience:**
+- Header with analysis icon and clear title
+- Contextual subtitles explaining counting methods
+- Unified action buttons with consistent styling
+- Enhanced visual feedback for user actions
 
 **Accessibility Features:**
 - Full keyboard navigation (tab, arrow keys, enter/space)
-- Screen reader compatibility
+- Screen reader compatibility with descriptive labels
 - Focus management and ARIA labels
+- High contrast design elements
+- Consistent button styling and interaction patterns
 
 #### 3.2.2. Status Bar Integration
 
@@ -182,6 +261,8 @@ For expert users, the plugin provides:
 
 **Settings Categories:**
 - UI element visibility toggles
+- Character count configuration and mode selection
+- Sentence count visibility settings
 - Path exclusion preferences
 - Custom labels and text
 - Advanced regex patterns
@@ -195,15 +276,18 @@ For expert users, the plugin provides:
 #### 3.3.2. History Management
 
 **History Features:**
-- Stores last 50 word counts
+- Stores last 50 text analyses with multiple metrics
+- Comprehensive tracking: words, characters, and sentences
 - Persistent across Obsidian restarts
 - Optional timestamp display
 - Global scope across all notes
 
 **Data Structure:**
-- Array of count objects with metadata
-- Efficient storage and retrieval
+- Array of analysis objects with comprehensive metadata
+- Multi-metric storage: `{ count, characterCount, sentenceCount, date }`
+- Efficient storage and retrieval for all metrics
 - Automatic cleanup of old entries
+- Backward compatibility with existing history data
 
 #### 3.3.3. Privacy and Security
 
@@ -305,6 +389,6 @@ For expert users, the plugin provides:
 
 ---
 
-*Last updated: June 7, 2025*
+*Last updated: June 29, 2025*
 
 *This document serves as the primary architectural reference for the Custom Selected Word Count plugin development and maintenance.* 
