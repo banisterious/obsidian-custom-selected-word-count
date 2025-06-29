@@ -34,3 +34,8 @@ docs/images/*.temp
 
 # Claude instructions file
 CLAUDE.md
+
+# UI mockups and temporary files
+docs/ui-mockups/
+*.html
+*.zip

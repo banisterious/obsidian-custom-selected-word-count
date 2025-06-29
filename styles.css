@@ -100,55 +100,319 @@ body {
     /*border-color: var(--interactive-accent);*/
 }
 
-/* Word Count Modal Styles */
-.word-count-modal {
-    padding: 20px;
+/* Word Count Modal Styles - Monochrome Design */
+
+.modal:has(.word-count-modal) {
+    width: 480px;
 }
 
-.word-count-modal .current-count {
-    margin-bottom: 20px;
-    padding: 10px;
-    font-size: 1.2em;
-    border-radius: 5px;
-    background-color: var(--background-secondary);
+.word-count-modal {
+    padding: 0;
+    background: var(--background-primary);
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+    max-width: 520px;
+    width: 100%;
+}
+
+.word-count-modal .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.word-count-modal .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.word-count-modal .modal-title .lucide {
+    color: var(--text-muted);
+    width: 18px;
+    height: 18px;
+}
+
+/* Lucide icon replacements using Unicode and symbols */
+.lucide::before {
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.lucide-bar-chart-3::before { content: "📊"; }
+.lucide-type::before { content: "Aa"; font-weight: bold; }
+.lucide-hash::before { content: "#"; font-weight: bold; }
+.lucide-list-ordered::before { content: "1."; font-weight: bold; }
+.lucide-copy::before { content: "⧉"; }
+.lucide-clock::before { content: "⏱"; }
+.lucide-trash-2::before { content: "🗑"; }
+.lucide-check::before { content: "✓"; }
+
+.word-count-modal .modal-content {
+    padding: 24px;
+}
+
+.word-count-modal .count-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.word-count-modal .count-card {
+    background: var(--background-primary);
+    border-radius: 6px;
+    padding: 16px;
+    border: 1px solid var(--background-modifier-border);
+    transition: all 0.2s ease;
+}
+
+.word-count-modal .count-card:hover {
+    border-color: var(--background-modifier-border-hover);
+    box-shadow: 0 2px 8px var(--background-modifier-box-shadow);
+}
+
+.word-count-modal .count-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.word-count-modal .count-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.word-count-modal .count-label .lucide {
+    width: 12px;
+    height: 12px;
+}
+
+.word-count-modal .count-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin: 8px 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.word-count-modal .count-subtitle {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: lowercase;
 }
 
 .word-count-modal .copy-button {
-    margin-left: 10px;
-    padding: 4px 8px;
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--background-modifier-border);
     border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 500;
     cursor: pointer;
-    color: var(--text-on-accent);
-    background-color: var(--interactive-accent);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .word-count-modal .copy-button:hover {
-    background-color: var(--interactive-accent-hover);
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.word-count-modal .copy-button .lucide {
+    width: 10px;
+    height: 10px;
 }
 
 .word-count-modal .history-section {
-    margin-top: 20px;
-    padding-top: 10px;
-    border-top: 1px solid var(--background-modifier-border);
+    margin-top: 16px;
 }
 
 .word-count-modal .history-header {
     display: flex;
-    margin-bottom: 10px;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.word-count-modal .history-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-normal);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.word-count-modal .history-title .lucide {
+    width: 12px;
+    height: 12px;
+    color: var(--text-muted);
+}
+
+.word-count-modal .clear-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.word-count-modal .clear-btn:hover {
+    background: var(--background-secondary);
+    border-color: var(--background-modifier-border-hover);
+}
+
+.word-count-modal .clear-btn .lucide {
+    width: 10px;
+    height: 10px;
+}
+
+.word-count-modal .history-list {
+    max-height: 180px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .word-count-modal .history-entry {
-    display: flex;
-    padding: 5px;
-    justify-content: space-between;
-    align-items: center;
+    background: var(--background-secondary);
     border-radius: 4px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
 }
 
 .word-count-modal .history-entry:hover {
-    background-color: var(--background-secondary);
+    background: var(--background-modifier-hover);
+}
+
+.word-count-modal .history-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.word-count-modal .history-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.word-count-modal .history-copy-btn {
+    background: transparent;
+    border: 1px solid var(--background-modifier-border);
+    color: var(--text-faint);
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-size: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.word-count-modal .history-copy-btn:hover {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.word-count-modal .history-copy-btn .lucide {
+    width: 8px;
+    height: 8px;
+}
+
+.word-count-modal .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--background-modifier-border);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.word-count-modal .close-btn {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.word-count-modal .close-btn:hover {
+    background: var(--interactive-accent-hover);
+}
+
+.word-count-modal .close-btn .lucide {
+    width: 12px;
+    height: 12px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .word-count-modal {
+        margin: 16px;
+        border-radius: 6px;
+    }
+    
+    .word-count-modal .modal-content {
+        padding: 16px;
+    }
+    
+    .word-count-modal .count-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .word-count-modal .count-value {
+        font-size: 20px;
+    }
 }
 
 /* Status Bar Styles */

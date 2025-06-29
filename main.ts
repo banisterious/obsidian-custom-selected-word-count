@@ -20,6 +20,12 @@ interface WordCountPluginSettings {
 	enableLiveCount: boolean;        // Toggle for live word count updates
 	statusBarLabel: string;          // Custom label for status bar
 	hideCoreWordCount: boolean;      // Toggle for hiding core word count
+	// Character count settings
+	showCharacterCount: boolean;     // Toggle for showing character count
+	characterCountMode: 'all' | 'no-spaces' | 'letters-only'; // Character counting mode
+	statusBarDisplayMode: 'words-only' | 'chars-only' | 'both'; // What to show in status bar
+	// Sentence count settings
+	showSentenceCount: boolean;      // Toggle for showing sentence count
 
 	enableDebugLogging: boolean;     // Toggle for debug logging
 	// Advanced Regex
@@ -47,6 +53,12 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	enableLiveCount: false,          // Live updates disabled by default
 	statusBarLabel: 'Selected: ',    // Default label
 	hideCoreWordCount: false,        // Don't hide core word count by default
+	// Character count defaults
+	showCharacterCount: false,       // Character count hidden by default
+	characterCountMode: 'all',       // Count all characters by default
+	statusBarDisplayMode: 'words-only', // Show only words in status bar by default
+	// Sentence count defaults
+	showSentenceCount: false,        // Sentence count hidden by default
 
 	enableDebugLogging: false,       // Debug logging disabled by default
 	// Advanced Regex
@@ -56,13 +68,179 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 
 interface WordCountHistoryEntry {
 	count: number;
+	characterCount?: number;
+	sentenceCount?: number;
 	date: Date;
+}
+
+interface CountResult {
+	words: number;
+	characters: number;
+	sentences: number;
 }
 
 function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...args: any[]) {
 	if (plugin.settings.enableDebugLogging) {
 		console.log(`[Word Count Debug] ${message}`, ...args);
 	}
+}
+
+/**
+ * Counts characters in the selected text according to the plugin specification.
+ * @param selectedText The text to analyze.
+ * @param mode Character counting mode: 'all', 'no-spaces', or 'letters-only'.
+ * @param settings The plugin settings.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The character count as an integer.
+ */
+function countSelectedCharacters(
+	selectedText: string,
+	mode: 'all' | 'no-spaces' | 'letters-only' = 'all',
+	settings?: WordCountPluginSettings,
+	plugin?: CustomSelectedWordCountPlugin
+): number {
+	if (!selectedText) return 0;
+	
+	if (plugin) debugLog(plugin, 'Counting characters in mode:', mode);
+	
+	let processedText = selectedText;
+	
+	switch (mode) {
+		case 'all':
+			// Count all characters including spaces and punctuation
+			return processedText.length;
+		case 'no-spaces':
+			// Count all characters except whitespace
+			processedText = processedText.replace(/\s/g, '');
+			return processedText.length;
+		case 'letters-only':
+			// Count only letters (alphabetic characters)
+			const matches = processedText.match(/[A-Za-z]/g);
+			return matches ? matches.length : 0;
+		default:
+			return processedText.length;
+	}
+}
+
+/**
+ * Counts sentences in the selected text using advanced sentence detection.
+ * @param selectedText The text to analyze.
+ * @param settings The plugin settings.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The sentence count as an integer.
+ */
+function countSelectedSentences(
+	selectedText: string,
+	settings?: WordCountPluginSettings,
+	plugin?: CustomSelectedWordCountPlugin
+): number {
+	if (!selectedText) return 0;
+	
+	if (plugin) debugLog(plugin, 'Counting sentences in text:', selectedText);
+	
+	// Remove code blocks and inline code first
+	let processedText = selectedText.replace(/```[\s\S]*?```/g, ' ');
+	processedText = processedText.replace(/`[^`]*`/g, ' ');
+	
+	// Remove markdown headers
+	processedText = processedText.replace(/^#{1,6}\s+.*$/gm, ' ');
+	
+	// Remove URLs and file paths to avoid counting periods in them
+	processedText = processedText.replace(/https?:\/\/[^\s]+/g, ' ');
+	processedText = processedText.replace(/[a-zA-Z]:[\\\/][^\s]+/g, ' ');
+	
+	// Advanced sentence boundary detection
+	// This regex handles:
+	// - Standard sentence endings: . ! ?
+	// - Abbreviations (Mr. Dr. etc.) - won't count as sentence endings
+	// - Decimal numbers (3.14) - won't count as sentence endings
+	// - Multiple punctuation (?! ... etc.)
+	// - Quotation marks after punctuation
+	const sentenceRegex = /[.!?]+(?:\s*["'])?(?:\s+|$)/g;
+	
+	// However, we need to exclude some false positives:
+	// - Decimal numbers (e.g., "3.14")
+	// - Common abbreviations
+	// - File extensions
+	// - Ellipsis as single sentence
+	
+	const sentences: string[] = [];
+	const parts = processedText.split(sentenceRegex);
+	
+	for (let i = 0; i < parts.length - 1; i++) {
+		const part = parts[i].trim();
+		if (!part) continue;
+		
+		// Skip if this looks like it ends with an abbreviation
+		if (/\b(?:Mr|Mrs|Dr|Prof|Sr|Jr|vs|etc|Inc|Ltd|Corp|Co|St|Ave|Blvd|Rd|Dept|Univ|govt|admin|info|tech|dev|org|com|net|edu|gov|mil|int|biz|name|pro|museum|coop|aero|jobs|mobi|travel|xxx|tel|cat|asia|post|xxx|tel|mil|museum|name|pro|travel|xxx|tel)\./i.test(part)) {
+			continue;
+		}
+		
+		// Skip if this looks like a decimal number
+		if (/\d+\.\d*$/.test(part.trim())) {
+			continue;
+		}
+		
+		// Skip if this looks like a file extension or version number
+		if (/\w+\.\w+$/.test(part.trim()) && part.trim().length < 20) {
+			continue;
+		}
+		
+		// Must have at least some letters to be a real sentence
+		if (/[a-zA-Z]/.test(part)) {
+			sentences.push(part);
+		}
+	}
+	
+	const count = Math.max(0, sentences.length);
+	
+	if (plugin) debugLog(plugin, 'Sentence count result:', count, 'Sentences found:', sentences);
+	
+	return count;
+}
+
+/**
+ * Counts both words and characters in the selected text according to the plugin specification.
+ * @param selectedText The text to analyze.
+ * @param excludedExtensions Array of file extensions to exclude (e.g., ['.jpg', '.png']).
+ * @param stripEmojis Whether to strip emojis from the count (default: true).
+ * @param settings The plugin settings.
+ * @returns Object containing both word and character counts.
+ */
+function countSelectedText(
+	selectedText: string,
+	excludedExtensions: string[] = [],
+	stripEmojis: boolean = true,
+	settings?: WordCountPluginSettings,
+	plugin?: CustomSelectedWordCountPlugin
+): CountResult {
+	if (!selectedText) return { words: 0, characters: 0, sentences: 0 };
+
+	// Count characters from the original text first
+	const characterCount = countSelectedCharacters(
+		selectedText, 
+		settings?.characterCountMode || 'all',
+		settings,
+		plugin
+	);
+
+	// Count sentences from the original text
+	const sentenceCount = countSelectedSentences(
+		selectedText,
+		settings,
+		plugin
+	);
+
+	// Now perform word counting (keeping existing logic)
+	const wordCount = countSelectedWords(
+		selectedText,
+		excludedExtensions,
+		stripEmojis,
+		settings,
+		plugin
+	);
+
+	return { words: wordCount, characters: characterCount, sentences: sentenceCount };
 }
 
 /**
@@ -481,21 +659,26 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 			this.log('Processing selection:', selectedText);
 			const exclusions = this.settings.exclusionList.split(',').map(e => e.trim()).filter(e => e);
-			const wordCount = countSelectedWords(selectedText, exclusions, true, this.settings, this);
+			const countResult = countSelectedText(selectedText, exclusions, true, this.settings, this);
 
 			// Update status bar if it exists
 			if (this.statusBarItem) {
-				this.updateStatusBar(wordCount);
+				this.updateStatusBar(countResult.words);
 			}
 
 			// Add to history
-			this.history.unshift({ count: wordCount, date: new Date() });
+			this.history.unshift({ 
+				count: countResult.words, 
+				characterCount: countResult.characters,
+				sentenceCount: countResult.sentences,
+				date: new Date() 
+			});
 			if (this.history.length > 50) this.history.pop();
 			await this.saveHistory();
 
-			this.log('Opening modal with count:', wordCount);
+			this.log('Opening modal with counts:', countResult);
 			// Open the modal
-			const modal = new WordCountModal(this.app, wordCount, this.history, this.settings.showDateTimeInHistory, this);
+			const modal = new WordCountModal(this.app, countResult, this.history, this.settings.showDateTimeInHistory, this);
 			modal.open();
 
 		} catch (error) {
@@ -635,13 +818,13 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 // Minimal modal for displaying word count and history
 class WordCountModal extends Modal {
-	wordCount: number;
+	countResult: CountResult;
 	history: WordCountHistoryEntry[];
 	showDateTime: boolean;
 	plugin: CustomSelectedWordCountPlugin | null;
-	constructor(app: App, wordCount: number, history: WordCountHistoryEntry[], showDateTime: boolean, plugin: CustomSelectedWordCountPlugin | null = null) {
+	constructor(app: App, countResult: CountResult, history: WordCountHistoryEntry[], showDateTime: boolean, plugin: CustomSelectedWordCountPlugin | null = null) {
 		super(app);
-		this.wordCount = wordCount;
+		this.countResult = countResult;
 		this.history = history;
 		this.showDateTime = showDateTime;
 		this.plugin = plugin;
@@ -652,31 +835,105 @@ class WordCountModal extends Modal {
 		contentEl.empty();
 		contentEl.addClass('word-count-modal');
 
-		// Current count section
-		const currentCountEl = contentEl.createDiv({cls: 'current-count'});
-		currentCountEl.createSpan({text: `Selected word count: ${this.wordCount}`});
+		// Modal header
+		const headerEl = contentEl.createDiv({cls: 'modal-header'});
+		const titleEl = headerEl.createEl('h2', {cls: 'modal-title'});
+		titleEl.createSpan({cls: 'lucide lucide-bar-chart-3'});
+		titleEl.appendText('Selection Analysis');
+
+		// Modal content
+		const modalContentEl = contentEl.createDiv({cls: 'modal-content'});
+
+		// Count cards section
+		const countCardsEl = modalContentEl.createDiv({cls: 'count-cards'});
 		
-		const copyButton = currentCountEl.createEl('button', {
-			cls: 'copy-button',
-			text: 'Copy'
+		// Word count card
+		const wordCountCard = countCardsEl.createDiv({cls: 'count-card'});
+		const wordCountHeader = wordCountCard.createDiv({cls: 'count-header'});
+		
+		const wordCountLabel = wordCountHeader.createDiv({cls: 'count-label'});
+		wordCountLabel.createSpan({cls: 'lucide lucide-type'});
+		wordCountLabel.appendText('Words');
+		
+		const copyWordButton = wordCountHeader.createEl('button', {
+			cls: 'copy-button'
 		});
+		copyWordButton.createSpan({cls: 'lucide lucide-copy'});
+		copyWordButton.appendText('Copy');
 		
-		copyButton.addEventListener('click', async () => {
-			await navigator.clipboard.writeText(this.wordCount.toString());
+		wordCountCard.createDiv({cls: 'count-value', text: this.countResult.words.toString()});
+		wordCountCard.createDiv({cls: 'count-subtitle', text: 'advanced word detection'});
+		
+		copyWordButton.addEventListener('click', async () => {
+			await navigator.clipboard.writeText(this.countResult.words.toString());
 			new Notice('Word count copied to clipboard');
 		});
 
+		// Character count card (if enabled in settings)
+		if (this.plugin?.settings.showCharacterCount) {
+			const charCountCard = countCardsEl.createDiv({cls: 'count-card'});
+			const charCountHeader = charCountCard.createDiv({cls: 'count-header'});
+			
+			const charCountLabel = charCountHeader.createDiv({cls: 'count-label'});
+			charCountLabel.createSpan({cls: 'lucide lucide-hash'});
+			charCountLabel.appendText('Characters');
+			
+			const copyCharButton = charCountHeader.createEl('button', {
+				cls: 'copy-button'
+			});
+			copyCharButton.createSpan({cls: 'lucide lucide-copy'});
+			copyCharButton.appendText('Copy');
+			
+			charCountCard.createDiv({cls: 'count-value', text: this.countResult.characters.toString()});
+			
+			const modeText = this.plugin.settings.characterCountMode === 'all' ? 'all characters (including spaces)' : 
+							this.plugin.settings.characterCountMode === 'no-spaces' ? 'all characters (excluding spaces)' : 'letters only';
+			charCountCard.createDiv({cls: 'count-subtitle', text: modeText});
+			
+			copyCharButton.addEventListener('click', async () => {
+				await navigator.clipboard.writeText(this.countResult.characters.toString());
+				new Notice('Character count copied to clipboard');
+			});
+		}
+
+		// Sentence count card (if enabled in settings)
+		if (this.plugin?.settings.showSentenceCount) {
+			const sentenceCountCard = countCardsEl.createDiv({cls: 'count-card'});
+			const sentenceCountHeader = sentenceCountCard.createDiv({cls: 'count-header'});
+			
+			const sentenceCountLabel = sentenceCountHeader.createDiv({cls: 'count-label'});
+			sentenceCountLabel.createSpan({cls: 'lucide lucide-list-ordered'});
+			sentenceCountLabel.appendText('Sentences');
+			
+			const copySentenceButton = sentenceCountHeader.createEl('button', {
+				cls: 'copy-button'
+			});
+			copySentenceButton.createSpan({cls: 'lucide lucide-copy'});
+			copySentenceButton.appendText('Copy');
+			
+			sentenceCountCard.createDiv({cls: 'count-value', text: this.countResult.sentences.toString()});
+			sentenceCountCard.createDiv({cls: 'count-subtitle', text: 'based on punctuation patterns'});
+			
+			copySentenceButton.addEventListener('click', async () => {
+				await navigator.clipboard.writeText(this.countResult.sentences.toString());
+				new Notice('Sentence count copied to clipboard');
+			});
+		}
+
 		// History section
 		if (this.history.length > 0) {
-			const historySection = contentEl.createDiv({cls: 'history-section'});
+			const historySection = modalContentEl.createDiv({cls: 'history-section'});
 			
 			const historyHeader = historySection.createDiv({cls: 'history-header'});
-			historyHeader.createSpan({text: 'History'});
+			const historyTitle = historyHeader.createEl('h3', {cls: 'history-title'});
+			historyTitle.createSpan({cls: 'lucide lucide-clock'});
+			historyTitle.appendText('Recent Counts');
 			
 			const clearButton = historyHeader.createEl('button', {
-				cls: 'copy-button',
-				text: 'Clear History'
+				cls: 'clear-btn'
 			});
+			clearButton.createSpan({cls: 'lucide lucide-trash-2'});
+			clearButton.appendText('Clear');
 			
 			clearButton.addEventListener('click', () => {
 				if (this.plugin) {
@@ -686,26 +943,85 @@ class WordCountModal extends Modal {
 				}
 			});
 
+			const historyList = historySection.createDiv({cls: 'history-list'});
+
 			this.history.slice().reverse().forEach(entry => {
-				const historyEntry = historySection.createDiv({cls: 'history-entry'});
+				const historyEntry = historyList.createDiv({cls: 'history-entry'});
 				
-				const countText = this.showDateTime 
+				let countText = this.showDateTime 
 					? `${entry.count} words (${entry.date.toLocaleString()})`
 					: `${entry.count} words`;
 				
-				historyEntry.createSpan({text: countText});
+				// Add character count if available and character count is enabled
+				if (entry.characterCount !== undefined && this.plugin?.settings.showCharacterCount) {
+					const charPart = this.showDateTime 
+						? `, ${entry.characterCount} chars`
+						: ` | ${entry.characterCount} chars`;
+					countText += charPart;
+				}
+
+				// Add sentence count if available and sentence count is enabled
+				if (entry.sentenceCount !== undefined && this.plugin?.settings.showSentenceCount) {
+					const sentencePart = this.showDateTime 
+						? `, ${entry.sentenceCount} sentences`
+						: ` | ${entry.sentenceCount} sentences`;
+					countText += sentencePart;
+				}
 				
-				const entryCopyButton = historyEntry.createEl('button', {
-					cls: 'copy-button',
-					text: 'Copy'
+				historyEntry.createDiv({cls: 'history-text', text: countText});
+				
+				const historyActions = historyEntry.createDiv({cls: 'history-actions'});
+				
+				const entryCopyButton = historyActions.createEl('button', {
+					cls: 'history-copy-btn'
 				});
+				entryCopyButton.createSpan({cls: 'lucide lucide-copy'});
+				entryCopyButton.appendText('Words');
 				
 				entryCopyButton.addEventListener('click', async () => {
 					await navigator.clipboard.writeText(entry.count.toString());
 					new Notice('Word count copied to clipboard');
 				});
+
+				// Add character count copy button if character count exists and is enabled
+				if (entry.characterCount !== undefined && this.plugin?.settings.showCharacterCount) {
+					const entryCharCopyButton = historyActions.createEl('button', {
+						cls: 'history-copy-btn'
+					});
+					entryCharCopyButton.createSpan({cls: 'lucide lucide-copy'});
+					entryCharCopyButton.appendText('Chars');
+					
+					entryCharCopyButton.addEventListener('click', async () => {
+						await navigator.clipboard.writeText(entry.characterCount!.toString());
+						new Notice('Character count copied to clipboard');
+					});
+				}
+
+				// Add sentence count copy button if sentence count exists and is enabled
+				if (entry.sentenceCount !== undefined && this.plugin?.settings.showSentenceCount) {
+					const entrySentenceCopyButton = historyActions.createEl('button', {
+						cls: 'history-copy-btn'
+					});
+					entrySentenceCopyButton.createSpan({cls: 'lucide lucide-copy'});
+					entrySentenceCopyButton.appendText('Sentences');
+					
+					entrySentenceCopyButton.addEventListener('click', async () => {
+						await navigator.clipboard.writeText(entry.sentenceCount!.toString());
+						new Notice('Sentence count copied to clipboard');
+					});
+				}
 			});
 		}
+
+		// Modal footer
+		const footerEl = contentEl.createDiv({cls: 'modal-footer'});
+		const closeButton = footerEl.createEl('button', {cls: 'close-btn'});
+		closeButton.createSpan({cls: 'lucide lucide-check'});
+		closeButton.appendText('Done');
+		
+		closeButton.addEventListener('click', () => {
+			this.close();
+		});
 	}
 
 	onClose() {
@@ -889,6 +1205,48 @@ class WordCountSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// Character Count Settings
+		new Setting(containerEl).setName('Character counting').setHeading();
+
+		const charCountContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(charCountContainer)
+			.setName('Show character count')
+			.setDesc('Display character count alongside word count in the modal.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.showCharacterCount)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.showCharacterCount = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		// Character counting mode
+		const charModeContainer = charCountContainer.createDiv({ cls: 'word-count-container-indented' });
+		new Setting(charModeContainer)
+			.setName('Character counting mode')
+			.setDesc('Choose how characters are counted. (Requires character count to be enabled)')
+			.addDropdown((dropdown: any) => dropdown
+				.addOption('all', 'All characters (including spaces)')
+				.addOption('no-spaces', 'All characters (excluding spaces)')
+				.addOption('letters-only', 'Letters only')
+				.setValue(this.plugin.settings.characterCountMode)
+				.onChange(async (value: 'all' | 'no-spaces' | 'letters-only') => {
+					this.plugin.settings.characterCountMode = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Sentence count settings
+		const sentenceCountContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(sentenceCountContainer)
+			.setName('Show sentence count')
+			.setDesc('Display sentence count alongside word count in the modal.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.showSentenceCount)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.showSentenceCount = value;
+					await this.plugin.saveSettings();
+				}));
+
 		// History & Debug Settings
 		new Setting(containerEl).setName('History & debug').setHeading();
 
@@ -1048,6 +1406,7 @@ class WordCountSettingTab extends PluginSettingTab {
 			hideWordCountContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
 			labelContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
 			pathSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludePaths);
+			charModeContainer.toggleClass('word-count-hidden', !this.plugin.settings.showCharacterCount);
 			testArea.toggleClass('word-count-hidden', !this.plugin.settings.enableAdvancedRegex);
 			exportLogsContainer.toggleClass('word-count-hidden', !this.plugin.settings.enableDebugLogging);
 		};
