@@ -26,6 +26,8 @@ interface WordCountPluginSettings {
 	statusBarDisplayMode: 'words-only' | 'chars-only' | 'both'; // What to show in status bar
 	// Sentence count settings
 	showSentenceCount: boolean;      // Toggle for showing sentence count
+	// Link exclusion settings
+	excludeNonVisibleLinkPortions: boolean; // Toggle for excluding non-visible portions of links
 	// Comment exclusion settings
 	excludeComments: boolean;        // Master toggle for comment exclusion
 	excludeObsidianComments: boolean; // Toggle for Obsidian comments (%% %%)
@@ -65,6 +67,8 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	statusBarDisplayMode: 'words-only', // Show only words in status bar by default
 	// Sentence count defaults
 	showSentenceCount: false,        // Sentence count hidden by default
+	// Link exclusion defaults
+	excludeNonVisibleLinkPortions: false, // Link exclusion disabled by default
 	// Comment exclusion defaults
 	excludeComments: false,          // Comment exclusion disabled by default
 	excludeObsidianComments: false,  // Obsidian comment exclusion disabled by default
@@ -156,6 +160,40 @@ function processHtmlComments(
 }
 
 /**
+ * Processes markdown links to exclude non-visible portions according to settings.
+ * @param text The text to process.
+ * @param excludeNonVisible Whether to exclude non-visible portions of links.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text with links handled according to settings.
+ */
+function processLinks(
+	text: string,
+	excludeNonVisible: boolean,
+	plugin?: CustomSelectedWordCountPlugin
+): string {
+	if (!excludeNonVisible) {
+		return text;
+	}
+
+	if (plugin) debugLog(plugin, 'Processing links, exclude non-visible portions:', excludeNonVisible);
+
+	let processedText = text;
+
+	// Process internal links with aliases: [[Note Name|Alias]] -> Alias
+	processedText = processedText.replace(/\[\[([^\|\]]+)\|([^\]]+)\]\]/g, '$2');
+	
+	// Process internal links without aliases: [[Note Name]] -> Note Name
+	processedText = processedText.replace(/\[\[([^\]]+)\]\]/g, '$1');
+	
+	// Process external links: [link text](url) -> link text
+	processedText = processedText.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+
+	if (plugin) debugLog(plugin, 'Text after link processing:', processedText);
+
+	return processedText;
+}
+
+/**
  * Counts characters in the selected text according to the plugin specification.
  * @param selectedText The text to analyze.
  * @param mode Character counting mode: 'all', 'no-spaces', or 'letters-only'.
@@ -198,6 +236,17 @@ function countSelectedCharacters(
 		}
 		
 		if (plugin) debugLog(plugin, 'Text after comment processing (char count):', processedText);
+	}
+	
+	// Process links after comments but before character counting
+	if (settings?.excludeNonVisibleLinkPortions) {
+		processedText = processLinks(
+			processedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after link processing (char count):', processedText);
 	}
 	
 	switch (mode) {
@@ -258,6 +307,17 @@ function countSelectedSentences(
 		}
 		
 		if (plugin) debugLog(plugin, 'Text after comment processing (sentence count):', processedText);
+	}
+	
+	// Process links after comments but before sentence counting
+	if (settings?.excludeNonVisibleLinkPortions) {
+		processedText = processLinks(
+			processedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after link processing (sentence count):', processedText);
 	}
 	
 	// Remove code blocks and inline code first
@@ -408,6 +468,17 @@ function countSelectedWords(
 		}
 		
 		if (plugin) debugLog(plugin, 'Text after comment processing:', selectedText);
+	}
+
+	// Process links after comments but before other text processing
+	if (settings?.excludeNonVisibleLinkPortions) {
+		selectedText = processLinks(
+			selectedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after link processing:', selectedText);
 	}
 
 	// Strip backticks before any other processing
@@ -1293,6 +1364,17 @@ class WordCountSettingTab extends PluginSettingTab {
 					this.plugin.settings.statusBarLabel = value;
 					await this.plugin.saveSettings();
 					this.plugin.setupStatusBar();
+				}));
+
+		// Link Exclusion Settings
+		new Setting(containerEl)
+			.setName('Exclude non-visible portions of links')
+			.setDesc('For [[Note Name|Alias]] links, only count "Alias". For [link text](url) links, only count "link text".')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeNonVisibleLinkPortions)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeNonVisibleLinkPortions = value;
+					await this.plugin.saveSettings();
 				}));
 
 		// Path Exclusion Settings

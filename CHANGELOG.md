@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 ### Added
+- **Link Processing System**
+  - Added intelligent processing for markdown links to improve word count accuracy
+  - Support for internal links with aliases: `[[Note Name|Alias]]` → counts only "Alias"
+  - Support for internal links without aliases: `[[Note Name]]` → counts "Note Name"
+  - Support for external links: `[link text](url)` → counts only "link text"
+  - Excludes non-visible portions like URLs, file paths, and technical markup
+  - Master toggle setting "Exclude non-visible portions of links" (**disabled by default**)
+  - Integrated into all counting modes (words, characters, sentences)
+  - Processing occurs after comment filtering but before path detection
 - **Comment Exclusion System**
   - Added support for excluding Obsidian comments (%% comment %%) from text analysis
   - Added support for excluding HTML comments (<!-- comment -->) from text analysis

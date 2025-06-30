@@ -544,6 +544,7 @@ body {
 .word-count-regex-warning {
     margin-top: 0.5em;
     color: var(--text-error);
+}
 
 /* Example Section Styles */
 .word-count-example-section {
@@ -736,7 +737,9 @@ body {
     }
 
     /* Path settings specific styling */
-    .word-count-path-settings, .word-count-char-settings, .word-count-comment-settings {
+    .word-count-path-settings,
+    .word-count-char-settings,
+    .word-count-comment-settings {
         margin-left: 5px;
         padding-left: 15px;
         border-left: 3px solid var(--background-modifier-border);

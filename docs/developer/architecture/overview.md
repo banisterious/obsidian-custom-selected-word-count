@@ -27,6 +27,7 @@ The Custom Selected Word Count plugin extends Obsidian's built-in text analysis 
 - **Sophisticated sentence counting** with advanced detection for abbreviations, decimal numbers, and code blocks
 - **Intelligent path exclusion** that filters out file paths and filenames from text analysis
 - **Comment exclusion** that filters out Obsidian comments (%% %%) and HTML comments (<!-- -->) with granular content control
+- **Link processing** that excludes non-visible portions of markdown links, counting only the visible text users see
 - **Multiple access methods** including modal dialog, status bar integration, and ribbon button
 - **Persistent history tracking** of the last 50 analyses with clipboard integration for all metrics
 - **Customizable regex patterns** for expert-level word detection customization
@@ -61,7 +62,8 @@ OCSWC Plugin
 │   ├── Character Counting System
 │   ├── Sentence Detection Algorithm
 │   ├── Path Detection System
-│   └── Comment Processing System
+│   ├── Comment Processing System
+│   └── Link Processing System
 ├── User Interface Layer
 │   ├── Modal Dialog Component (Card-based Design)
 │   ├── Status Bar Integration
@@ -73,6 +75,7 @@ OCSWC Plugin
 └── Configuration System
     ├── Path Exclusion Rules
     ├── Comment Exclusion Rules
+    ├── Link Processing Rules
     ├── Character Count Configuration
     ├── Sentence Count Settings
     ├── UI Customization Options
@@ -84,13 +87,14 @@ OCSWC Plugin
 1. **Text Selection** → User selects text in any Obsidian view mode
 2. **Processing** → Text Analysis Engine processes the selected text
 3. **Comment Filtering** → Comment Processing System applies comment exclusion rules
-4. **Path Filtering** → Path Detection System applies path exclusion rules
-5. **Analysis** → Multiple algorithms analyze the text:
+4. **Link Processing** → Link Processing System applies link exclusion rules
+5. **Path Filtering** → Path Detection System applies path exclusion rules
+6. **Analysis** → Multiple algorithms analyze the text:
    - Word Recognition Algorithm identifies countable words
    - Character Counting System processes characters based on mode
    - Sentence Detection Algorithm identifies sentence boundaries
-6. **Display** → Results shown through selected UI components with card-based layout
-7. **Storage** → Multi-metric analysis added to history and settings updated
+7. **Display** → Results shown through selected UI components with card-based layout
+8. **Storage** → Multi-metric analysis added to history and settings updated
 
 ## 3. Functional Requirements
 
@@ -158,7 +162,32 @@ The plugin includes sophisticated comment exclusion capabilities:
 - Separate content exclusion controls for each comment type
 - All settings default to OFF for backward compatibility
 
-#### 3.1.4. Advanced Regex Capabilities
+#### 3.1.4. Link Processing System
+
+The plugin includes intelligent link processing capabilities to improve word count accuracy:
+
+**Link Types Supported:**
+- **Internal Links with Aliases:** `[[Note Name|Alias]]` → counts only "Alias"
+- **Internal Links without Aliases:** `[[Note Name]]` → counts "Note Name"  
+- **External Links:** `[link text](url)` → counts only "link text"
+
+**Processing Logic:**
+- **Visible Text Focus:** Only counts the text that users actually see when reading
+- **Non-visible Exclusion:** Removes URLs, file paths, and technical markup from counting
+- **Seamless Integration:** Processes links after comments but before other text analysis
+
+**Implementation Details:**
+- **Regex Patterns:** Uses specific patterns for each link type with proper capture groups
+- **Processing Order:** Links are processed after comment filtering but before path detection
+- **Multi-analysis Support:** Applied consistently across word, character, and sentence counting
+- **Debug Logging:** Comprehensive logging for troubleshooting link processing
+
+**Configuration Options:**
+- **Master Toggle:** Single setting to enable/disable link processing
+- **Default State:** Feature disabled by default for backward compatibility
+- **User-Friendly Description:** Clear explanation of what gets counted vs. excluded
+
+#### 3.1.5. Advanced Regex Capabilities
 
 For expert users, the plugin provides:
 
@@ -167,7 +196,7 @@ For expert users, the plugin provides:
 - **Safety Features:** Reset to default options and clear test functionality
 - **Pattern Validation:** Real-time feedback on regex syntax and performance
 
-#### 3.1.4. Character Counting System
+#### 3.1.6. Character Counting System
 
 The plugin provides flexible character counting with multiple modes:
 
@@ -188,7 +217,7 @@ The plugin provides flexible character counting with multiple modes:
 - Character count display in history tracking
 - Copy to clipboard functionality for character counts
 
-#### 3.1.5. Sentence Detection Algorithm
+#### 3.1.7. Sentence Detection Algorithm
 
 The plugin includes sophisticated sentence boundary detection:
 
@@ -294,6 +323,7 @@ The plugin includes sophisticated sentence boundary detection:
 - Sentence count visibility settings
 - Path exclusion preferences
 - Comment exclusion configuration and type-specific settings
+- Link processing configuration
 - Custom labels and text
 - Advanced regex patterns
 - History display options

@@ -26,6 +26,10 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
 - Customizable status bar label
 
 ### Advanced Features
+- **Link processing** for accurate text analysis:
+  - For `[[Note Name|Alias]]` links, only count "Alias"
+  - For `[link text](url)` links, only count "link text"
+  - Excludes non-visible portions like URLs and file paths
 - **Comment exclusion** with granular control:
   - Support for Obsidian comments (%% comment %%) and HTML comments (<!-- comment -->)
   - Option to exclude comment markers only or entire comments including content
@@ -78,12 +82,21 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 
 ## Settings
 
-<p align="center">
-  <a href="docs/images/settings.png" target="_blank">
-    <img src="docs/images/settings.png" alt="Settings interface (click to enlarge)" width="400" style="cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"/>
+<table align="center">
+<tr>
+<td>
+  <a href="docs/images/settings-top.png" target="_blank">
+    <img src="docs/images/settings-top.png" alt="Settings interface - UI and Character options (click to enlarge)" width="400" style="cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"/>
   </a>
-</p>
-<p align="center"><em>Settings interface (click to enlarge)</em></p>
+</td>
+<td>
+  <a href="docs/images/settings-bottom.png" target="_blank">
+    <img src="docs/images/settings-bottom.png" alt="Settings interface - Link processing and exclusion options (click to enlarge)" width="400" style="cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"/>
+  </a>
+</td>
+</tr>
+</table>
+<p align="center"><em>Settings interface (click images to enlarge)</em></p>
 
 ### UI Elements
 - **Show Ribbon Button**: Add a button to the ribbon menu for quick access (requires restart)
@@ -101,6 +114,12 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 
 ### Sentence Counting
 - **Show Sentence Count**: Display sentence count alongside word count in the modal
+
+### Link Processing
+- **Exclude Non-visible Portions of Links**: Count only visible text in markdown links (**disabled by default**)
+  - For `[[Note Name|Alias]]` links, only count "Alias"
+  - For `[link text](url)` links, only count "link text"
+  - Excludes URLs, file paths, and technical markup from word counting
 
 ### Exclude Comments
 - **Exclude Comments from Text Analysis**: Master toggle for comment exclusion (**disabled by default**)
