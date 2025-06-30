@@ -39,3 +39,6 @@ CLAUDE.md
 docs/ui-mockups/
 *.html
 *.zip
+
+# Obsidian developer documentation (external reference)
+obsidian-developer-docs/

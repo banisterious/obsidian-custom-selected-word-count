@@ -42,8 +42,8 @@ body {
 .word-count-exclusion-section {
     margin-bottom: 1.5em;
     padding: 0.5em 1em;
-    background: var(--background-secondary-alt);
     border-radius: 6px;
+    background: var(--background-secondary-alt);
 }
 .word-count-regex-row {
     display: flex;
@@ -73,31 +73,19 @@ body {
   .word-count-buttons button, .word-count-advanced-section button {
     width: 100%;
     min-height: 44px;
-    font-size: 1.1em;
     margin-bottom: 0.5em;
+    font-size: 1.1em;
   }
   .word-count-label, .word-count-count {
     font-size: 1.2em;
   }
   .word-count-regex-sample {
-    font-size: 1.1em;
     min-height: 60px;
+    font-size: 1.1em;
   }
   .word-count-history-list {
     font-size: 1em;
   }
-}
-
-/* Settings styling - using our custom classes */
-.word-count-settings-group {
-    /*padding: 10px;
-    margin: 10px 0;
-    border-radius: 5px;
-    transition: border-color 0.15s ease;*/
-}
-
-.word-count-settings-group:hover {
-    /*border-color: var(--interactive-accent);*/
 }
 
 /* Word Count Modal Styles - Monochrome Design */
@@ -107,12 +95,12 @@ body {
 }
 
 .word-count-modal {
-    padding: 0;
-    background: var(--background-primary);
-    border-radius: 8px;
-    border: 1px solid var(--background-modifier-border);
     max-width: 520px;
     width: 100%;
+    padding: 0;
+    border-radius: 8px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
 }
 
 .word-count-modal .modal-header {
@@ -121,19 +109,19 @@ body {
 }
 
 .word-count-modal .modal-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-normal);
-    margin: 0;
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-normal);
 }
 
 .word-count-modal .modal-title .lucide {
-    color: var(--text-muted);
-    width: 18px;
     height: 18px;
+    width: 18px;
+    color: var(--text-muted);
 }
 
 /* Lucide icon replacements using Unicode and symbols */
@@ -167,11 +155,11 @@ body {
 }
 
 .word-count-modal .count-card {
-    background: var(--background-primary);
-    border-radius: 6px;
     padding: 16px;
     border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
     transition: all 0.2s ease;
+    background: var(--background-primary);
 }
 
 .word-count-modal .count-card:hover {
@@ -182,32 +170,32 @@ body {
 .word-count-modal .count-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     margin-bottom: 8px;
+    justify-content: space-between;
 }
 
 .word-count-modal .count-label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
     font-size: 11px;
     font-weight: 500;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    color: var(--text-muted);
 }
 
 .word-count-modal .count-label .lucide {
-    width: 12px;
     height: 12px;
+    width: 12px;
 }
 
 .word-count-modal .count-value {
+    margin: 8px 0;
     font-size: 24px;
     font-weight: 600;
-    color: var(--text-normal);
-    margin: 8px 0;
     font-variant-numeric: tabular-nums;
+    color: var(--text-normal);
 }
 
 .word-count-modal .count-subtitle {
@@ -217,31 +205,31 @@ body {
 }
 
 .word-count-modal .copy-button {
-    background: var(--background-secondary);
-    color: var(--text-muted);
+    display: flex;
+    gap: 4px;
+    padding: 4px 8px;
+    align-items: center;
     border: 1px solid var(--background-modifier-border);
     border-radius: 4px;
-    padding: 4px 8px;
+    transition: all 0.2s ease;
     font-size: 10px;
     font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    cursor: pointer;
+    color: var(--text-muted);
+    background: var(--background-secondary);
 }
 
 .word-count-modal .copy-button:hover {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
     border-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    background: var(--interactive-accent);
 }
 
 .word-count-modal .copy-button .lucide {
-    width: 10px;
     height: 10px;
+    width: 10px;
 }
 
 .word-count-modal .history-section {
@@ -250,53 +238,53 @@ body {
 
 .word-count-modal .history-header {
     display: flex;
+    margin-bottom: 12px;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
 }
 
 .word-count-modal .history-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-normal);
     display: flex;
     align-items: center;
     gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    color: var(--text-normal);
 }
 
 .word-count-modal .history-title .lucide {
-    width: 12px;
     height: 12px;
+    width: 12px;
     color: var(--text-muted);
 }
 
 .word-count-modal .clear-btn {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 10px;
-    font-weight: 500;
-    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
     transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    color: var(--text-muted);
+    background: transparent;
 }
 
 .word-count-modal .clear-btn:hover {
-    background: var(--background-secondary);
     border-color: var(--background-modifier-border-hover);
+    background: var(--background-secondary);
 }
 
 .word-count-modal .clear-btn .lucide {
-    width: 10px;
     height: 10px;
+    width: 10px;
 }
 
 .word-count-modal .history-list {
@@ -308,13 +296,13 @@ body {
 }
 
 .word-count-modal .history-entry {
-    background: var(--background-secondary);
-    border-radius: 4px;
-    padding: 10px;
     display: flex;
+    padding: 10px;
     align-items: center;
+    border-radius: 4px;
     justify-content: space-between;
     transition: all 0.2s ease;
+    background: var(--background-secondary);
 }
 
 .word-count-modal .history-entry:hover {
@@ -322,10 +310,10 @@ body {
 }
 
 .word-count-modal .history-text {
-    font-size: 11px;
-    color: var(--text-muted);
     flex: 1;
+    font-size: 11px;
     font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
 }
 
 .word-count-modal .history-actions {
@@ -334,55 +322,55 @@ body {
 }
 
 .word-count-modal .history-copy-btn {
-    background: transparent;
-    border: 1px solid var(--background-modifier-border);
-    color: var(--text-faint);
-    border-radius: 3px;
-    padding: 3px 6px;
-    font-size: 9px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 2px;
     transition: all 0.2s ease;
+    padding: 3px 6px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 3px;
+    font-size: 9px;
+    cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 500;
+    color: var(--text-faint);
+    background: transparent;
 }
 
 .word-count-modal .history-copy-btn:hover {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
     border-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    background: var(--interactive-accent);
 }
 
 .word-count-modal .history-copy-btn .lucide {
-    width: 8px;
     height: 8px;
+    width: 8px;
 }
 
 .word-count-modal .modal-footer {
+    display: flex;
     padding: 16px 24px;
     border-top: 1px solid var(--background-modifier-border);
-    display: flex;
     justify-content: flex-end;
 }
 
 .word-count-modal .close-btn {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
-    border: none;
-    border-radius: 4px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
     padding: 6px 12px;
-    font-size: 11px;
-    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    color: var(--text-on-accent);
+    background: var(--interactive-accent);
 }
 
 .word-count-modal .close-btn:hover {
@@ -390,8 +378,8 @@ body {
 }
 
 .word-count-modal .close-btn .lucide {
-    width: 12px;
     height: 12px;
+    width: 12px;
 }
 
 /* Responsive adjustments */
@@ -448,9 +436,9 @@ body {
 .word-count-settings .regex-test-results {
     margin-top: 10px;
     padding: 10px;
-    background-color: var(--background-primary);
     border: 1px solid var(--background-modifier-border);
     border-radius: 4px;
+    background-color: var(--background-primary);
 }
 
 /* Hide Core Word Count (when enabled) - temporarily disabled
@@ -494,14 +482,14 @@ body {
     align-self: flex-start;
     margin-top: 0.3em;
     margin-bottom: 0.8em;
-    font-size: 0.85em;
     padding: 2px 10px;
+    font-size: 0.85em;
 }
 
 .word-count-settings .reset-description {
+    margin-bottom: 0.8em;
     font-size: 0.8em;
     color: var(--text-muted);
-    margin-bottom: 0.8em;
 }
 
 .word-count-settings .test-area {
@@ -525,15 +513,15 @@ body {
 }
 
 .word-count-settings .word-count-display {
-    font-weight: bold;
     margin-bottom: 0.2em;
+    font-weight: bold;
 }
 
 .word-count-settings .test-reset-button {
     align-self: flex-start;
-    font-size: 0.85em;
-    padding: 2px 10px;
     margin-top: 0.3em;
+    padding: 2px 10px;
+    font-size: 0.85em;
 }
 
 /* Advanced Section Styles */
@@ -554,21 +542,20 @@ body {
 }
 
 .word-count-regex-warning {
-    color: var(--text-error);
     margin-top: 0.5em;
-}
+    color: var(--text-error);
 
 /* Example Section Styles */
 .word-count-example-section {
     margin-top: 1em;
     padding: 0.5em;
-    background: var(--background-secondary);
     border-radius: 4px;
+    background: var(--background-secondary);
 }
 
 .word-count-example-title {
-    font-weight: bold;
     margin-bottom: 0.5em;
+    font-weight: bold;
 }
 
 .word-count-example-list {
@@ -582,8 +569,8 @@ body {
 
 /* Path Settings Styles */
 .word-count-path-settings {
-    padding-left: 20px;
     margin-top: 1em;
+    padding-left: 20px;
 }
 
 /* Core Word Count Hide Style */
@@ -736,10 +723,10 @@ body {
 
     /* Exclusion info sections */
     .word-count-exclusion-info {
-        background-color: var(--background-secondary);
+        margin: 10px 0;
         padding: 10px;
         border-radius: 4px;
-        margin: 10px 0;
+        background-color: var(--background-secondary);
         
         .word-count-explanation {
             color: var(--text-muted);
@@ -749,10 +736,10 @@ body {
     }
 
     /* Path settings specific styling */
-    .word-count-path-settings {
-        border-left: 3px solid var(--background-modifier-border);
-        padding-left: 15px;
+    .word-count-path-settings, .word-count-char-settings, .word-count-comment-settings {
         margin-left: 5px;
+        padding-left: 15px;
+        border-left: 3px solid var(--background-modifier-border);
 
         /* Use :has() to style based on parent state */
         &:has(.setting-item:first-child .checkbox-container input:checked) {
@@ -783,8 +770,8 @@ body {
     .word-count-exclusion-section {
         margin-bottom: 1.5em;
         padding: 0.5em 1em;
-        background: var(--background-secondary-alt);
         border-radius: 6px;
+        background: var(--background-secondary-alt);
     }
 
     /* Visibility utility classes */
@@ -810,10 +797,10 @@ body {
     /* Status bar related settings grouping */
     .word-count-settings-group:has(.setting-item .setting-item-name[data-setting="status-bar"]) {
         .word-count-container-indented {
-            background: var(--background-secondary-alt);
-            border-radius: 4px;
-            padding: 15px 20px;
             margin-top: 8px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            background: var(--background-secondary-alt);
         }
     }
 

@@ -26,6 +26,10 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
 - Customizable status bar label
 
 ### Advanced Features
+- **Comment exclusion** with granular control:
+  - Support for Obsidian comments (%% comment %%) and HTML comments (<!-- comment -->)
+  - Option to exclude comment markers only or entire comments including content
+  - Individual toggles for each comment type with separate content controls
 - **Path and file extension exclusion** to avoid counting URLs and file paths
 - **Custom Word Detection Regex** (expert users):
   - Define your own regex pattern for word detection
@@ -97,6 +101,13 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 
 ### Sentence Counting
 - **Show Sentence Count**: Display sentence count alongside word count in the modal
+
+### Exclude Comments
+- **Exclude Comments from Text Analysis**: Master toggle for comment exclusion (**disabled by default**)
+  - **Exclude Obsidian Comments (%% %%)**: Skip Obsidian-style comments (**disabled by default**)
+    - **Exclude Obsidian Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
+  - **Exclude HTML Comments (<!-- -->)**: Skip HTML-style comments (**disabled by default**)
+    - **Exclude HTML Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
 
 ### Path Exclusion
 - **Exclude Paths from Word Count**: Toggle path exclusion (**disabled by default**)

@@ -26,6 +26,12 @@ interface WordCountPluginSettings {
 	statusBarDisplayMode: 'words-only' | 'chars-only' | 'both'; // What to show in status bar
 	// Sentence count settings
 	showSentenceCount: boolean;      // Toggle for showing sentence count
+	// Comment exclusion settings
+	excludeComments: boolean;        // Master toggle for comment exclusion
+	excludeObsidianComments: boolean; // Toggle for Obsidian comments (%% %%)
+	excludeObsidianCommentContent: boolean; // Toggle for Obsidian comment content
+	excludeHtmlComments: boolean;    // Toggle for HTML comments (<!-- -->)
+	excludeHtmlCommentContent: boolean; // Toggle for HTML comment content
 
 	enableDebugLogging: boolean;     // Toggle for debug logging
 	// Advanced Regex
@@ -59,6 +65,12 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	statusBarDisplayMode: 'words-only', // Show only words in status bar by default
 	// Sentence count defaults
 	showSentenceCount: false,        // Sentence count hidden by default
+	// Comment exclusion defaults
+	excludeComments: false,          // Comment exclusion disabled by default
+	excludeObsidianComments: false,  // Obsidian comment exclusion disabled by default
+	excludeObsidianCommentContent: false, // Obsidian comment content exclusion disabled by default
+	excludeHtmlComments: false,      // HTML comment exclusion disabled by default
+	excludeHtmlCommentContent: false, // HTML comment content exclusion disabled by default
 
 	enableDebugLogging: false,       // Debug logging disabled by default
 	// Advanced Regex
@@ -86,6 +98,64 @@ function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...arg
 }
 
 /**
+ * Processes Obsidian comments (%% %%) in text according to settings.
+ * @param text The text to process.
+ * @param excludeComments Whether to exclude comments at all.
+ * @param excludeContent Whether to exclude the content inside comments.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text with comments handled according to settings.
+ */
+function processObsidianComments(
+	text: string,
+	excludeComments: boolean,
+	excludeContent: boolean,
+	plugin?: CustomSelectedWordCountPlugin
+): string {
+	if (!excludeComments) {
+		return text;
+	}
+
+	if (plugin) debugLog(plugin, 'Processing Obsidian comments, exclude content:', excludeContent);
+
+	if (excludeContent) {
+		// Remove entire comments including content
+		return text.replace(/%%[\s\S]*?%%/g, '');
+	} else {
+		// Remove only comment markers, keep content
+		return text.replace(/%%/g, '');
+	}
+}
+
+/**
+ * Processes HTML comments (<!-- -->) in text according to settings.
+ * @param text The text to process.
+ * @param excludeComments Whether to exclude comments at all.
+ * @param excludeContent Whether to exclude the content inside comments.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text with comments handled according to settings.
+ */
+function processHtmlComments(
+	text: string,
+	excludeComments: boolean,
+	excludeContent: boolean,
+	plugin?: CustomSelectedWordCountPlugin
+): string {
+	if (!excludeComments) {
+		return text;
+	}
+
+	if (plugin) debugLog(plugin, 'Processing HTML comments, exclude content:', excludeContent);
+
+	if (excludeContent) {
+		// Remove entire comments including content
+		return text.replace(/<!--[\s\S]*?-->/g, '');
+	} else {
+		// Remove only comment markers, keep content
+		return text.replace(/<!--/g, '').replace(/-->/g, '');
+	}
+}
+
+/**
  * Counts characters in the selected text according to the plugin specification.
  * @param selectedText The text to analyze.
  * @param mode Character counting mode: 'all', 'no-spaces', or 'letters-only'.
@@ -104,6 +174,31 @@ function countSelectedCharacters(
 	if (plugin) debugLog(plugin, 'Counting characters in mode:', mode);
 	
 	let processedText = selectedText;
+	
+	// Process comments before character counting
+	if (settings?.excludeComments) {
+		// Process Obsidian comments
+		if (settings.excludeObsidianComments) {
+			processedText = processObsidianComments(
+				processedText,
+				true,
+				settings.excludeObsidianCommentContent,
+				plugin
+			);
+		}
+		
+		// Process HTML comments
+		if (settings.excludeHtmlComments) {
+			processedText = processHtmlComments(
+				processedText,
+				true,
+				settings.excludeHtmlCommentContent,
+				plugin
+			);
+		}
+		
+		if (plugin) debugLog(plugin, 'Text after comment processing (char count):', processedText);
+	}
 	
 	switch (mode) {
 		case 'all':
@@ -138,8 +233,35 @@ function countSelectedSentences(
 	
 	if (plugin) debugLog(plugin, 'Counting sentences in text:', selectedText);
 	
+	let processedText = selectedText;
+	
+	// Process comments before sentence counting
+	if (settings?.excludeComments) {
+		// Process Obsidian comments
+		if (settings.excludeObsidianComments) {
+			processedText = processObsidianComments(
+				processedText,
+				true,
+				settings.excludeObsidianCommentContent,
+				plugin
+			);
+		}
+		
+		// Process HTML comments
+		if (settings.excludeHtmlComments) {
+			processedText = processHtmlComments(
+				processedText,
+				true,
+				settings.excludeHtmlCommentContent,
+				plugin
+			);
+		}
+		
+		if (plugin) debugLog(plugin, 'Text after comment processing (sentence count):', processedText);
+	}
+	
 	// Remove code blocks and inline code first
-	let processedText = selectedText.replace(/```[\s\S]*?```/g, ' ');
+	processedText = processedText.replace(/```[\s\S]*?```/g, ' ');
 	processedText = processedText.replace(/`[^`]*`/g, ' ');
 	
 	// Remove markdown headers
@@ -262,6 +384,31 @@ function countSelectedWords(
 
 	// Debug logging
 	if (plugin) debugLog(plugin, 'Initial text:', selectedText);
+
+	// Process comments before any other text processing
+	if (settings?.excludeComments) {
+		// Process Obsidian comments
+		if (settings.excludeObsidianComments) {
+			selectedText = processObsidianComments(
+				selectedText,
+				true,
+				settings.excludeObsidianCommentContent,
+				plugin
+			);
+		}
+		
+		// Process HTML comments
+		if (settings.excludeHtmlComments) {
+			selectedText = processHtmlComments(
+				selectedText,
+				true,
+				settings.excludeHtmlCommentContent,
+				plugin
+			);
+		}
+		
+		if (plugin) debugLog(plugin, 'Text after comment processing:', selectedText);
+	}
 
 	// Strip backticks before any other processing
 	selectedText = selectedText.replace(/`/g, '');
@@ -1220,8 +1367,10 @@ class WordCountSettingTab extends PluginSettingTab {
 					this.updateSettingsUI();
 				}));
 
+		const charCountSettingsContainer = charCountContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-char-settings' });
+
 		// Character counting mode
-		const charModeContainer = charCountContainer.createDiv({ cls: 'word-count-container-indented' });
+		const charModeContainer = charCountSettingsContainer.createDiv({ cls: 'word-count-container-indented' });
 		new Setting(charModeContainer)
 			.setName('Character counting mode')
 			.setDesc('Choose how characters are counted. (Requires character count to be enabled)')
@@ -1244,6 +1393,69 @@ class WordCountSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.showSentenceCount)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.showSentenceCount = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Comment Exclusion Settings
+		new Setting(containerEl).setName('Exclude comments').setHeading();
+
+		const commentContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(commentContainer)
+			.setName('Exclude comments from text analysis')
+			.setDesc('When enabled, comments will be excluded from word, character, and sentence counts.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeComments)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeComments = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		const commentSettingsContainer = commentContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-comment-settings' });
+
+		// Obsidian comments section
+		new Setting(commentSettingsContainer)
+			.setName('Exclude Obsidian comments (%% %%)')
+			.setDesc('Exclude Obsidian-style comments from text analysis. (Requires comment exclusion to be enabled)')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeObsidianComments)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeObsidianComments = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		const obsidianCommentContentContainer = commentSettingsContainer.createDiv({ cls: 'word-count-container-indented' });
+		new Setting(obsidianCommentContentContainer)
+			.setName('Exclude Obsidian comment content')
+			.setDesc('When unchecked, only the comment markers (%% %%) are excluded, but the content inside is still counted. (Requires Obsidian comment exclusion to be enabled)')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeObsidianCommentContent)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeObsidianCommentContent = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// HTML comments section
+		new Setting(commentSettingsContainer)
+			.setName('Exclude HTML comments (<!-- -->)')
+			.setDesc('Exclude HTML-style comments from text analysis. (Requires comment exclusion to be enabled)')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeHtmlComments)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeHtmlComments = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		const htmlCommentContentContainer = commentSettingsContainer.createDiv({ cls: 'word-count-container-indented' });
+		new Setting(htmlCommentContentContainer)
+			.setName('Exclude HTML comment content')
+			.setDesc('When unchecked, only the comment markers (<!-- -->) are excluded, but the content inside is still counted. (Requires HTML comment exclusion to be enabled)')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeHtmlCommentContent)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeHtmlCommentContent = value;
 					await this.plugin.saveSettings();
 				}));
 
@@ -1406,7 +1618,11 @@ class WordCountSettingTab extends PluginSettingTab {
 			hideWordCountContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
 			labelContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
 			pathSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludePaths);
+			charCountSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.showCharacterCount);
 			charModeContainer.toggleClass('word-count-hidden', !this.plugin.settings.showCharacterCount);
+			commentSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeComments);
+			obsidianCommentContentContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeObsidianComments);
+			htmlCommentContentContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeHtmlComments);
 			testArea.toggleClass('word-count-hidden', !this.plugin.settings.enableAdvancedRegex);
 			exportLogsContainer.toggleClass('word-count-hidden', !this.plugin.settings.enableDebugLogging);
 		};
@@ -1433,7 +1649,9 @@ class WordCountSettingTab extends PluginSettingTab {
 					},
 					system: {
 						userAgent: navigator.userAgent,
-						platform: navigator.platform,
+						platform: navigator.userAgent.includes('Windows') ? 'Windows' : 
+								  navigator.userAgent.includes('Mac') ? 'macOS' : 
+								  navigator.userAgent.includes('Linux') ? 'Linux' : 'Unknown',
 						language: navigator.language
 					},
 					obsidian: {

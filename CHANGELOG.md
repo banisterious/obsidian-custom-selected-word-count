@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- **Comment Exclusion System**
+  - Added support for excluding Obsidian comments (%% comment %%) from text analysis
+  - Added support for excluding HTML comments (<!-- comment -->) from text analysis
+  - Granular control options for each comment type:
+    - Option to exclude comment markers only (keeping content for counting)
+    - Option to exclude entire comments including content
+  - Individual toggles for Obsidian and HTML comment types
+  - Master toggle for comment exclusion feature
+  - All comment exclusion settings default to OFF for backward compatibility
+  - Comment processing integrated into all counting modes (words, characters, sentences)
+
 ## [1.2.0] - 2025-06-29
 ### Added
 - **Character Counting System**

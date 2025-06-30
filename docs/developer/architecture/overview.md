@@ -26,6 +26,7 @@ The Custom Selected Word Count plugin extends Obsidian's built-in text analysis 
 - **Flexible character counting** with configurable modes (all characters, no spaces, letters only)
 - **Sophisticated sentence counting** with advanced detection for abbreviations, decimal numbers, and code blocks
 - **Intelligent path exclusion** that filters out file paths and filenames from text analysis
+- **Comment exclusion** that filters out Obsidian comments (%% %%) and HTML comments (<!-- -->) with granular content control
 - **Multiple access methods** including modal dialog, status bar integration, and ribbon button
 - **Persistent history tracking** of the last 50 analyses with clipboard integration for all metrics
 - **Customizable regex patterns** for expert-level word detection customization
@@ -59,7 +60,8 @@ OCSWC Plugin
 │   ├── Word Recognition Algorithm
 │   ├── Character Counting System
 │   ├── Sentence Detection Algorithm
-│   └── Path Detection System
+│   ├── Path Detection System
+│   └── Comment Processing System
 ├── User Interface Layer
 │   ├── Modal Dialog Component (Card-based Design)
 │   ├── Status Bar Integration
@@ -70,6 +72,7 @@ OCSWC Plugin
 │   └── Clipboard Integration
 └── Configuration System
     ├── Path Exclusion Rules
+    ├── Comment Exclusion Rules
     ├── Character Count Configuration
     ├── Sentence Count Settings
     ├── UI Customization Options
@@ -80,13 +83,14 @@ OCSWC Plugin
 
 1. **Text Selection** → User selects text in any Obsidian view mode
 2. **Processing** → Text Analysis Engine processes the selected text
-3. **Filtering** → Path Detection System applies exclusion rules
-4. **Analysis** → Multiple algorithms analyze the text:
+3. **Comment Filtering** → Comment Processing System applies comment exclusion rules
+4. **Path Filtering** → Path Detection System applies path exclusion rules
+5. **Analysis** → Multiple algorithms analyze the text:
    - Word Recognition Algorithm identifies countable words
    - Character Counting System processes characters based on mode
    - Sentence Detection Algorithm identifies sentence boundaries
-5. **Display** → Results shown through selected UI components with card-based layout
-6. **Storage** → Multi-metric analysis added to history and settings updated
+6. **Display** → Results shown through selected UI components with card-based layout
+7. **Storage** → Multi-metric analysis added to history and settings updated
 
 ## 3. Functional Requirements
 
@@ -129,7 +133,32 @@ The plugin includes advanced path detection capabilities:
 - Custom pattern support for user-defined formats
 - Examples provided in settings UI for clarity
 
-#### 3.1.3. Advanced Regex Capabilities
+#### 3.1.3. Comment Processing System
+
+The plugin includes sophisticated comment exclusion capabilities:
+
+**Comment Types Supported:**
+- **Obsidian Comments:** Native markdown comments (%% comment %%)
+- **HTML Comments:** Standard HTML comments (<!-- comment -->)
+
+**Processing Options:**
+- **Exclude Comment Markers Only:** Remove comment delimiters but count content inside
+- **Exclude Entire Comments:** Remove both comment markers and all content within
+- **Granular Control:** Separate settings for each comment type and content exclusion
+
+**Implementation Details:**
+- **Regex Patterns:** Uses `%%[\s\S]*?%%` for Obsidian comments and `<!--[\s\S]*?-->` for HTML comments
+- **Processing Order:** Comments are processed before all other text analysis operations
+- **Multi-line Support:** Handles both inline and block comments seamlessly
+- **Non-greedy Matching:** Ensures proper handling of nested or adjacent comments
+
+**Configuration Options:**
+- Master toggle for comment exclusion feature
+- Individual toggles for Obsidian and HTML comment types
+- Separate content exclusion controls for each comment type
+- All settings default to OFF for backward compatibility
+
+#### 3.1.4. Advanced Regex Capabilities
 
 For expert users, the plugin provides:
 
@@ -264,6 +293,7 @@ The plugin includes sophisticated sentence boundary detection:
 - Character count configuration and mode selection
 - Sentence count visibility settings
 - Path exclusion preferences
+- Comment exclusion configuration and type-specific settings
 - Custom labels and text
 - Advanced regex patterns
 - History display options
@@ -389,6 +419,6 @@ The plugin includes sophisticated sentence boundary detection:
 
 ---
 
-*Last updated: June 29, 2025*
+*Last updated: June 30, 2025*
 
 *This document serves as the primary architectural reference for the Custom Selected Word Count plugin development and maintenance.* 
