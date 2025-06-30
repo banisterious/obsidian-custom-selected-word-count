@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.3.0] - 2025-06-30
 ### Added
 - **Link Processing System**
   - Added intelligent processing for markdown links to improve word count accuracy
