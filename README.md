@@ -31,7 +31,7 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
   - For `[link text](url)` links, only count "link text"
   - Excludes non-visible portions like URLs and file paths
 - **Comment exclusion** with granular control:
-  - Support for Obsidian comments (%% comment %%) and HTML comments (<!-- comment -->)
+  - Support for Obsidian comments (`%% comment %%`) and HTML comments (`<!-- comment -->`)
   - Option to exclude comment markers only or entire comments including content
   - Individual toggles for each comment type with separate content controls
 - **Path and file extension exclusion** to avoid counting URLs and file paths
