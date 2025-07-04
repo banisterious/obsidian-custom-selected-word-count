@@ -1,6 +1,51 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Heading Exclusion System**
+  - Added comprehensive heading exclusion functionality with three modes:
+    - Exclude heading markers only (removes # symbols, keeps text)
+    - Exclude entire heading lines (removes complete headings)
+    - Exclude entire heading sections (removes heading + content until next heading)
+  - Section exclusion follows Obsidian's block system for proper markdown structure handling
+  - Mutual exclusivity logic ensures only one heading mode is active at a time
+  - Master toggle setting "Exclude headings from text analysis" (**disabled by default**)
+  - Integrated into all counting modes (words, characters, sentences)
+  - Support for both ATX (`# Heading`) and Setext (`Heading\n===`) heading formats
+- **Words and Phrases Exclusion System**
+  - Added flexible word exclusion via comma-separated list input
+    - Case-insensitive exact word matching (e.g., "Test" excludes "test" but not "testing")
+    - Validation for proper comma formatting
+    - Examples: "the, and, or, but" excludes common stop words
+  - Added phrase exclusion with right-click context menu integration
+    - Select text → Right-click → "Exclude phrase from word count"
+    - Context menu only appears when phrase exclusion feature is enabled
+    - Automatic duplicate detection prevents adding same phrase twice
+    - Auto-opens plugin settings after adding phrase for immediate management
+  - Added phrase management UI with individual controls
+    - List display showing all excluded phrases
+    - Edit button for each phrase with inline editing
+    - Delete button for individual phrase removal
+    - Empty state guidance for new users
+  - Master toggle setting "Exclude words and phrases from text analysis" (**disabled by default**)
+  - Integrated into all counting modes (words, characters, sentences)
+  - Advanced regex escaping for safe phrase matching
+
+### Technical
+- **Enhanced Text Processing Pipeline**
+  - Updated processing order: Comments → Links → Headings → Words/Phrases → Word counting
+  - All new exclusions work seamlessly with existing exclusions
+  - Optimized regex compilation and matching for performance
+  - Enhanced debug logging for troubleshooting new features
+- **Settings Architecture Improvements**
+  - Added conditional UI visibility for better user experience
+  - Implemented mutual exclusivity logic for heading options
+  - Enhanced settings validation and error handling
+  - Consistent styling patterns following existing design system
+- **Context Menu Integration**
+  - Proper Obsidian editor-menu event registration
+  - Conditional menu item display based on feature settings
+  - Comprehensive error handling for phrase addition workflow
 
 ## [1.3.0] - 2025-06-30
 ### Added

@@ -34,6 +34,14 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
   - Support for Obsidian comments (%% comment %%) and HTML comments (<!-- comment -->)
   - Option to exclude comment markers only or entire comments including content
   - Individual toggles for each comment type with separate content controls
+- **Heading exclusion** with flexible options:
+  - Exclude heading markers only (just the # symbols)
+  - Exclude entire heading lines (complete headings)
+  - Exclude entire heading sections (heading + content until next heading)
+- **Words and phrases exclusion** for precise filtering:
+  - Comma-separated word list with case-insensitive exact matching
+  - Right-click phrase selection with context menu integration
+  - Phrase management UI with edit/delete capabilities
 - **Path and file extension exclusion** to avoid counting URLs and file paths
 - **Custom Word Detection Regex** (expert users):
   - Define your own regex pattern for word detection
@@ -127,6 +135,22 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
     - **Exclude Obsidian Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
   - **Exclude HTML Comments (<!-- -->)**: Skip HTML-style comments (**disabled by default**)
     - **Exclude HTML Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
+
+### Exclude Headings
+- **Exclude Headings from Text Analysis**: Master toggle for heading exclusion (**disabled by default**)
+  - **Exclude Heading Markers Only**: Remove only the # symbols but count heading text (**disabled by default**)
+  - **Exclude Entire Heading Lines**: Remove complete heading lines including text (**disabled by default**)
+  - **Exclude Entire Heading Sections**: Remove heading + all content until next heading (**disabled by default**)
+  
+*Note: Only one heading exclusion mode can be active at a time for logical consistency.*
+
+### Exclude Words and Phrases
+- **Exclude Words and Phrases from Text Analysis**: Master toggle for custom word/phrase exclusion (**disabled by default**)
+  - **Excluded Words**: Comma-separated list (e.g., "the, and, or, but") with case-insensitive exact word matching
+  - **Excluded Phrases**: Managed via right-click context menu on selected text
+    - Select text → Right-click → "Exclude phrase from word count" (only available when feature enabled)
+    - Phrase management UI with individual edit/delete buttons for each phrase
+    - Automatic duplicate detection and settings navigation
 
 ### Path Exclusion
 - **Exclude Paths from Word Count**: Toggle path exclusion (**disabled by default**)

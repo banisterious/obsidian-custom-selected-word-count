@@ -739,7 +739,9 @@ body {
     /* Path settings specific styling */
     .word-count-path-settings,
     .word-count-char-settings,
-    .word-count-comment-settings {
+    .word-count-comment-settings,
+    .word-count-heading-settings,
+    .word-count-words-phrases-settings {
         margin-left: 5px;
         padding-left: 15px;
         border-left: 3px solid var(--background-modifier-border);

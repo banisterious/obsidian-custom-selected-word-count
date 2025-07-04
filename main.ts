@@ -34,6 +34,15 @@ interface WordCountPluginSettings {
 	excludeObsidianCommentContent: boolean; // Toggle for Obsidian comment content
 	excludeHtmlComments: boolean;    // Toggle for HTML comments (<!-- -->)
 	excludeHtmlCommentContent: boolean; // Toggle for HTML comment content
+	// Heading exclusion settings
+	excludeHeadings: boolean;        // Master toggle for heading exclusion
+	excludeHeadingMarkersOnly: boolean; // Toggle for excluding only markers
+	excludeEntireHeadingLines: boolean; // Toggle for excluding entire lines
+	excludeEntireHeadingSections: boolean; // Toggle for excluding entire sections
+	// Words and phrases exclusion settings
+	excludeWordsAndPhrases: boolean; // Master toggle for words/phrases exclusion
+	excludedWords: string;           // Comma-separated list of words
+	excludedPhrases: string[];       // Array of phrases to exclude
 
 	enableDebugLogging: boolean;     // Toggle for debug logging
 	// Advanced Regex
@@ -75,6 +84,15 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	excludeObsidianCommentContent: false, // Obsidian comment content exclusion disabled by default
 	excludeHtmlComments: false,      // HTML comment exclusion disabled by default
 	excludeHtmlCommentContent: false, // HTML comment content exclusion disabled by default
+	// Heading exclusion defaults
+	excludeHeadings: false,          // Heading exclusion disabled by default
+	excludeHeadingMarkersOnly: false, // Markers-only exclusion disabled by default
+	excludeEntireHeadingLines: false, // Entire lines exclusion disabled by default
+	excludeEntireHeadingSections: false, // Entire sections exclusion disabled by default
+	// Words and phrases exclusion defaults
+	excludeWordsAndPhrases: false,   // Words/phrases exclusion disabled by default
+	excludedWords: '',               // Empty word list by default
+	excludedPhrases: [],             // Empty phrase list by default
 
 	enableDebugLogging: false,       // Debug logging disabled by default
 	// Advanced Regex
@@ -194,6 +212,177 @@ function processLinks(
 }
 
 /**
+ * Processes headings in text according to settings.
+ * @param text The text to process.
+ * @param excludeHeadings Whether to exclude headings at all.
+ * @param excludeMarkersOnly Whether to exclude only the heading markers.
+ * @param excludeEntireLines Whether to exclude entire heading lines.
+ * @param excludeEntireSections Whether to exclude entire heading sections.
+ * @param plugin The plugin instance for debug logging.
+ * @param originalText The original full document text (for section processing).
+ * @returns The processed text with headings handled according to settings.
+ */
+function processHeadings(
+	text: string,
+	excludeHeadings: boolean,
+	excludeMarkersOnly: boolean,
+	excludeEntireLines: boolean,
+	excludeEntireSections: boolean,
+	plugin?: CustomSelectedWordCountPlugin,
+	originalText?: string
+): string {
+	if (!excludeHeadings) {
+		return text;
+	}
+
+	if (plugin) debugLog(plugin, 'Processing headings, markers only:', excludeMarkersOnly, 'entire lines:', excludeEntireLines, 'entire sections:', excludeEntireSections);
+
+	let processedText = text;
+
+	if (excludeEntireSections && originalText && plugin) {
+		// For section exclusion, we need to find heading sections within the selected text
+		// This is a simplified approach that works with ATX headings
+		processedText = processHeadingSections(text, originalText, plugin);
+	} else if (excludeEntireLines) {
+		// Remove entire heading lines (both ATX and Setext)
+		// ATX headings: # ## ### etc.
+		processedText = processedText.replace(/^#{1,6}\s+.*$/gm, '');
+		// Setext headings: underlined with = or -
+		processedText = processedText.replace(/^.+\n[=-]+\s*$/gm, '');
+	} else if (excludeMarkersOnly) {
+		// Remove only the heading markers, keep the text
+		// ATX headings: remove # symbols and leading space
+		processedText = processedText.replace(/^#{1,6}\s+/gm, '');
+		// Setext headings: remove the underline, keep the heading text
+		processedText = processedText.replace(/^(.+)\n[=-]+\s*$/gm, '$1');
+	}
+
+	if (plugin) debugLog(plugin, 'Text after heading processing:', processedText);
+
+	return processedText;
+}
+
+/**
+ * Processes heading sections by removing entire sections (heading + content until next heading).
+ * @param selectedText The selected text to process.
+ * @param originalText The full document text.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text with heading sections removed.
+ */
+function processHeadingSections(
+	selectedText: string,
+	originalText: string,
+	plugin: CustomSelectedWordCountPlugin
+): string {
+	if (plugin) debugLog(plugin, 'Processing heading sections for selected text');
+
+	// Split the selected text into lines for processing
+	const lines = selectedText.split('\n');
+	const processedLines: string[] = [];
+	let skipUntilNextHeading = false;
+	let currentHeadingLevel = 0;
+
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+
+		if (headingMatch) {
+			// This is a heading line
+			const headingLevel = headingMatch[1].length;
+			
+			if (!skipUntilNextHeading) {
+				// Start skipping from this heading
+				skipUntilNextHeading = true;
+				currentHeadingLevel = headingLevel;
+				if (plugin) debugLog(plugin, `Starting to skip heading section at level ${headingLevel}:`, line);
+				continue; // Skip this heading line
+			} else {
+				// We're already skipping, check if this is a same or higher level heading
+				if (headingLevel <= currentHeadingLevel) {
+					// This is a same or higher level heading, stop skipping and start new section
+					skipUntilNextHeading = true;
+					currentHeadingLevel = headingLevel;
+					if (plugin) debugLog(plugin, `Starting new heading section at level ${headingLevel}:`, line);
+					continue; // Skip this heading line too
+				} else {
+					// This is a lower level heading (subsection), continue skipping
+					if (plugin) debugLog(plugin, `Skipping subsection heading at level ${headingLevel}:`, line);
+					continue;
+				}
+			}
+		} else {
+			// This is not a heading line
+			if (skipUntilNextHeading) {
+				// We're skipping content under a heading
+				if (plugin) debugLog(plugin, 'Skipping content line:', line);
+				continue;
+			} else {
+				// Keep this line (it's before any heading)
+				processedLines.push(line);
+			}
+		}
+	}
+
+	const result = processedLines.join('\n');
+	if (plugin) debugLog(plugin, 'Text after heading sections processing:', result);
+	return result;
+}
+
+/**
+ * Processes words and phrases exclusion in text according to settings.
+ * @param text The text to process.
+ * @param excludeWordsAndPhrases Whether to exclude words and phrases at all.
+ * @param excludedWords Comma-separated list of words to exclude.
+ * @param excludedPhrases Array of phrases to exclude.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text with words and phrases excluded according to settings.
+ */
+function processWordsAndPhrases(
+	text: string,
+	excludeWordsAndPhrases: boolean,
+	excludedWords: string,
+	excludedPhrases: string[],
+	plugin?: CustomSelectedWordCountPlugin
+): string {
+	if (!excludeWordsAndPhrases) {
+		return text;
+	}
+
+	if (plugin) debugLog(plugin, 'Processing words and phrases exclusion');
+
+	let processedText = text;
+
+	// Process excluded phrases first (case-insensitive)
+	if (excludedPhrases && excludedPhrases.length > 0) {
+		excludedPhrases.forEach(phrase => {
+			if (phrase.trim()) {
+				// Create case-insensitive regex for the phrase
+				const phraseRegex = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+				processedText = processedText.replace(phraseRegex, '');
+				if (plugin) debugLog(plugin, 'Excluded phrase:', phrase);
+			}
+		});
+	}
+
+	// Process excluded words (case-insensitive, whole words only)
+	if (excludedWords && excludedWords.trim()) {
+		const words = excludedWords.split(',').map(w => w.trim()).filter(w => w);
+		words.forEach(word => {
+			if (word) {
+				// Create case-insensitive regex for whole word matching
+				const wordRegex = new RegExp('\\b' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+				processedText = processedText.replace(wordRegex, '');
+				if (plugin) debugLog(plugin, 'Excluded word:', word);
+			}
+		});
+	}
+
+	if (plugin) debugLog(plugin, 'Text after words and phrases processing:', processedText);
+
+	return processedText;
+}
+
+/**
  * Counts characters in the selected text according to the plugin specification.
  * @param selectedText The text to analyze.
  * @param mode Character counting mode: 'all', 'no-spaces', or 'letters-only'.
@@ -247,6 +436,33 @@ function countSelectedCharacters(
 		);
 		
 		if (plugin) debugLog(plugin, 'Text after link processing (char count):', processedText);
+	}
+	
+	// Process headings after links but before character counting
+	if (settings?.excludeHeadings) {
+		processedText = processHeadings(
+			processedText,
+			true,
+			settings.excludeHeadingMarkersOnly,
+			settings.excludeEntireHeadingLines,
+			settings.excludeEntireHeadingSections,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after heading processing (char count):', processedText);
+	}
+	
+	// Process words and phrases after headings but before character counting
+	if (settings?.excludeWordsAndPhrases) {
+		processedText = processWordsAndPhrases(
+			processedText,
+			true,
+			settings.excludedWords,
+			settings.excludedPhrases,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after words/phrases processing (char count):', processedText);
 	}
 	
 	switch (mode) {
@@ -318,6 +534,33 @@ function countSelectedSentences(
 		);
 		
 		if (plugin) debugLog(plugin, 'Text after link processing (sentence count):', processedText);
+	}
+	
+	// Process headings after links but before sentence counting
+	if (settings?.excludeHeadings) {
+		processedText = processHeadings(
+			processedText,
+			true,
+			settings.excludeHeadingMarkersOnly,
+			settings.excludeEntireHeadingLines,
+			settings.excludeEntireHeadingSections,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after heading processing (sentence count):', processedText);
+	}
+	
+	// Process words and phrases after headings but before sentence counting
+	if (settings?.excludeWordsAndPhrases) {
+		processedText = processWordsAndPhrases(
+			processedText,
+			true,
+			settings.excludedWords,
+			settings.excludedPhrases,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after words/phrases processing (sentence count):', processedText);
 	}
 	
 	// Remove code blocks and inline code first
@@ -479,6 +722,33 @@ function countSelectedWords(
 		);
 		
 		if (plugin) debugLog(plugin, 'Text after link processing:', selectedText);
+	}
+	
+	// Process headings after links but before other text processing
+	if (settings?.excludeHeadings) {
+		selectedText = processHeadings(
+			selectedText,
+			true,
+			settings.excludeHeadingMarkersOnly,
+			settings.excludeEntireHeadingLines,
+			settings.excludeEntireHeadingSections,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after heading processing:', selectedText);
+	}
+	
+	// Process words and phrases after headings but before other text processing
+	if (settings?.excludeWordsAndPhrases) {
+		selectedText = processWordsAndPhrases(
+			selectedText,
+			true,
+			settings.excludedWords,
+			settings.excludedPhrases,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after words/phrases processing:', selectedText);
 	}
 
 	// Strip backticks before any other processing
@@ -729,6 +999,28 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				await this.handleWordCount();
 			}
 		});
+
+		// Register context menu for phrase exclusion
+		this.registerEvent(
+			this.app.workspace.on('editor-menu', (menu, editor, view) => {
+				// Only show the menu item if phrase exclusion is enabled
+				if (!this.settings.excludeWordsAndPhrases) {
+					return;
+				}
+
+				const selectedText = editor.getSelection();
+				if (selectedText && selectedText.trim()) {
+					menu.addItem((item) => {
+						item
+							.setTitle('Exclude phrase from word count')
+							.setIcon('minus-circle')
+							.onClick(async () => {
+								await this.addExcludedPhrase(selectedText.trim());
+							});
+					});
+				}
+			})
+		);
 
 		// Register the settings tab
 		this.addSettingTab(new WordCountSettingTab(this.app, this));
@@ -1000,6 +1292,42 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			if (styleElement) {
 				styleElement.remove();
 			}
+		}
+	}
+
+	async addExcludedPhrase(phrase: string) {
+		try {
+			// Trim the phrase and check if it's not empty
+			const trimmedPhrase = phrase.trim();
+			if (!trimmedPhrase) {
+				new Notice('Cannot exclude empty phrase');
+				return;
+			}
+
+			// Check if phrase already exists (case-insensitive)
+			const existsAlready = this.settings.excludedPhrases.some(
+				existingPhrase => existingPhrase.toLowerCase() === trimmedPhrase.toLowerCase()
+			);
+
+			if (existsAlready) {
+				new Notice(`Phrase "${trimmedPhrase}" is already excluded`);
+				return;
+			}
+
+			// Add the phrase to the exclusion list
+			this.settings.excludedPhrases.push(trimmedPhrase);
+			await this.saveSettings();
+
+			// Show success notice
+			new Notice(`Added "${trimmedPhrase}" to exclusion list`);
+
+			// Open plugin settings using Obsidian API
+			(this.app as any).setting.open();
+			(this.app as any).setting.openTabById(this.manifest.id);
+
+		} catch (error) {
+			console.error('Error adding excluded phrase:', error);
+			new Notice('Failed to add phrase to exclusion list');
 		}
 	}
 
@@ -1541,6 +1869,168 @@ class WordCountSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		// Heading Exclusion Settings
+		new Setting(containerEl).setName('Exclude headings').setHeading();
+
+		const headingContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(headingContainer)
+			.setName('Exclude headings from text analysis')
+			.setDesc('When enabled, markdown headings will be excluded from word, character, and sentence counts.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeHeadings)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeHeadings = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		const headingSettingsContainer = headingContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-heading-settings' });
+
+		// Heading exclusion options
+		new Setting(headingSettingsContainer)
+			.setName('Exclude heading markers only')
+			.setDesc('Exclude only the # symbols but count the heading text. (Requires heading exclusion to be enabled)')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeHeadingMarkersOnly)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeHeadingMarkersOnly = value;
+					if (value) {
+						// If markers only is enabled, disable other options
+						this.plugin.settings.excludeEntireHeadingLines = false;
+						this.plugin.settings.excludeEntireHeadingSections = false;
+					}
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		new Setting(headingSettingsContainer)
+			.setName('Exclude entire heading lines')
+			.setDesc('Exclude complete heading lines including the text. (Requires heading exclusion to be enabled)')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeEntireHeadingLines)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeEntireHeadingLines = value;
+					if (value) {
+						// If entire lines is enabled, disable other options
+						this.plugin.settings.excludeHeadingMarkersOnly = false;
+						this.plugin.settings.excludeEntireHeadingSections = false;
+					}
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		new Setting(headingSettingsContainer)
+			.setName('Exclude entire heading sections')
+			.setDesc('Exclude complete heading sections (heading + all content until the next heading). (Requires heading exclusion to be enabled)')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeEntireHeadingSections)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeEntireHeadingSections = value;
+					if (value) {
+						// If entire sections is enabled, disable other options
+						this.plugin.settings.excludeHeadingMarkersOnly = false;
+						this.plugin.settings.excludeEntireHeadingLines = false;
+					}
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		// Words and Phrases Exclusion Settings
+		new Setting(containerEl).setName('Exclude words and phrases').setHeading();
+
+		const wordsAndPhrasesContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(wordsAndPhrasesContainer)
+			.setName('Exclude words and phrases from text analysis')
+			.setDesc('When enabled, specific words and phrases will be excluded from word, character, and sentence counts.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeWordsAndPhrases)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeWordsAndPhrases = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		const wordsAndPhrasesSettingsContainer = wordsAndPhrasesContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-words-phrases-settings' });
+
+		// Words exclusion subsection
+		const wordsSubsection = wordsAndPhrasesSettingsContainer.createDiv({ cls: 'word-count-subsection' });
+		new Setting(wordsSubsection)
+			.setName('Excluded words')
+			.setDesc('Comma-separated list of words to exclude (case-insensitive, exact matches only). (Requires words/phrases exclusion to be enabled)')
+			.addText((text: any) => text
+				.setPlaceholder('the, and, or, but')
+				.setValue(this.plugin.settings.excludedWords)
+				.onChange(async (value: string) => {
+					this.plugin.settings.excludedWords = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Phrases exclusion subsection
+		const phrasesSubsection = wordsAndPhrasesSettingsContainer.createDiv({ cls: 'word-count-subsection' });
+		const phrasesHeader = phrasesSubsection.createDiv({ cls: 'word-count-subsection-header' });
+		phrasesHeader.createEl('strong', { text: 'Excluded phrases' });
+		phrasesHeader.createEl('p', { 
+			text: 'Select text in any note and right-click to add phrases. (Requires words/phrases exclusion to be enabled)',
+			cls: 'word-count-subsection-desc'
+		});
+
+		const phrasesList = phrasesSubsection.createDiv({ cls: 'word-count-phrases-list' });
+
+		// Function to render phrases list
+		const renderPhrasesList = () => {
+			phrasesList.empty();
+			
+			if (!this.plugin.settings.excludedPhrases || this.plugin.settings.excludedPhrases.length === 0) {
+				phrasesList.createDiv({ 
+					text: 'No excluded phrases. Right-click selected text to add phrases.',
+					cls: 'word-count-empty-phrases'
+				});
+				return;
+			}
+
+			this.plugin.settings.excludedPhrases.forEach((phrase, index) => {
+				const phraseItem = phrasesList.createDiv({ cls: 'word-count-phrase-item' });
+				
+				const phraseText = phraseItem.createSpan({ 
+					text: phrase,
+					cls: 'word-count-phrase-text'
+				});
+
+				const phraseActions = phraseItem.createDiv({ cls: 'word-count-phrase-actions' });
+				
+				const editButton = phraseActions.createEl('button', {
+					text: 'Edit',
+					cls: 'word-count-phrase-btn word-count-phrase-edit'
+				});
+				
+				const deleteButton = phraseActions.createEl('button', {
+					text: 'Delete',
+					cls: 'word-count-phrase-btn word-count-phrase-delete'
+				});
+
+				editButton.onclick = async () => {
+					const newPhrase = prompt('Edit phrase:', phrase);
+					if (newPhrase !== null && newPhrase.trim() !== '') {
+						this.plugin.settings.excludedPhrases[index] = newPhrase.trim();
+						await this.plugin.saveSettings();
+						renderPhrasesList();
+					}
+				};
+
+				deleteButton.onclick = async () => {
+					this.plugin.settings.excludedPhrases.splice(index, 1);
+					await this.plugin.saveSettings();
+					renderPhrasesList();
+				};
+			});
+		};
+
+		// Initial render
+		renderPhrasesList();
+
+		// Store reference for updates
+		(this as any).renderPhrasesList = renderPhrasesList;
+
 		// History & Debug Settings
 		new Setting(containerEl).setName('History & debug').setHeading();
 
@@ -1705,6 +2195,8 @@ class WordCountSettingTab extends PluginSettingTab {
 			commentSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeComments);
 			obsidianCommentContentContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeObsidianComments);
 			htmlCommentContentContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeHtmlComments);
+			headingSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeHeadings);
+			wordsAndPhrasesSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeWordsAndPhrases);
 			testArea.toggleClass('word-count-hidden', !this.plugin.settings.enableAdvancedRegex);
 			exportLogsContainer.toggleClass('word-count-hidden', !this.plugin.settings.enableDebugLogging);
 		};

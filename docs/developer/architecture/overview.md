@@ -28,6 +28,8 @@ The Custom Selected Word Count plugin extends Obsidian's built-in text analysis 
 - **Intelligent path exclusion** that filters out file paths and filenames from text analysis
 - **Comment exclusion** that filters out Obsidian comments (%% %%) and HTML comments (<!-- -->) with granular content control
 - **Link processing** that excludes non-visible portions of markdown links, counting only the visible text users see
+- **Heading exclusion** with three flexible modes: markers only, entire lines, or complete sections following Obsidian's block system
+- **Words and phrases exclusion** with comma-separated word lists and right-click phrase management for precise content filtering
 - **Multiple access methods** including modal dialog, status bar integration, and ribbon button
 - **Persistent history tracking** of the last 50 analyses with clipboard integration for all metrics
 - **Customizable regex patterns** for expert-level word detection customization
@@ -63,7 +65,9 @@ OCSWC Plugin
 │   ├── Sentence Detection Algorithm
 │   ├── Path Detection System
 │   ├── Comment Processing System
-│   └── Link Processing System
+│   ├── Link Processing System
+│   ├── Heading Processing System
+│   └── Words/Phrases Processing System
 ├── User Interface Layer
 │   ├── Modal Dialog Component (Card-based Design)
 │   ├── Status Bar Integration
@@ -76,6 +80,8 @@ OCSWC Plugin
     ├── Path Exclusion Rules
     ├── Comment Exclusion Rules
     ├── Link Processing Rules
+    ├── Heading Exclusion Rules
+    ├── Words/Phrases Exclusion Rules
     ├── Character Count Configuration
     ├── Sentence Count Settings
     ├── UI Customization Options
@@ -88,13 +94,15 @@ OCSWC Plugin
 2. **Processing** → Text Analysis Engine processes the selected text
 3. **Comment Filtering** → Comment Processing System applies comment exclusion rules
 4. **Link Processing** → Link Processing System applies link exclusion rules
-5. **Path Filtering** → Path Detection System applies path exclusion rules
-6. **Analysis** → Multiple algorithms analyze the text:
+5. **Heading Processing** → Heading Processing System applies heading exclusion rules
+6. **Words/Phrases Filtering** → Words/Phrases Processing System applies custom exclusion rules
+7. **Path Filtering** → Path Detection System applies path exclusion rules
+8. **Analysis** → Multiple algorithms analyze the text:
    - Word Recognition Algorithm identifies countable words
    - Character Counting System processes characters based on mode
    - Sentence Detection Algorithm identifies sentence boundaries
-7. **Display** → Results shown through selected UI components with card-based layout
-8. **Storage** → Multi-metric analysis added to history and settings updated
+9. **Display** → Results shown through selected UI components with card-based layout
+10. **Storage** → Multi-metric analysis added to history and settings updated
 
 ## 3. Functional Requirements
 
@@ -187,7 +195,74 @@ The plugin includes intelligent link processing capabilities to improve word cou
 - **Default State:** Feature disabled by default for backward compatibility
 - **User-Friendly Description:** Clear explanation of what gets counted vs. excluded
 
-#### 3.1.5. Advanced Regex Capabilities
+#### 3.1.5. Heading Processing System
+
+The plugin includes comprehensive heading exclusion capabilities with three distinct modes:
+
+**Heading Types Supported:**
+- **ATX Headers:** Standard markdown headers (`# ## ### #### ##### ######`)
+- **Setext Headers:** Underlined headers (`Heading\n======` and `Heading\n------`)
+
+**Processing Modes:**
+- **Exclude Heading Markers Only:** Removes # symbols but counts heading text
+- **Exclude Entire Heading Lines:** Removes complete heading lines including text
+- **Exclude Entire Heading Sections:** Removes heading + all content until next heading (follows Obsidian's block system)
+
+**Section Processing Logic:**
+- **Hierarchy Awareness:** Respects heading levels for proper section boundaries
+- **Block-Based Processing:** Follows Obsidian's concept of heading sections as blocks
+- **Intelligent Boundaries:** Properly handles nested subsections within parent sections
+- **Line-by-Line Analysis:** Processes selected text while maintaining markdown structure
+
+**Implementation Details:**
+- **Regex Patterns:** Uses `^#{1,6}\s+.*$` for ATX headers and `^.+\n[=-]+\s*$` for Setext headers
+- **Processing Order:** Headers are processed after links but before words/phrases filtering
+- **Multi-analysis Support:** Applied consistently across word, character, and sentence counting
+- **Debug Logging:** Comprehensive logging for troubleshooting heading processing
+
+**Configuration Options:**
+- **Master Toggle:** Single setting to enable/disable heading processing
+- **Mutual Exclusivity:** Only one heading mode can be active at a time for logical consistency
+- **Default State:** All heading exclusion features disabled by default
+- **User-Friendly Descriptions:** Clear explanations of each mode's behavior
+
+#### 3.1.6. Words and Phrases Processing System
+
+The plugin includes flexible custom word and phrase exclusion capabilities:
+
+**Word Exclusion Features:**
+- **Comma-Separated Input:** Simple text field for word list management
+- **Case-Insensitive Matching:** "Test" excludes "test" but not "testing"
+- **Exact Word Matching:** Uses word boundaries to prevent partial matches
+- **Validation:** Ensures proper comma formatting with user feedback
+
+**Phrase Exclusion Features:**
+- **Right-Click Integration:** Context menu appears on text selection
+- **Conditional Menu Display:** Only shows when phrase exclusion feature is enabled
+- **Duplicate Detection:** Prevents adding the same phrase multiple times
+- **Case-Insensitive Comparison:** Handles phrase duplicates regardless of case
+
+**Phrase Management UI:**
+- **List Display:** Shows all excluded phrases in organized list format
+- **Individual Controls:** Edit and delete buttons for each phrase
+- **Inline Editing:** Prompt-based editing for phrase modification
+- **Empty State Guidance:** Helpful instructions for new users
+
+**Implementation Details:**
+- **Regex Escaping:** Safely handles special characters in phrases using proper escaping
+- **Processing Order:** Words/phrases are processed after headings but before path detection
+- **Multi-analysis Support:** Applied consistently across word, character, and sentence counting
+- **Context Menu Integration:** Uses Obsidian's editor-menu event system
+- **Settings Integration:** Auto-opens plugin settings after adding phrases
+
+**Configuration Options:**
+- **Master Toggle:** Single setting to enable/disable words/phrases exclusion
+- **Words Field:** Text input with validation and placeholder guidance
+- **Phrases Management:** Dynamic list with real-time updates
+- **Default State:** Feature disabled by default for backward compatibility
+- **Auto-Navigation:** Seamless transition to settings when adding phrases
+
+#### 3.1.7. Advanced Regex Capabilities
 
 For expert users, the plugin provides:
 
@@ -196,7 +271,7 @@ For expert users, the plugin provides:
 - **Safety Features:** Reset to default options and clear test functionality
 - **Pattern Validation:** Real-time feedback on regex syntax and performance
 
-#### 3.1.6. Character Counting System
+#### 3.1.8. Character Counting System
 
 The plugin provides flexible character counting with multiple modes:
 
@@ -217,7 +292,7 @@ The plugin provides flexible character counting with multiple modes:
 - Character count display in history tracking
 - Copy to clipboard functionality for character counts
 
-#### 3.1.7. Sentence Detection Algorithm
+#### 3.1.9. Sentence Detection Algorithm
 
 The plugin includes sophisticated sentence boundary detection:
 
@@ -324,6 +399,8 @@ The plugin includes sophisticated sentence boundary detection:
 - Path exclusion preferences
 - Comment exclusion configuration and type-specific settings
 - Link processing configuration
+- Heading exclusion configuration with mode selection
+- Words and phrases exclusion with word lists and phrase management
 - Custom labels and text
 - Advanced regex patterns
 - History display options
@@ -449,6 +526,6 @@ The plugin includes sophisticated sentence boundary detection:
 
 ---
 
-*Last updated: June 30, 2025*
+*Last updated: July 4, 2025*
 
 *This document serves as the primary architectural reference for the Custom Selected Word Count plugin development and maintenance.* 
