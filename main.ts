@@ -2060,12 +2060,44 @@ class WordCountSettingTab extends PluginSettingTab {
 				});
 
 				editButton.onclick = async () => {
-					const newHeading = prompt('Edit heading:', heading);
-					if (newHeading !== null && newHeading.trim() !== '') {
-						this.plugin.settings.excludeHeadingSections[index] = newHeading.trim();
-						await this.plugin.saveSettings();
+					// Create inline editor
+					const originalText = headingInfo.querySelector('.word-count-heading-text');
+					if (!originalText) return;
+					
+					const input = document.createElement('input');
+					input.type = 'text';
+					input.value = heading;
+					input.className = 'word-count-heading-edit-input';
+					
+					// Replace the text with input
+					originalText.replaceWith(input);
+					input.focus();
+					input.select();
+					
+					const saveEdit = async () => {
+						const newValue = input.value.trim();
+						if (newValue && newValue !== heading) {
+							this.plugin.settings.excludeHeadingSections[index] = newValue;
+							await this.plugin.saveSettings();
+						}
 						renderHeadingsList();
-					}
+					};
+					
+					const cancelEdit = () => {
+						renderHeadingsList();
+					};
+					
+					input.addEventListener('keydown', (e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							saveEdit();
+						} else if (e.key === 'Escape') {
+							e.preventDefault();
+							cancelEdit();
+						}
+					});
+					
+					input.addEventListener('blur', saveEdit);
 				};
 
 				deleteButton.onclick = async () => {
@@ -2156,12 +2188,41 @@ class WordCountSettingTab extends PluginSettingTab {
 				});
 
 				editButton.onclick = async () => {
-					const newPhrase = prompt('Edit phrase:', phrase);
-					if (newPhrase !== null && newPhrase.trim() !== '') {
-						this.plugin.settings.excludedPhrases[index] = newPhrase.trim();
-						await this.plugin.saveSettings();
+					// Create inline editor
+					const input = document.createElement('input');
+					input.type = 'text';
+					input.value = phrase;
+					input.className = 'word-count-phrase-edit-input';
+					
+					// Replace the text with input
+					phraseText.replaceWith(input);
+					input.focus();
+					input.select();
+					
+					const saveEdit = async () => {
+						const newValue = input.value.trim();
+						if (newValue && newValue !== phrase) {
+							this.plugin.settings.excludedPhrases[index] = newValue;
+							await this.plugin.saveSettings();
+						}
 						renderPhrasesList();
-					}
+					};
+					
+					const cancelEdit = () => {
+						renderPhrasesList();
+					};
+					
+					input.addEventListener('keydown', (e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							saveEdit();
+						} else if (e.key === 'Escape') {
+							e.preventDefault();
+							cancelEdit();
+						}
+					});
+					
+					input.addEventListener('blur', saveEdit);
 				};
 
 				deleteButton.onclick = async () => {
