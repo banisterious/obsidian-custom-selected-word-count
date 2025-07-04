@@ -123,9 +123,9 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 
 ### Exclude Comments
 - **Exclude Comments from Text Analysis**: Master toggle for comment exclusion (**disabled by default**)
-  - **Exclude Obsidian Comments (%% %%)**: Skip Obsidian-style comments (**disabled by default**)
+  - **Exclude Obsidian Comments (`%% comment %%`)**: Skip Obsidian-style comments (**disabled by default**)
     - **Exclude Obsidian Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
-  - **Exclude HTML Comments (<!-- -->)**: Skip HTML-style comments (**disabled by default**)
+  - **Exclude HTML Comments (`<!-- comment -->`)**: Skip HTML-style comments (**disabled by default**)
     - **Exclude HTML Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
 
 ### Path Exclusion
