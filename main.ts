@@ -38,7 +38,7 @@ interface WordCountPluginSettings {
 	excludeHeadings: boolean;        // Master toggle for heading exclusion
 	excludeHeadingMarkersOnly: boolean; // Toggle for excluding only markers
 	excludeEntireHeadingLines: boolean; // Toggle for excluding entire lines
-	excludeEntireHeadingSections: boolean; // Toggle for excluding entire sections
+	excludeHeadingSections: string[]; // Array of specific heading sections to exclude
 	// Words and phrases exclusion settings
 	excludeWordsAndPhrases: boolean; // Master toggle for words/phrases exclusion
 	excludedWords: string;           // Comma-separated list of words
@@ -88,7 +88,7 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	excludeHeadings: false,          // Heading exclusion disabled by default
 	excludeHeadingMarkersOnly: false, // Markers-only exclusion disabled by default
 	excludeEntireHeadingLines: false, // Entire lines exclusion disabled by default
-	excludeEntireHeadingSections: false, // Entire sections exclusion disabled by default
+	excludeHeadingSections: [],      // Empty heading sections list by default
 	// Words and phrases exclusion defaults
 	excludeWordsAndPhrases: false,   // Words/phrases exclusion disabled by default
 	excludedWords: '',               // Empty word list by default
@@ -217,9 +217,8 @@ function processLinks(
  * @param excludeHeadings Whether to exclude headings at all.
  * @param excludeMarkersOnly Whether to exclude only the heading markers.
  * @param excludeEntireLines Whether to exclude entire heading lines.
- * @param excludeEntireSections Whether to exclude entire heading sections.
+ * @param excludeHeadingSections Array of specific heading sections to exclude.
  * @param plugin The plugin instance for debug logging.
- * @param originalText The original full document text (for section processing).
  * @returns The processed text with headings handled according to settings.
  */
 function processHeadings(
@@ -227,23 +226,24 @@ function processHeadings(
 	excludeHeadings: boolean,
 	excludeMarkersOnly: boolean,
 	excludeEntireLines: boolean,
-	excludeEntireSections: boolean,
-	plugin?: CustomSelectedWordCountPlugin,
-	originalText?: string
+	excludeHeadingSections: string[],
+	plugin?: CustomSelectedWordCountPlugin
 ): string {
 	if (!excludeHeadings) {
 		return text;
 	}
 
-	if (plugin) debugLog(plugin, 'Processing headings, markers only:', excludeMarkersOnly, 'entire lines:', excludeEntireLines, 'entire sections:', excludeEntireSections);
+	if (plugin) debugLog(plugin, 'Processing headings, markers only:', excludeMarkersOnly, 'entire lines:', excludeEntireLines, 'specific sections:', excludeHeadingSections);
 
 	let processedText = text;
 
-	if (excludeEntireSections && originalText && plugin) {
-		// For section exclusion, we need to find heading sections within the selected text
-		// This is a simplified approach that works with ATX headings
-		processedText = processHeadingSections(text, originalText, plugin);
-	} else if (excludeEntireLines) {
+	// First, handle selective heading section exclusion
+	if (excludeHeadingSections && excludeHeadingSections.length > 0) {
+		processedText = processSelectiveHeadingSections(text, excludeHeadingSections, plugin);
+	}
+	
+	// Then apply other heading processing modes
+	if (excludeEntireLines) {
 		// Remove entire heading lines (both ATX and Setext)
 		// ATX headings: # ## ### etc.
 		processedText = processedText.replace(/^#{1,6}\s+.*$/gm, '');
@@ -263,24 +263,24 @@ function processHeadings(
 }
 
 /**
- * Processes heading sections by removing entire sections (heading + content until next heading).
+ * Processes selective heading sections by removing only specifically excluded headings and their content.
  * @param selectedText The selected text to process.
- * @param originalText The full document text.
+ * @param excludeHeadingSections Array of specific headings to exclude (e.g., ["## My Section", "# Important Chapter"]).
  * @param plugin The plugin instance for debug logging.
- * @returns The processed text with heading sections removed.
+ * @returns The processed text with specified heading sections removed.
  */
-function processHeadingSections(
+function processSelectiveHeadingSections(
 	selectedText: string,
-	originalText: string,
-	plugin: CustomSelectedWordCountPlugin
+	excludeHeadingSections: string[],
+	plugin?: CustomSelectedWordCountPlugin
 ): string {
-	if (plugin) debugLog(plugin, 'Processing heading sections for selected text');
+	if (plugin) debugLog(plugin, 'Processing selective heading sections for:', excludeHeadingSections);
 
 	// Split the selected text into lines for processing
 	const lines = selectedText.split('\n');
 	const processedLines: string[] = [];
 	let skipUntilNextHeading = false;
-	let currentHeadingLevel = 0;
+	let currentSkippingHeadingLevel = 0;
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
@@ -289,42 +289,52 @@ function processHeadingSections(
 		if (headingMatch) {
 			// This is a heading line
 			const headingLevel = headingMatch[1].length;
+			const headingText = headingMatch[2].trim();
+			const fullHeading = line.trim(); // Full heading including markers
 			
-			if (!skipUntilNextHeading) {
-				// Start skipping from this heading
+			// Check if this heading should be excluded
+			const shouldExclude = excludeHeadingSections.some(excludedHeading => 
+				excludedHeading.toLowerCase() === fullHeading.toLowerCase()
+			);
+
+			if (shouldExclude) {
+				// Start skipping this heading and its content
 				skipUntilNextHeading = true;
-				currentHeadingLevel = headingLevel;
-				if (plugin) debugLog(plugin, `Starting to skip heading section at level ${headingLevel}:`, line);
+				currentSkippingHeadingLevel = headingLevel;
+				if (plugin) debugLog(plugin, `Excluding heading section: ${fullHeading}`);
 				continue; // Skip this heading line
-			} else {
-				// We're already skipping, check if this is a same or higher level heading
-				if (headingLevel <= currentHeadingLevel) {
-					// This is a same or higher level heading, stop skipping and start new section
-					skipUntilNextHeading = true;
-					currentHeadingLevel = headingLevel;
-					if (plugin) debugLog(plugin, `Starting new heading section at level ${headingLevel}:`, line);
-					continue; // Skip this heading line too
+			} else if (skipUntilNextHeading) {
+				// We're currently skipping content, check if this heading ends the section
+				if (headingLevel <= currentSkippingHeadingLevel) {
+					// This is a same or higher level heading, stop skipping
+					skipUntilNextHeading = false;
+					currentSkippingHeadingLevel = 0;
+					if (plugin) debugLog(plugin, `Ending exclusion at heading: ${fullHeading}`);
 				} else {
-					// This is a lower level heading (subsection), continue skipping
-					if (plugin) debugLog(plugin, `Skipping subsection heading at level ${headingLevel}:`, line);
+					// This is a subsection of the excluded heading, continue skipping
+					if (plugin) debugLog(plugin, `Skipping subsection: ${fullHeading}`);
 					continue;
 				}
 			}
+
+			// If we reach here, this heading should be kept
+			if (!skipUntilNextHeading) {
+				processedLines.push(line);
+			}
 		} else {
 			// This is not a heading line
-			if (skipUntilNextHeading) {
-				// We're skipping content under a heading
-				if (plugin) debugLog(plugin, 'Skipping content line:', line);
-				continue;
-			} else {
-				// Keep this line (it's before any heading)
+			if (!skipUntilNextHeading) {
+				// Keep this line
 				processedLines.push(line);
+			} else {
+				// We're skipping content under an excluded heading
+				if (plugin) debugLog(plugin, 'Skipping content line:', line);
 			}
 		}
 	}
 
 	const result = processedLines.join('\n');
-	if (plugin) debugLog(plugin, 'Text after heading sections processing:', result);
+	if (plugin) debugLog(plugin, 'Text after selective heading sections processing:', result);
 	return result;
 }
 
@@ -445,7 +455,7 @@ function countSelectedCharacters(
 			true,
 			settings.excludeHeadingMarkersOnly,
 			settings.excludeEntireHeadingLines,
-			settings.excludeEntireHeadingSections,
+			settings.excludeHeadingSections,
 			plugin
 		);
 		
@@ -543,7 +553,7 @@ function countSelectedSentences(
 			true,
 			settings.excludeHeadingMarkersOnly,
 			settings.excludeEntireHeadingLines,
-			settings.excludeEntireHeadingSections,
+			settings.excludeHeadingSections,
 			plugin
 		);
 		
@@ -731,7 +741,7 @@ function countSelectedWords(
 			true,
 			settings.excludeHeadingMarkersOnly,
 			settings.excludeEntireHeadingLines,
-			settings.excludeEntireHeadingSections,
+			settings.excludeHeadingSections,
 			plugin
 		);
 		
@@ -1000,24 +1010,39 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			}
 		});
 
-		// Register context menu for phrase exclusion
+		// Register context menu for phrase and heading exclusion
 		this.registerEvent(
 			this.app.workspace.on('editor-menu', (menu, editor, view) => {
-				// Only show the menu item if phrase exclusion is enabled
-				if (!this.settings.excludeWordsAndPhrases) {
-					return;
+				const cursor = editor.getCursor();
+				
+				// Add heading section exclusion option if enabled and cursor is on a heading
+				if (this.settings.excludeHeadings && this.settings.excludeHeadingSections) {
+					const headingAtCursor = this.getHeadingAtCursor(editor, cursor);
+					if (headingAtCursor) {
+						menu.addItem((item) => {
+							item
+								.setTitle('Exclude heading section from word count')
+								.setIcon('heading')
+								.onClick(async () => {
+									await this.addExcludedHeading(headingAtCursor);
+								});
+						});
+					}
 				}
 
-				const selectedText = editor.getSelection();
-				if (selectedText && selectedText.trim()) {
-					menu.addItem((item) => {
-						item
-							.setTitle('Exclude phrase from word count')
-							.setIcon('minus-circle')
-							.onClick(async () => {
-								await this.addExcludedPhrase(selectedText.trim());
-							});
-					});
+				// Add phrase exclusion option if enabled and text is selected
+				if (this.settings.excludeWordsAndPhrases) {
+					const selectedText = editor.getSelection();
+					if (selectedText && selectedText.trim()) {
+						menu.addItem((item) => {
+							item
+								.setTitle('Exclude phrase from word count')
+								.setIcon('minus-circle')
+								.onClick(async () => {
+									await this.addExcludedPhrase(selectedText.trim());
+								});
+						});
+					}
 				}
 			})
 		);
@@ -1292,6 +1317,66 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			if (styleElement) {
 				styleElement.remove();
 			}
+		}
+	}
+
+	/**
+	 * Detects if the cursor is on a heading line and returns the full heading text.
+	 * @param editor The editor instance
+	 * @param cursor The cursor position
+	 * @returns The full heading text (including markers) if on a heading, null otherwise
+	 */
+	getHeadingAtCursor(editor: any, cursor: any): string | null {
+		try {
+			const lineText = editor.getLine(cursor.line);
+			const headingMatch = lineText.match(/^(#{1,6})\s+(.*)$/);
+			
+			if (headingMatch) {
+				const fullHeading = lineText.trim();
+				debugLog(this, 'Detected heading at cursor:', fullHeading);
+				return fullHeading;
+			}
+			
+			return null;
+		} catch (error) {
+			debugLog(this, 'Error detecting heading at cursor:', error);
+			return null;
+		}
+	}
+
+	async addExcludedHeading(heading: string) {
+		try {
+			// Trim the heading and check if it's not empty
+			const trimmedHeading = heading.trim();
+			if (!trimmedHeading) {
+				new Notice('Cannot exclude empty heading');
+				return;
+			}
+
+			// Check if heading already exists (case-insensitive)
+			const existsAlready = this.settings.excludeHeadingSections.some(
+				existingHeading => existingHeading.toLowerCase() === trimmedHeading.toLowerCase()
+			);
+
+			if (existsAlready) {
+				new Notice(`Heading "${trimmedHeading}" is already excluded`);
+				return;
+			}
+
+			// Add the heading to the exclusion list
+			this.settings.excludeHeadingSections.push(trimmedHeading);
+			await this.saveSettings();
+
+			// Show success notice
+			new Notice(`Added "${trimmedHeading}" to heading exclusion list`);
+
+			// Open plugin settings using Obsidian API
+			(this.app as any).setting.open();
+			(this.app as any).setting.openTabById(this.manifest.id);
+
+		} catch (error) {
+			console.error('Error adding excluded heading:', error);
+			new Notice('Failed to add heading to exclusion list');
 		}
 	}
 
@@ -1897,7 +1982,8 @@ class WordCountSettingTab extends PluginSettingTab {
 					if (value) {
 						// If markers only is enabled, disable other options
 						this.plugin.settings.excludeEntireHeadingLines = false;
-						this.plugin.settings.excludeEntireHeadingSections = false;
+						// Clear heading sections exclusion
+						this.plugin.settings.excludeHeadingSections = [];
 					}
 					await this.plugin.saveSettings();
 					this.updateSettingsUI();
@@ -1913,27 +1999,88 @@ class WordCountSettingTab extends PluginSettingTab {
 					if (value) {
 						// If entire lines is enabled, disable other options
 						this.plugin.settings.excludeHeadingMarkersOnly = false;
-						this.plugin.settings.excludeEntireHeadingSections = false;
+						// Clear heading sections exclusion
+						this.plugin.settings.excludeHeadingSections = [];
 					}
 					await this.plugin.saveSettings();
 					this.updateSettingsUI();
 				}));
 
-		new Setting(headingSettingsContainer)
-			.setName('Exclude entire heading sections')
-			.setDesc('Exclude complete heading sections (heading + all content until the next heading). (Requires heading exclusion to be enabled)')
-			.addToggle((toggle: any) => toggle
-				.setValue(this.plugin.settings.excludeEntireHeadingSections)
-				.onChange(async (value: boolean) => {
-					this.plugin.settings.excludeEntireHeadingSections = value;
-					if (value) {
-						// If entire sections is enabled, disable other options
-						this.plugin.settings.excludeHeadingMarkersOnly = false;
-						this.plugin.settings.excludeEntireHeadingLines = false;
+		// Heading sections exclusion subsection
+		const headingSectionsSubsection = headingSettingsContainer.createDiv({ cls: 'word-count-subsection' });
+		const headingSectionsHeader = headingSectionsSubsection.createDiv({ cls: 'word-count-subsection-header' });
+		headingSectionsHeader.createEl('strong', { text: 'Excluded heading sections' });
+		headingSectionsHeader.createEl('p', { 
+			text: 'Right-click on heading lines to exclude entire sections. (Requires heading exclusion to be enabled)',
+			cls: 'word-count-subsection-desc'
+		});
+
+		const headingsList = headingSectionsSubsection.createDiv({ cls: 'word-count-headings-list' });
+
+		// Function to render headings list
+		const renderHeadingsList = () => {
+			headingsList.empty();
+			
+			if (!this.plugin.settings.excludeHeadingSections || this.plugin.settings.excludeHeadingSections.length === 0) {
+				headingsList.createDiv({ 
+					text: 'No excluded heading sections. Right-click on headings to add sections.',
+					cls: 'word-count-empty-headings'
+				});
+				return;
+			}
+
+			this.plugin.settings.excludeHeadingSections.forEach((heading, index) => {
+				const headingItem = headingsList.createDiv({ cls: 'word-count-heading-item' });
+				
+				// Extract heading level and text for display
+				const headingMatch = heading.match(/^(#{1,6})\s+(.*)$/);
+				const headingLevel = headingMatch ? headingMatch[1].length : 1;
+				const headingText = headingMatch ? headingMatch[2] : heading;
+				
+				const headingInfo = headingItem.createDiv({ cls: 'word-count-heading-info' });
+				headingInfo.createSpan({ 
+					text: `H${headingLevel}`,
+					cls: 'word-count-heading-level'
+				});
+				headingInfo.createSpan({ 
+					text: headingText,
+					cls: 'word-count-heading-text'
+				});
+
+				const headingActions = headingItem.createDiv({ cls: 'word-count-heading-actions' });
+				
+				const editButton = headingActions.createEl('button', {
+					text: 'Edit',
+					cls: 'word-count-heading-btn word-count-heading-edit'
+				});
+				
+				const deleteButton = headingActions.createEl('button', {
+					text: 'Delete',
+					cls: 'word-count-heading-btn word-count-heading-delete'
+				});
+
+				editButton.onclick = async () => {
+					const newHeading = prompt('Edit heading:', heading);
+					if (newHeading !== null && newHeading.trim() !== '') {
+						this.plugin.settings.excludeHeadingSections[index] = newHeading.trim();
+						await this.plugin.saveSettings();
+						renderHeadingsList();
 					}
+				};
+
+				deleteButton.onclick = async () => {
+					this.plugin.settings.excludeHeadingSections.splice(index, 1);
 					await this.plugin.saveSettings();
-					this.updateSettingsUI();
-				}));
+					renderHeadingsList();
+				};
+			});
+		};
+
+		// Initial render
+		renderHeadingsList();
+
+		// Store reference for updates
+		(this as any).renderHeadingsList = renderHeadingsList;
 
 		// Words and Phrases Exclusion Settings
 		new Setting(containerEl).setName('Exclude words and phrases').setHeading();

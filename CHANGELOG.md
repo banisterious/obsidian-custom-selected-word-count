@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.4.0] - 2025-07-04
 ### Added
 - **Heading Exclusion System**
   - Added comprehensive heading exclusion functionality with three modes:
