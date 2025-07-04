@@ -212,12 +212,19 @@ The exclusion processing should follow this order to avoid conflicts:
 - **COMPLETED**: Implemented section-aware processing following Obsidian's block system
 - **COMPLETED**: Updated UI with proper mutual exclusivity logic
 
+### ✅ Enhancement: Selective Heading Exclusion
+- **COMPLETED**: Replaced "blind" heading sections exclusion with selective exclusion
+- **COMPLETED**: Added `getHeadingAtCursor()` method for detecting headings at cursor position
+- **COMPLETED**: Implemented right-click context menu for heading selection
+- **COMPLETED**: Created heading management UI with edit/delete functionality
+- **COMPLETED**: Added inline editing for both headings and phrases with keyboard shortcuts
+
 ## Final Feature Summary
 
 ### 🎯 Exclude Headings (3 modes)
 1. **Exclude heading markers only** - Removes `#` symbols, keeps text
 2. **Exclude entire heading lines** - Removes complete heading lines  
-3. **Exclude entire heading sections** - Removes heading + content until next heading
+3. **Exclude specific heading sections** - Right-click on headings to selectively exclude sections
 
 ### 🎯 Exclude Words and Phrases
 1. **Words**: Comma-separated input (case-insensitive, exact word matching)

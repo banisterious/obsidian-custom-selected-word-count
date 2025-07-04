@@ -206,13 +206,15 @@ The plugin includes comprehensive heading exclusion capabilities with three dist
 **Processing Modes:**
 - **Exclude Heading Markers Only:** Removes # symbols but counts heading text
 - **Exclude Entire Heading Lines:** Removes complete heading lines including text
-- **Exclude Entire Heading Sections:** Removes heading + all content until next heading (follows Obsidian's block system)
+- **Exclude Specific Heading Sections:** Selectively excludes heading sections via right-click context menu
 
 **Section Processing Logic:**
+- **Selective Exclusion:** Users right-click on specific headings to exclude their sections
 - **Hierarchy Awareness:** Respects heading levels for proper section boundaries
 - **Block-Based Processing:** Follows Obsidian's concept of heading sections as blocks
 - **Intelligent Boundaries:** Properly handles nested subsections within parent sections
 - **Line-by-Line Analysis:** Processes selected text while maintaining markdown structure
+- **Context Menu Integration:** Conditional heading exclusion option appears when cursor is on heading line
 
 **Implementation Details:**
 - **Regex Patterns:** Uses `^#{1,6}\s+.*$` for ATX headers and `^.+\n[=-]+\s*$` for Setext headers
@@ -222,7 +224,9 @@ The plugin includes comprehensive heading exclusion capabilities with three dist
 
 **Configuration Options:**
 - **Master Toggle:** Single setting to enable/disable heading processing
-- **Mutual Exclusivity:** Only one heading mode can be active at a time for logical consistency
+- **Mutual Exclusivity:** Heading markers and lines are mutually exclusive; sections work independently
+- **Heading Management UI:** List display with edit/delete buttons showing heading levels (H1, H2, etc.)
+- **Inline Editing:** Direct text editing with keyboard shortcuts (Enter to save, Escape to cancel)
 - **Default State:** All heading exclusion features disabled by default
 - **User-Friendly Descriptions:** Clear explanations of each mode's behavior
 
@@ -245,7 +249,7 @@ The plugin includes flexible custom word and phrase exclusion capabilities:
 **Phrase Management UI:**
 - **List Display:** Shows all excluded phrases in organized list format
 - **Individual Controls:** Edit and delete buttons for each phrase
-- **Inline Editing:** Prompt-based editing for phrase modification
+- **Inline Editing:** Direct text editing with keyboard shortcuts (Enter to save, Escape to cancel)
 - **Empty State Guidance:** Helpful instructions for new users
 
 **Implementation Details:**

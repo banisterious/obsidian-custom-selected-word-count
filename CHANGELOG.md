@@ -10,6 +10,10 @@
     - Exclude entire heading lines (removes complete headings)
     - Exclude entire heading sections (removes heading + content until next heading)
   - Section exclusion follows Obsidian's block system for proper markdown structure handling
+  - **ENHANCED**: Replaced "blind" heading sections exclusion with selective exclusion system
+    - Right-click on specific heading lines to exclude their sections
+    - Heading management UI with edit/delete buttons showing heading levels (H1, H2, etc.)
+    - Inline editing with keyboard shortcuts (Enter to save, Escape to cancel)
   - Mutual exclusivity logic ensures only one heading mode is active at a time
   - Master toggle setting "Exclude headings from text analysis" (**disabled by default**)
   - Integrated into all counting modes (words, characters, sentences)
@@ -26,7 +30,7 @@
     - Auto-opens plugin settings after adding phrase for immediate management
   - Added phrase management UI with individual controls
     - List display showing all excluded phrases
-    - Edit button for each phrase with inline editing
+    - Edit button for each phrase with inline editing and keyboard shortcuts
     - Delete button for individual phrase removal
     - Empty state guidance for new users
   - Master toggle setting "Exclude words and phrases from text analysis" (**disabled by default**)

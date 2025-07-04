@@ -140,9 +140,12 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 - **Exclude Headings from Text Analysis**: Master toggle for heading exclusion (**disabled by default**)
   - **Exclude Heading Markers Only**: Remove only the # symbols but count heading text (**disabled by default**)
   - **Exclude Entire Heading Lines**: Remove complete heading lines including text (**disabled by default**)
-  - **Exclude Entire Heading Sections**: Remove heading + all content until next heading (**disabled by default**)
+  - **Excluded Heading Sections**: Selectively exclude specific heading sections via right-click context menu
+    - Right-click on heading lines → "Exclude heading section from word count"
+    - Heading management UI with edit/delete buttons showing heading levels (H1, H2, etc.)
+    - Inline editing with keyboard shortcuts (Enter to save, Escape to cancel)
   
-*Note: Only one heading exclusion mode can be active at a time for logical consistency.*
+*Note: Heading markers and lines are mutually exclusive modes. Heading sections work independently.*
 
 ### Exclude Words and Phrases
 - **Exclude Words and Phrases from Text Analysis**: Master toggle for custom word/phrase exclusion (**disabled by default**)
@@ -150,6 +153,7 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
   - **Excluded Phrases**: Managed via right-click context menu on selected text
     - Select text → Right-click → "Exclude phrase from word count" (only available when feature enabled)
     - Phrase management UI with individual edit/delete buttons for each phrase
+    - Inline editing with keyboard shortcuts (Enter to save, Escape to cancel)
     - Automatic duplicate detection and settings navigation
 
 ### Path Exclusion
