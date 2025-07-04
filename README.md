@@ -31,7 +31,7 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
   - For `[link text](url)` links, only count "link text"
   - Excludes non-visible portions like URLs and file paths
 - **Comment exclusion** with granular control:
-  - Support for Obsidian comments (%% comment %%) and HTML comments (<!-- comment -->)
+  - Support for Obsidian comments (`%% comment %%`) and HTML comments (`<!-- comment -->`)
   - Option to exclude comment markers only or entire comments including content
   - Individual toggles for each comment type with separate content controls
 - **Heading exclusion** with flexible options:
@@ -131,9 +131,9 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 
 ### Exclude Comments
 - **Exclude Comments from Text Analysis**: Master toggle for comment exclusion (**disabled by default**)
-  - **Exclude Obsidian Comments (%% %%)**: Skip Obsidian-style comments (**disabled by default**)
+  - **Exclude Obsidian Comments (`%% comment %%`)**: Skip Obsidian-style comments (**disabled by default**)
     - **Exclude Obsidian Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
-  - **Exclude HTML Comments (<!-- -->)**: Skip HTML-style comments (**disabled by default**)
+  - **Exclude HTML Comments (`<!-- comment -->`)**: Skip HTML-style comments (**disabled by default**)
     - **Exclude HTML Comment Content**: When unchecked, only comment markers are excluded (**disabled by default**)
 
 ### Exclude Headings
