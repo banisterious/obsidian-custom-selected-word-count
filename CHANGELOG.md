@@ -1,6 +1,42 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- **Per-Note Exclusion Override System**
+  - Added YAML frontmatter property `cswc-disable` to override global exclusion settings per note
+  - Supports array format: `cswc-disable: [exclude-urls, exclude-comments]`
+  - Supports single value format: `cswc-disable: exclude-windows-paths`
+  - Special value `all` disables all exclusions: `cswc-disable: all`
+  - All exclusion types can be overridden:
+    - Path exclusions: `exclude-windows-paths`, `exclude-unix-paths`, `exclude-unc-paths`, `exclude-environment-paths`
+    - Content exclusions: `exclude-urls`, `exclude-code-blocks`, `exclude-inline-code`, `exclude-comments`
+    - Structure exclusions: `exclude-headings`, `exclude-specific-headings`, `exclude-words-phrases`
+- **Inline Comment-Based Overrides**
+  - Added inline markers to disable exclusions for specific text sections
+  - HTML style: `<!-- cswc-disable -->` ... `<!-- cswc-enable -->`
+  - Obsidian style: `%% cswc-disable %%` ... `%% cswc-enable %%`
+  - Text between markers has all exclusions disabled
+  - Unclosed sections extend to end of selected text
+- **Code Exclusion Settings**
+  - Added previously missing code exclusion toggles to Settings UI
+  - Master toggle "Exclude code" with sub-options:
+    - "Exclude code blocks" for triple-backtick blocks
+    - "Exclude inline code" for single-backtick code
+  - Property values: `exclude-code-blocks` and `exclude-inline-code`
+
+### Enhanced
+- **Settings UI Improvements**
+  - Added property value indicators next to each exclusion toggle (e.g., "• Property: exclude-urls")
+  - Added collapsible "Using per-note exclusion overrides" help section with examples
+  - Reorganized settings with better grouping and visual hierarchy
+  - Improved section headings and descriptions for clarity
+
+### Technical
+- **Override Processing Implementation**
+  - Added `getDisabledExclusionsFromFrontmatter()` function for frontmatter parsing
+  - Added `processTextWithOverrides()` function for inline comment handling
+  - Updated all counting functions to respect override settings
+  - Minimal performance impact with efficient caching
 
 ## [1.4.0] - 2025-07-04
 ### Added

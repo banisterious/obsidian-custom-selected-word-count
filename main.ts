@@ -177,6 +177,65 @@ function getDisabledExclusionsFromFrontmatter(app: App): string[] {
 }
 
 /**
+ * Processes text with inline override sections marked by comments.
+ * @param text The text to process.
+ * @param processFunc Function to apply to non-override sections.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text.
+ */
+function processTextWithOverrides(
+	text: string,
+	processFunc: (text: string) => string,
+	plugin?: CustomSelectedWordCountPlugin
+): string {
+	// Combined regex to match both HTML and Obsidian style comments with cswc-disable or cswc-enable
+	const markerRegex = /(?:<!--\s*cswc-(disable|enable)\s*-->|%%\s*cswc-(disable|enable)\s*%%)/gi;
+	
+	let result = '';
+	let lastIndex = 0;
+	let inOverrideSection = false;
+	let match;
+	
+	// Reset regex state
+	markerRegex.lastIndex = 0;
+	
+	while ((match = markerRegex.exec(text)) !== null) {
+		const marker = match[1] || match[2]; // Get 'disable' or 'enable'
+		const beforeMatch = text.substring(lastIndex, match.index);
+		
+		if (inOverrideSection) {
+			// In override section - add text as-is
+			result += beforeMatch;
+		} else {
+			// Not in override section - apply processing
+			result += processFunc(beforeMatch);
+		}
+		
+		// Toggle override state
+		if (marker === 'disable' && !inOverrideSection) {
+			inOverrideSection = true;
+			if (plugin) debugLog(plugin, 'Entering override section at position:', match.index);
+		} else if (marker === 'enable' && inOverrideSection) {
+			inOverrideSection = false;
+			if (plugin) debugLog(plugin, 'Exiting override section at position:', match.index);
+		}
+		
+		lastIndex = match.index + match[0].length;
+	}
+	
+	// Process remaining text
+	const remainingText = text.substring(lastIndex);
+	if (inOverrideSection) {
+		result += remainingText;
+		if (plugin) debugLog(plugin, 'Override section extends to end of text');
+	} else {
+		result += processFunc(remainingText);
+	}
+	
+	return result;
+}
+
+/**
  * Processes code blocks (```) in text according to settings.
  * @param text The text to process.
  * @param excludeCodeBlocks Whether to exclude code blocks.
@@ -514,97 +573,102 @@ function countSelectedCharacters(
 	
 	if (plugin) debugLog(plugin, 'Counting characters in mode:', mode);
 	
-	let processedText = selectedText;
-	
 	// Helper function to check if exclusion is disabled
 	const isExclusionDisabled = (exclusionId: string): boolean => {
 		return disabledExclusions.includes(exclusionId);
 	};
 	
-	// Process code blocks first (before inline code)
-	if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
-		processedText = processCodeBlocks(
-			processedText,
-			true,
-			plugin
-		);
+	// First, handle inline override sections
+	let processedText = processTextWithOverrides(selectedText, (text) => {
+		let result = text;
 		
-		if (plugin) debugLog(plugin, 'Text after code block processing (char count):', processedText);
-	}
-	
-	// Process inline code after code blocks
-	if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
-		processedText = processInlineCode(
-			processedText,
-			true,
-			plugin
-		);
-		
-		if (plugin) debugLog(plugin, 'Text after inline code processing (char count):', processedText);
-	}
-	
-	// Process comments before character counting
-	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
-		// Process Obsidian comments
-		if (settings.excludeObsidianComments) {
-			processedText = processObsidianComments(
-				processedText,
+		// Process code blocks first (before inline code)
+		if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+			result = processCodeBlocks(
+				result,
 				true,
-				settings.excludeObsidianCommentContent,
 				plugin
 			);
+			
+			if (plugin) debugLog(plugin, 'Text after code block processing (char count):', result);
 		}
 		
-		// Process HTML comments
-		if (settings.excludeHtmlComments) {
-			processedText = processHtmlComments(
-				processedText,
+		// Process inline code after code blocks
+		if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+			result = processInlineCode(
+				result,
 				true,
-				settings.excludeHtmlCommentContent,
 				plugin
 			);
+			
+			if (plugin) debugLog(plugin, 'Text after inline code processing (char count):', result);
 		}
 		
-		if (plugin) debugLog(plugin, 'Text after comment processing (char count):', processedText);
-	}
-	
-	// Process links after comments but before character counting
-	if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
-		processedText = processLinks(
-			processedText,
-			true,
-			plugin
-		);
+		// Process comments before character counting
+		if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
+			// Process Obsidian comments
+			if (settings.excludeObsidianComments) {
+				result = processObsidianComments(
+					result,
+					true,
+					settings.excludeObsidianCommentContent,
+					plugin
+				);
+			}
+			
+			// Process HTML comments
+			if (settings.excludeHtmlComments) {
+				result = processHtmlComments(
+					result,
+					true,
+					settings.excludeHtmlCommentContent,
+					plugin
+				);
+			}
+			
+			if (plugin) debugLog(plugin, 'Text after comment processing (char count):', result);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after link processing (char count):', processedText);
-	}
-	
-	// Process headings after links but before character counting
-	if (settings?.excludeHeadings && !isExclusionDisabled('exclude-headings')) {
-		processedText = processHeadings(
-			processedText,
-			true,
-			settings.excludeHeadingMarkersOnly,
-			settings.excludeEntireHeadingLines,
-			settings.excludeHeadingSections,
-			plugin
-		);
+		// Process links after comments but before character counting
+		if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
+			result = processLinks(
+				result,
+				true,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after link processing (char count):', result);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after heading processing (char count):', processedText);
-	}
-	
-	// Process words and phrases after headings but before character counting
-	if (settings?.excludeWordsAndPhrases && !isExclusionDisabled('exclude-words-phrases')) {
-		processedText = processWordsAndPhrases(
-			processedText,
-			true,
-			settings.excludedWords,
-			settings.excludedPhrases,
-			plugin
-		);
+		// Process headings after links but before character counting
+		if (settings?.excludeHeadings && !isExclusionDisabled('exclude-headings')) {
+			result = processHeadings(
+				result,
+				true,
+				settings.excludeHeadingMarkersOnly,
+				settings.excludeEntireHeadingLines,
+				settings.excludeHeadingSections,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after heading processing (char count):', result);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after words/phrases processing (char count):', processedText);
-	}
+		// Process words and phrases after headings but before character counting
+		if (settings?.excludeWordsAndPhrases && !isExclusionDisabled('exclude-words-phrases')) {
+			result = processWordsAndPhrases(
+				result,
+				true,
+				settings.excludedWords,
+				settings.excludedPhrases,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after words/phrases processing (char count):', result);
+		}
+		
+		return result;
+	}, plugin);
 	
 	switch (mode) {
 		case 'all':
@@ -641,97 +705,102 @@ function countSelectedSentences(
 	
 	if (plugin) debugLog(plugin, 'Counting sentences in text:', selectedText);
 	
-	let processedText = selectedText;
-	
 	// Helper function to check if exclusion is disabled
 	const isExclusionDisabled = (exclusionId: string): boolean => {
 		return disabledExclusions.includes(exclusionId);
 	};
 	
-	// Process code blocks first (before inline code)
-	if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
-		processedText = processCodeBlocks(
-			processedText,
-			true,
-			plugin
-		);
+	// First, handle inline override sections
+	let processedText = processTextWithOverrides(selectedText, (text) => {
+		let result = text;
 		
-		if (plugin) debugLog(plugin, 'Text after code block processing (sentence count):', processedText);
-	}
-	
-	// Process inline code after code blocks
-	if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
-		processedText = processInlineCode(
-			processedText,
-			true,
-			plugin
-		);
-		
-		if (plugin) debugLog(plugin, 'Text after inline code processing (sentence count):', processedText);
-	}
-	
-	// Process comments before sentence counting
-	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
-		// Process Obsidian comments
-		if (settings.excludeObsidianComments) {
-			processedText = processObsidianComments(
-				processedText,
+		// Process code blocks first (before inline code)
+		if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+			result = processCodeBlocks(
+				result,
 				true,
-				settings.excludeObsidianCommentContent,
 				plugin
 			);
+			
+			if (plugin) debugLog(plugin, 'Text after code block processing (sentence count):', result);
 		}
 		
-		// Process HTML comments
-		if (settings.excludeHtmlComments) {
-			processedText = processHtmlComments(
-				processedText,
+		// Process inline code after code blocks
+		if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+			result = processInlineCode(
+				result,
 				true,
-				settings.excludeHtmlCommentContent,
 				plugin
 			);
+			
+			if (plugin) debugLog(plugin, 'Text after inline code processing (sentence count):', result);
 		}
 		
-		if (plugin) debugLog(plugin, 'Text after comment processing (sentence count):', processedText);
-	}
-	
-	// Process links after comments but before sentence counting
-	if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
-		processedText = processLinks(
-			processedText,
-			true,
-			plugin
-		);
+		// Process comments before sentence counting
+		if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
+			// Process Obsidian comments
+			if (settings.excludeObsidianComments) {
+				result = processObsidianComments(
+					result,
+					true,
+					settings.excludeObsidianCommentContent,
+					plugin
+				);
+			}
+			
+			// Process HTML comments
+			if (settings.excludeHtmlComments) {
+				result = processHtmlComments(
+					result,
+					true,
+					settings.excludeHtmlCommentContent,
+					plugin
+				);
+			}
+			
+			if (plugin) debugLog(plugin, 'Text after comment processing (sentence count):', result);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after link processing (sentence count):', processedText);
-	}
-	
-	// Process headings after links but before sentence counting
-	if (settings?.excludeHeadings) {
-		processedText = processHeadings(
-			processedText,
-			true,
-			settings.excludeHeadingMarkersOnly,
-			settings.excludeEntireHeadingLines,
-			settings.excludeHeadingSections,
-			plugin
-		);
+		// Process links after comments but before sentence counting
+		if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
+			result = processLinks(
+				result,
+				true,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after link processing (sentence count):', result);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after heading processing (sentence count):', processedText);
-	}
-	
-	// Process words and phrases after headings but before sentence counting
-	if (settings?.excludeWordsAndPhrases) {
-		processedText = processWordsAndPhrases(
-			processedText,
-			true,
-			settings.excludedWords,
-			settings.excludedPhrases,
-			plugin
-		);
+		// Process headings after links but before sentence counting
+		if (settings?.excludeHeadings && !isExclusionDisabled('exclude-headings')) {
+			result = processHeadings(
+				result,
+				true,
+				settings.excludeHeadingMarkersOnly,
+				settings.excludeEntireHeadingLines,
+				settings.excludeHeadingSections,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after heading processing (sentence count):', result);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after words/phrases processing (sentence count):', processedText);
-	}
+		// Process words and phrases after headings but before sentence counting
+		if (settings?.excludeWordsAndPhrases && !isExclusionDisabled('exclude-words-phrases')) {
+			result = processWordsAndPhrases(
+				result,
+				true,
+				settings.excludedWords,
+				settings.excludedPhrases,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after words/phrases processing (sentence count):', result);
+		}
+		
+		return result;
+	}, plugin);
 	
 	// Remove code blocks and inline code first
 	processedText = processedText.replace(/```[\s\S]*?```/g, ' ');
@@ -872,91 +941,97 @@ function countSelectedWords(
 		return disabledExclusions.includes(exclusionId);
 	};
 
-	// Process code blocks first (before inline code)
-	if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
-		selectedText = processCodeBlocks(
-			selectedText,
-			true,
-			plugin
-		);
-		
-		if (plugin) debugLog(plugin, 'Text after code block processing:', selectedText);
-	}
-	
-	// Process inline code after code blocks
-	if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
-		selectedText = processInlineCode(
-			selectedText,
-			true,
-			plugin
-		);
-		
-		if (plugin) debugLog(plugin, 'Text after inline code processing:', selectedText);
-	}
+	// First, handle inline override sections
+	selectedText = processTextWithOverrides(selectedText, (text) => {
+		let processedText = text;
 
-	// Process comments before any other text processing
-	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
-		// Process Obsidian comments
-		if (settings.excludeObsidianComments) {
-			selectedText = processObsidianComments(
-				selectedText,
+		// Process code blocks first (before inline code)
+		if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+			processedText = processCodeBlocks(
+				processedText,
 				true,
-				settings.excludeObsidianCommentContent,
 				plugin
 			);
+			
+			if (plugin) debugLog(plugin, 'Text after code block processing:', processedText);
 		}
 		
-		// Process HTML comments
-		if (settings.excludeHtmlComments) {
-			selectedText = processHtmlComments(
-				selectedText,
+		// Process inline code after code blocks
+		if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+			processedText = processInlineCode(
+				processedText,
 				true,
-				settings.excludeHtmlCommentContent,
 				plugin
 			);
+			
+			if (plugin) debugLog(plugin, 'Text after inline code processing:', processedText);
+		}
+
+		// Process comments before any other text processing
+		if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
+			// Process Obsidian comments
+			if (settings.excludeObsidianComments) {
+				processedText = processObsidianComments(
+					processedText,
+					true,
+					settings.excludeObsidianCommentContent,
+					plugin
+				);
+			}
+			
+			// Process HTML comments
+			if (settings.excludeHtmlComments) {
+				processedText = processHtmlComments(
+					processedText,
+					true,
+					settings.excludeHtmlCommentContent,
+					plugin
+				);
+			}
+			
+			if (plugin) debugLog(plugin, 'Text after comment processing:', processedText);
+		}
+
+		// Process links after comments but before other text processing
+		if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
+			processedText = processLinks(
+				processedText,
+				true,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after link processing:', processedText);
 		}
 		
-		if (plugin) debugLog(plugin, 'Text after comment processing:', selectedText);
-	}
-
-	// Process links after comments but before other text processing
-	if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
-		selectedText = processLinks(
-			selectedText,
-			true,
-			plugin
-		);
+		// Process headings after links but before other text processing
+		if (settings?.excludeHeadings && !isExclusionDisabled('exclude-headings')) {
+			processedText = processHeadings(
+				processedText,
+				true,
+				settings.excludeHeadingMarkersOnly,
+				settings.excludeEntireHeadingLines,
+				settings.excludeHeadingSections,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after heading processing:', processedText);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after link processing:', selectedText);
-	}
-	
-	// Process headings after links but before other text processing
-	if (settings?.excludeHeadings && !isExclusionDisabled('exclude-headings')) {
-		selectedText = processHeadings(
-			selectedText,
-			true,
-			settings.excludeHeadingMarkersOnly,
-			settings.excludeEntireHeadingLines,
-			settings.excludeHeadingSections,
-			plugin
-		);
+		// Process words and phrases after headings but before other text processing
+		if (settings?.excludeWordsAndPhrases && !isExclusionDisabled('exclude-words-phrases')) {
+			processedText = processWordsAndPhrases(
+				processedText,
+				true,
+				settings.excludedWords,
+				settings.excludedPhrases,
+				plugin
+			);
+			
+			if (plugin) debugLog(plugin, 'Text after words/phrases processing:', processedText);
+		}
 		
-		if (plugin) debugLog(plugin, 'Text after heading processing:', selectedText);
-	}
-	
-	// Process words and phrases after headings but before other text processing
-	if (settings?.excludeWordsAndPhrases && !isExclusionDisabled('exclude-words-phrases')) {
-		selectedText = processWordsAndPhrases(
-			selectedText,
-			true,
-			settings.excludedWords,
-			settings.excludedPhrases,
-			plugin
-		);
-		
-		if (plugin) debugLog(plugin, 'Text after words/phrases processing:', selectedText);
-	}
-
+		return processedText;
+	}, plugin);
 
 	// Function to normalize path separators
 	const normalizePath = (str: string): string => {
@@ -1666,7 +1741,7 @@ class WordCountModal extends Modal {
 		// Modal header
 		const headerEl = contentEl.createDiv({cls: 'modal-header'});
 		const titleEl = headerEl.createEl('h2', {cls: 'modal-title'});
-		titleEl.createSpan({cls: 'lucide lucide-bar-chart-3'});
+		titleEl.createSpan({cls: 'lucide word-count-lucide-bar-chart-3'});
 		titleEl.appendText('Selection Analysis');
 
 		// Modal content
@@ -1680,13 +1755,13 @@ class WordCountModal extends Modal {
 		const wordCountHeader = wordCountCard.createDiv({cls: 'count-header'});
 		
 		const wordCountLabel = wordCountHeader.createDiv({cls: 'count-label'});
-		wordCountLabel.createSpan({cls: 'lucide lucide-type'});
+		wordCountLabel.createSpan({cls: 'lucide word-count-lucide-type'});
 		wordCountLabel.appendText('Words');
 		
 		const copyWordButton = wordCountHeader.createEl('button', {
 			cls: 'copy-button'
 		});
-		copyWordButton.createSpan({cls: 'lucide lucide-copy'});
+		copyWordButton.createSpan({cls: 'lucide word-count-lucide-copy'});
 		copyWordButton.appendText('Copy');
 		
 		wordCountCard.createDiv({cls: 'count-value', text: this.countResult.words.toString()});
@@ -1703,13 +1778,13 @@ class WordCountModal extends Modal {
 			const charCountHeader = charCountCard.createDiv({cls: 'count-header'});
 			
 			const charCountLabel = charCountHeader.createDiv({cls: 'count-label'});
-			charCountLabel.createSpan({cls: 'lucide lucide-hash'});
+			charCountLabel.createSpan({cls: 'lucide word-count-lucide-hash'});
 			charCountLabel.appendText('Characters');
 			
 			const copyCharButton = charCountHeader.createEl('button', {
 				cls: 'copy-button'
 			});
-			copyCharButton.createSpan({cls: 'lucide lucide-copy'});
+			copyCharButton.createSpan({cls: 'lucide word-count-lucide-copy'});
 			copyCharButton.appendText('Copy');
 			
 			charCountCard.createDiv({cls: 'count-value', text: this.countResult.characters.toString()});
@@ -1730,13 +1805,13 @@ class WordCountModal extends Modal {
 			const sentenceCountHeader = sentenceCountCard.createDiv({cls: 'count-header'});
 			
 			const sentenceCountLabel = sentenceCountHeader.createDiv({cls: 'count-label'});
-			sentenceCountLabel.createSpan({cls: 'lucide lucide-list-ordered'});
+			sentenceCountLabel.createSpan({cls: 'lucide word-count-lucide-list-ordered'});
 			sentenceCountLabel.appendText('Sentences');
 			
 			const copySentenceButton = sentenceCountHeader.createEl('button', {
 				cls: 'copy-button'
 			});
-			copySentenceButton.createSpan({cls: 'lucide lucide-copy'});
+			copySentenceButton.createSpan({cls: 'lucide word-count-lucide-copy'});
 			copySentenceButton.appendText('Copy');
 			
 			sentenceCountCard.createDiv({cls: 'count-value', text: this.countResult.sentences.toString()});
@@ -1754,13 +1829,13 @@ class WordCountModal extends Modal {
 			
 			const historyHeader = historySection.createDiv({cls: 'history-header'});
 			const historyTitle = historyHeader.createEl('h3', {cls: 'history-title'});
-			historyTitle.createSpan({cls: 'lucide lucide-clock'});
+			historyTitle.createSpan({cls: 'lucide word-count-lucide-clock'});
 			historyTitle.appendText('Recent Counts');
 			
 			const clearButton = historyHeader.createEl('button', {
 				cls: 'clear-btn'
 			});
-			clearButton.createSpan({cls: 'lucide lucide-trash-2'});
+			clearButton.createSpan({cls: 'lucide word-count-lucide-trash-2'});
 			clearButton.appendText('Clear');
 			
 			clearButton.addEventListener('click', () => {
@@ -1803,7 +1878,7 @@ class WordCountModal extends Modal {
 				const entryCopyButton = historyActions.createEl('button', {
 					cls: 'history-copy-btn'
 				});
-				entryCopyButton.createSpan({cls: 'lucide lucide-copy'});
+				entryCopyButton.createSpan({cls: 'lucide word-count-lucide-copy'});
 				entryCopyButton.appendText('Words');
 				
 				entryCopyButton.addEventListener('click', async () => {
@@ -1816,7 +1891,7 @@ class WordCountModal extends Modal {
 					const entryCharCopyButton = historyActions.createEl('button', {
 						cls: 'history-copy-btn'
 					});
-					entryCharCopyButton.createSpan({cls: 'lucide lucide-copy'});
+					entryCharCopyButton.createSpan({cls: 'lucide word-count-lucide-copy'});
 					entryCharCopyButton.appendText('Chars');
 					
 					entryCharCopyButton.addEventListener('click', async () => {
@@ -1830,7 +1905,7 @@ class WordCountModal extends Modal {
 					const entrySentenceCopyButton = historyActions.createEl('button', {
 						cls: 'history-copy-btn'
 					});
-					entrySentenceCopyButton.createSpan({cls: 'lucide lucide-copy'});
+					entrySentenceCopyButton.createSpan({cls: 'lucide word-count-lucide-copy'});
 					entrySentenceCopyButton.appendText('Sentences');
 					
 					entrySentenceCopyButton.addEventListener('click', async () => {
@@ -1844,7 +1919,7 @@ class WordCountModal extends Modal {
 		// Modal footer
 		const footerEl = contentEl.createDiv({cls: 'modal-footer'});
 		const closeButton = footerEl.createEl('button', {cls: 'close-btn'});
-		closeButton.createSpan({cls: 'lucide lucide-check'});
+		closeButton.createSpan({cls: 'lucide word-count-lucide-check'});
 		closeButton.appendText('Done');
 		
 		closeButton.addEventListener('click', () => {
@@ -2045,6 +2120,13 @@ class WordCountSettingTab extends PluginSettingTab {
 		examplePre2.createEl('code', { text: '---\ncswc-disable: all\n---' });
 		
 		overrideContent.createEl('p', { text: 'Property values are shown next to each setting below (• Property: ...)' });
+		
+		overrideContent.createEl('h4', { text: 'Inline comment overrides' });
+		overrideContent.createEl('p', { text: 'You can also disable exclusions for specific sections within a note using comments:' });
+		const inlinePre = overrideContent.createEl('pre', { cls: 'word-count-override-example' });
+		inlinePre.createEl('code', { text: 'This text is excluded.\n<!-- cswc-disable -->\nThis text is NOT excluded from counts.\n<!-- cswc-enable -->\nThis text is excluded again.' });
+		
+		overrideContent.createEl('p', { text: 'Supported comment formats: <!-- cswc-disable --> or %% cswc-disable %%' });
 
 		// Link Exclusion Settings
 		const linkContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });

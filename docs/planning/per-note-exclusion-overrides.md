@@ -113,8 +113,41 @@ Combine approaches for best user experience:
 - Include a collapsible "Using per-note overrides" section at the top of exclusions
 - Provide copy buttons for easy use
 
+## Inline Comment Overrides
+
+In addition to frontmatter-based overrides, users can disable exclusions for specific sections within a note using special comment markers:
+
+### Syntax
+
+Users can use either HTML or Obsidian-style comments:
+- `<!-- cswc-disable -->` ... `<!-- cswc-enable -->`
+- `%% cswc-disable %%` ... `%% cswc-enable %%`
+
+### Behavior
+
+1. **Exclusions Apply by Default**: All enabled exclusions apply to the entire note.
+2. **Section Override**: Text between `cswc-disable` and `cswc-enable` markers will have all exclusions disabled.
+3. **Nested Override**: If a `cswc-disable` section extends to the end of the note without a matching `cswc-enable`, all remaining text has exclusions disabled.
+
+### Example
+
+```markdown
+This text follows global exclusion rules.
+
+<!-- cswc-disable -->
+This section ignores all exclusions - paths, URLs, comments, etc. will all be counted.
+<!-- cswc-enable -->
+
+This text returns to following global exclusion rules.
+
+%% cswc-disable %%
+This also works with Obsidian comment syntax.
+%% cswc-enable %%
+```
+
 ## Future Considerations
 
 - Could extend to support enabling exclusions that are globally disabled (using a complementary property like `cswc-enable`)
 - Might add validation/autocomplete support in future Obsidian versions
 - Could provide UI indicators showing when exclusions are overridden in a note
+- Could add support for granular inline overrides (e.g., `<!-- cswc-disable: exclude-urls, exclude-comments -->`)

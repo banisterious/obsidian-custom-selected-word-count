@@ -30,6 +30,7 @@ The Custom Selected Word Count plugin extends Obsidian's built-in text analysis 
 - **Link processing** that excludes non-visible portions of markdown links, counting only the visible text users see
 - **Heading exclusion** with three flexible modes: markers only, entire lines, or complete sections following Obsidian's block system
 - **Words and phrases exclusion** with comma-separated word lists and right-click phrase management for precise content filtering
+- **Per-note exclusion overrides** using YAML frontmatter and inline comment markers to selectively disable exclusions
 - **Multiple access methods** including modal dialog, status bar integration, and ribbon button
 - **Persistent history tracking** of the last 50 analyses with clipboard integration for all metrics
 - **Customizable regex patterns** for expert-level word detection customization
@@ -82,6 +83,7 @@ OCSWC Plugin
     ├── Link Processing Rules
     ├── Heading Exclusion Rules
     ├── Words/Phrases Exclusion Rules
+    ├── Per-Note Override System
     ├── Character Count Configuration
     ├── Sentence Count Settings
     ├── UI Customization Options
@@ -326,6 +328,49 @@ The plugin includes sophisticated sentence boundary detection:
 - Handling of complex punctuation patterns
 - Markdown-aware processing
 - Minimum content validation for sentence qualification
+
+#### 3.1.10. Per-Note Exclusion Override System
+
+The plugin provides powerful per-note override capabilities allowing users to selectively disable exclusion rules:
+
+**YAML Frontmatter Overrides:**
+- **Property Name:** `cswc-disable` in note frontmatter
+- **Array Format:** `cswc-disable: [exclude-urls, exclude-comments]`
+- **Single Value:** `cswc-disable: exclude-windows-paths`
+- **Disable All:** `cswc-disable: all` to disable all exclusions
+
+**Supported Override Values:**
+- `exclude-windows-paths` - Disable Windows path exclusion
+- `exclude-unix-paths` - Disable Unix path exclusion
+- `exclude-unc-paths` - Disable UNC path exclusion
+- `exclude-environment-paths` - Disable environment variable path exclusion
+- `exclude-urls` - Disable URL/link exclusion
+- `exclude-code-blocks` - Disable code block exclusion
+- `exclude-inline-code` - Disable inline code exclusion
+- `exclude-comments` - Disable comment exclusion
+- `exclude-headings` - Disable heading exclusion
+- `exclude-specific-headings` - Disable specific heading section exclusion
+- `exclude-words-phrases` - Disable custom words/phrases exclusion
+- `all` - Disable all exclusions at once
+
+**Inline Comment Overrides:**
+- **HTML Style:** `<!-- cswc-disable -->` ... `<!-- cswc-enable -->`
+- **Obsidian Style:** `%% cswc-disable %%` ... `%% cswc-enable %%`
+- **Section Control:** Text between markers has all exclusions disabled
+- **Nested Behavior:** Unclosed sections extend to end of selection
+
+**Implementation Details:**
+- **Frontmatter Parsing:** Uses Obsidian's MetadataCache API
+- **Runtime Processing:** Checks active file's frontmatter during each count
+- **Inline Processing:** `processTextWithOverrides()` function wraps exclusion logic
+- **Performance:** Minimal overhead with efficient caching
+- **Graceful Fallback:** Invalid values are ignored
+
+**User Interface Integration:**
+- **Settings Display:** Property values shown inline with each exclusion toggle
+- **Help Section:** Collapsible guide with examples in settings
+- **Visual Indicators:** Clear labeling of override property values
+- **Copy Support:** Easy copying of property values from settings
 
 ### 3.2. User Interface Components
 

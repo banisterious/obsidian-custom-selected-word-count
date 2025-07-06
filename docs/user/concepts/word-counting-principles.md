@@ -104,7 +104,158 @@ The plugin's path exclusion follows these principles:
 - Special characters in paths: `[brackets]`, `(parentheses)`
 - Network paths with authentication: `\\domain\user@server`
 
-## 3. Filtering and Exclusion Logic
+## 5. Comment Processing System
+
+### 5.1. Comment Types
+
+The plugin recognizes two comment formats:
+
+**Obsidian Comments:**
+- Format: `%% comment content %%`
+- Multi-line support
+- Nested comment handling
+
+**HTML Comments:**
+- Format: `<!-- comment content -->`
+- Standard HTML/Markdown compatibility
+- Multi-line support
+
+### 5.2. Processing Options
+
+**Exclude Markers Only:**
+- Removes comment delimiters but keeps content
+- `%% text %%` becomes ` text `
+- `<!-- text -->` becomes ` text `
+
+**Exclude Entire Comments:**
+- Removes both markers and content
+- Complete removal from text analysis
+- Preserves surrounding text structure
+
+## 6. Link Processing System
+
+### 6.1. Link Types
+
+The plugin handles multiple link formats:
+
+**Internal Links:**
+- Basic: `[[Note Name]]` → "Note Name"
+- With alias: `[[Note Name|Display Text]]` → "Display Text"
+- Only the visible text is counted
+
+**External Links:**
+- Markdown: `[link text](https://url.com)` → "link text"
+- URLs and paths are excluded from count
+- Only user-visible text remains
+
+### 6.2. Processing Logic
+
+- Regex-based pattern matching
+- Preserves link text while removing technical parts
+- Maintains sentence flow and readability
+
+## 7. Heading Processing System
+
+### 7.1. Heading Recognition
+
+**ATX Headers:**
+- Levels 1-6: `#` through `######`
+- Space after markers required
+- Full line processing
+
+**Setext Headers:**
+- Level 1: Text with `===` underline
+- Level 2: Text with `---` underline
+- Multi-line pattern matching
+
+### 7.2. Exclusion Modes
+
+**Markers Only:**
+- Removes `#` symbols
+- Preserves heading text
+- Maintains document structure
+
+**Entire Lines:**
+- Removes complete heading lines
+- Includes the text content
+- Clean removal without gaps
+
+**Specific Sections:**
+- Right-click to exclude heading sections
+- Removes heading and all content until next heading
+- Respects heading hierarchy
+- Section boundaries follow Obsidian's block concept
+
+## 8. Words and Phrases Processing
+
+### 8.1. Word Exclusion
+
+**Matching Rules:**
+- Case-insensitive exact matching
+- Word boundary detection
+- "Test" matches "test" but not "testing"
+
+**Input Format:**
+- Comma-separated list
+- Trimmed for whitespace
+- Validated for proper formatting
+
+### 8.2. Phrase Exclusion
+
+**Adding Phrases:**
+- Right-click selected text
+- Context menu integration
+- Automatic duplicate detection
+
+**Matching Logic:**
+- Case-insensitive matching
+- Regex-escaped for safety
+- Preserves surrounding text
+
+## 9. Code Exclusion Logic
+
+### 9.1. Code Block Detection
+
+**Fenced Code Blocks:**
+- Triple backticks: ` ``` `
+- Triple tildes: `~~~`
+- Language identifiers supported
+- Multi-line content handling
+
+### 9.2. Inline Code Detection
+
+**Single Backticks:**
+- Format: `` `code` ``
+- Escaped backticks handled
+- No nesting support
+- Preserves text flow
+
+## 10. Per-Note Override System
+
+### 10.1. Frontmatter Overrides
+
+**Property Format:**
+```yaml
+cswc-disable: [exclude-urls, exclude-comments]
+```
+
+**Processing:**
+- Uses Obsidian's MetadataCache API
+- Runtime evaluation
+- Graceful fallback for invalid values
+
+### 10.2. Inline Comment Overrides
+
+**Marker Formats:**
+- HTML: `<!-- cswc-disable -->` ... `<!-- cswc-enable -->`
+- Obsidian: `%% cswc-disable %%` ... `%% cswc-enable %%`
+
+**Behavior:**
+- Disables all exclusions between markers
+- Unclosed sections extend to end of text
+- Minimal performance impact
+
+## 11. Filtering and Exclusion Logic
 
 ### 3.1. Processing Pipeline
 
@@ -145,7 +296,7 @@ The plugin processes text through a structured pipeline:
 
 ## 4. Custom Pattern Concepts
 
-### 4.1. Regular Expression Fundamentals
+### 12.1. Regular Expression Fundamentals
 
 The plugin allows expert users to define custom word recognition patterns using regular expressions:
 
@@ -162,7 +313,7 @@ The plugin allows expert users to define custom word recognition patterns using 
 - `[A-Za-z0-9]+`: One or more alphanumeric characters
 - `(?:[-_][A-Za-z0-9]+)*`: Zero or more hyphen/underscore followed by alphanumeric sequences
 
-### 4.2. Pattern Testing Concepts
+### 12.2. Pattern Testing Concepts
 
 **Interactive Validation:**
 - Live preview of pattern matches
@@ -176,7 +327,7 @@ The plugin allows expert users to define custom word recognition patterns using 
 - Reset functionality for safe experimentation
 - Performance monitoring for complex patterns
 
-### 4.3. Common Pattern Examples
+### 12.3. Common Pattern Examples
 
 **Numbers Only:**
 ```regex
@@ -228,6 +379,6 @@ Matches CamelCase and PascalCase terms.
 
 ---
 
-*Last updated: June 7, 2025*
+*Last updated: July 6, 2025*
 
 *This document provides the conceptual foundation for understanding the Custom Selected Word Count plugin's word processing algorithms and filtering logic.* 

@@ -10,7 +10,15 @@ This guide helps you install, configure, and use the Custom Selected Word Count 
 - [2. Quick Start](#2-quick-start)
 - [3. Basic Features](#3-basic-features)
 - [4. Configuration](#4-configuration)
+  - [4.1. UI Elements Configuration](#41-ui-elements-configuration)
+  - [4.2. Character Counting Configuration](#42-character-counting-configuration)
+  - [4.3. Sentence Counting Configuration](#43-sentence-counting-configuration)
+  - [4.4. Exclusion Settings](#44-exclusion-settings)
+  - [4.5. History Settings](#45-history-settings)
 - [5. Advanced Usage](#5-advanced-usage)
+  - [5.1. Custom Regex Patterns](#51-custom-regex-patterns)
+  - [5.2. Per-Note Exclusion Overrides](#52-per-note-exclusion-overrides)
+  - [5.3. Use Cases](#53-use-cases)
 - [6. Troubleshooting](#6-troubleshooting)
 
 ## 1. Installation
@@ -166,7 +174,9 @@ Access plugin settings via **Settings → Community Plugins → Custom Selected 
 **Sentence Count Options:**
 - **Show Sentence Count:** Toggle sentence count visibility in the modal
 
-### 4.4. Path Exclusion Settings
+### 4.4. Exclusion Settings
+
+#### 4.4.1. Path Exclusion
 
 Configure which types of paths and files to exclude from word counts:
 
@@ -177,6 +187,45 @@ Configure which types of paths and files to exclude from word counts:
 - **Exclude UNC Paths:** Filter out network paths (\\server)
 - **Exclude Unix Paths:** Filter out Unix-style paths (/usr/local)
 - **Exclude Environment Paths:** Filter out environment variables
+
+#### 4.4.2. Link Processing
+
+- **Exclude non-visible portions of links:** When enabled, only counts the visible text in links:
+  - For `[[Note Name|Alias]]` links, only counts "Alias"
+  - For `[link text](url)` links, only counts "link text"
+  - Property: `exclude-urls`
+
+#### 4.4.3. Code Exclusion
+
+- **Exclude code:** Master toggle for code exclusion
+  - **Exclude code blocks:** Removes triple-backtick code blocks from counts
+  - **Exclude inline code:** Removes single-backtick inline code from counts
+  - Properties: `exclude-code-blocks`, `exclude-inline-code`
+
+#### 4.4.4. Comment Exclusion
+
+- **Exclude comments:** Master toggle for comment exclusion
+  - **Exclude Obsidian comments:** Removes `%% comment %%` style comments
+  - **Exclude Obsidian comment content:** Choose to exclude content or just markers
+  - **Exclude HTML comments:** Removes `<!-- comment -->` style comments
+  - **Exclude HTML comment content:** Choose to exclude content or just markers
+  - Property: `exclude-comments`
+
+#### 4.4.5. Heading Exclusion
+
+- **Exclude headings:** Master toggle with three modes:
+  - **Exclude heading markers only:** Removes # symbols but counts heading text
+  - **Exclude entire heading lines:** Removes complete heading lines
+  - **Exclude specific heading sections:** Right-click headings to exclude their sections
+  - Properties: `exclude-headings`, `exclude-specific-headings`
+
+#### 4.4.6. Words and Phrases Exclusion
+
+- **Exclude words and phrases:** Master toggle for custom filtering
+  - **Excluded words:** Comma-separated list (e.g., "the, and, or")
+  - **Excluded phrases:** Right-click selected text to add phrases
+  - Phrase management UI with edit/delete options
+  - Property: `exclude-words-phrases`
 
 ### 4.5. History Settings
 
@@ -201,7 +250,49 @@ For expert users, the plugin offers custom word detection patterns:
 
 > **Warning:** This is an advanced feature. Incorrect regex patterns may cause inaccurate counts or performance issues.
 
-### 5.2. Use Cases
+### 5.2. Per-Note Exclusion Overrides
+
+Override global exclusion settings for individual notes:
+
+#### 5.2.1. YAML Frontmatter Override
+
+Add a `cswc-disable` property to your note's frontmatter:
+
+```yaml
+---
+cswc-disable: [exclude-urls, exclude-comments]
+---
+```
+
+Disable all exclusions:
+```yaml
+---
+cswc-disable: all
+---
+```
+
+**Supported values:**
+- Path exclusions: `exclude-windows-paths`, `exclude-unix-paths`, `exclude-unc-paths`, `exclude-environment-paths`
+- Content exclusions: `exclude-urls`, `exclude-code-blocks`, `exclude-inline-code`, `exclude-comments`
+- Structure exclusions: `exclude-headings`, `exclude-specific-headings`, `exclude-words-phrases`
+
+#### 5.2.2. Inline Comment Override
+
+Use special comments to disable exclusions for specific sections:
+
+```markdown
+This text follows global exclusion rules.
+
+<!-- cswc-disable -->
+This section ignores all exclusions.
+<!-- cswc-enable -->
+
+Back to normal exclusion rules.
+```
+
+Also works with Obsidian comments: `%% cswc-disable %%` and `%% cswc-enable %%`
+
+### 5.3. Use Cases
 
 #### 5.2.1. Academic Writing
 - Exclude references and file paths from counts

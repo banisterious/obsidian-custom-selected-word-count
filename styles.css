@@ -128,14 +128,14 @@ body {
     margin-right: 4px;
 }
 
-.lucide-bar-chart-3::before { content: "📊"; }
-.lucide-type::before { content: "Aa"; font-weight: bold; }
-.lucide-hash::before { content: "#"; font-weight: bold; }
-.lucide-list-ordered::before { content: "1."; font-weight: bold; }
-.lucide-copy::before { content: "⧉"; }
-.lucide-clock::before { content: "⏱"; }
-.lucide-trash-2::before { content: "🗑"; }
-.lucide-check::before { content: "✓"; }
+.word-count-lucide-bar-chart-3::before { content: "📊"; }
+.word-count-lucide-type::before { content: "Aa"; font-weight: bold; }
+.word-count-lucide-hash::before { content: "#"; font-weight: bold; }
+.word-count-lucide-list-ordered::before { content: "1."; font-weight: bold; }
+.word-count-lucide-copy::before { content: "⧉"; }
+.word-count-lucide-clock::before { content: "⏱"; }
+.word-count-lucide-trash-2::before { content: "🗑"; }
+.word-count-lucide-check::before { content: "✓"; }
 
 .word-count-modal .modal-content {
     padding: 24px;

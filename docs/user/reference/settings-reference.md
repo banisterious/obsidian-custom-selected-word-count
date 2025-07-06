@@ -9,10 +9,14 @@ This reference provides comprehensive documentation for all configuration option
 - [1. Accessing Settings](#1-accessing-settings)
 - [2. UI Elements Settings](#2-ui-elements-settings)
 - [3. Path Exclusion Settings](#3-path-exclusion-settings)
-- [4. Advanced Regex Settings](#4-advanced-regex-settings)
-- [5. History Settings](#5-history-settings)
-- [6. Debug and Maintenance](#6-debug-and-maintenance)
-- [7. Import and Export](#7-import-and-export)
+- [4. Character Count Settings](#4-character-count-settings)
+- [5. Sentence Count Settings](#5-sentence-count-settings)
+- [6. Exclusion Settings](#6-exclusion-settings)
+- [7. Per-Note Override Settings](#7-per-note-override-settings)
+- [8. Advanced Regex Settings](#8-advanced-regex-settings)
+- [9. History Settings](#9-history-settings)
+- [10. Debug and Maintenance](#10-debug-and-maintenance)
+- [11. Import and Export](#11-import-and-export)
 
 ## 1. Accessing Settings
 
@@ -244,7 +248,7 @@ Settings are organized into logical groups:
 - Testing recommended before production use
 - Performance monitoring for complex patterns
 
-### 4.2. Custom Regex Pattern
+### 8.2. Custom Regex Pattern
 
 **Purpose:** Defines the regular expression used for word recognition.
 
@@ -266,7 +270,7 @@ Settings are organized into logical groups:
 - Long words only: `[A-Za-z]{6,}`
 - CamelCase terms: `[A-Z][a-z]*(?:[A-Z][a-z]*)*`
 
-### 4.3. Reset to Default Regex
+### 8.3. Reset to Default Regex
 
 **Purpose:** Instantly reverts custom regex to the plugin's default pattern.
 
@@ -280,7 +284,7 @@ Settings are organized into logical groups:
 - Baseline comparison testing
 - Quick restoration during experimentation
 
-### 4.4. Test Your Regex
+### 8.4. Test Your Regex
 
 **Purpose:** Interactive testing area for custom regex patterns.
 
@@ -301,7 +305,7 @@ Settings are organized into logical groups:
 - Immediate feedback on pattern behavior
 - Prevents deployment of problematic patterns
 
-### 4.5. Reset Test
+### 8.5. Reset Test
 
 **Purpose:** Clears the regex test input area.
 
@@ -335,7 +339,7 @@ Settings are organized into logical groups:
 - Document writing session timestamps
 - Analyze writing patterns and productivity
 
-### 5.2. History Storage Limit
+### 9.2. History Storage Limit
 
 **Purpose:** Controls how many word counts are stored in history.
 
@@ -374,7 +378,7 @@ Settings are organized into logical groups:
 
 **Warning:** Debug logging may impact performance and should be disabled during normal use.
 
-### 6.2. Clear History
+### 10.2. Clear History
 
 **Purpose:** Removes all stored word count history.
 

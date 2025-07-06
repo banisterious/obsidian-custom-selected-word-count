@@ -43,6 +43,11 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
   - Right-click phrase selection with context menu integration
   - Phrase management UI with edit/delete capabilities
 - **Path and file extension exclusion** to avoid counting URLs and file paths
+- **Per-note exclusion overrides**:
+  - Override global exclusion settings for individual notes using YAML frontmatter
+  - Use `cswc-disable` property to disable specific exclusions (e.g., `cswc-disable: [exclude-urls, exclude-comments]`)
+  - Special value `all` disables all exclusions for the note
+  - Inline comment overrides: Use `<!-- cswc-disable -->` or `%% cswc-disable %%` markers to disable exclusions for specific sections
 - **Custom Word Detection Regex** (expert users):
   - Define your own regex pattern for word detection
   - Interactive "Test Your Regex" area with live preview
@@ -188,6 +193,44 @@ The settings page now includes a detailed "Exclusion Logic Details" section. For
 This makes it easy to understand what is being excluded and why.
 
 **UI improvement:** The sub-settings for "Exclude Paths" are now indented to match the style of the "Show Count in Status Bar" children, for a more consistent and visually appealing settings page.
+
+## Per-Note Exclusion Overrides
+
+You can override global exclusion settings for individual notes using two methods:
+
+### YAML Frontmatter Override
+
+Add a `cswc-disable` property to your note's frontmatter:
+
+```yaml
+---
+cswc-disable: [exclude-urls, exclude-comments]
+---
+```
+
+Or disable all exclusions:
+
+```yaml
+---
+cswc-disable: all
+---
+```
+
+### Inline Comment Override
+
+Use special comments to disable exclusions for specific sections:
+
+```markdown
+This text follows global exclusion rules.
+
+<!-- cswc-disable -->
+This section ignores all exclusions - URLs, paths, and comments are counted.
+<!-- cswc-enable -->
+
+Back to normal exclusion rules.
+```
+
+You can also use Obsidian comment syntax: `%% cswc-disable %%` and `%% cswc-enable %%`.
 
 ## Support
 
