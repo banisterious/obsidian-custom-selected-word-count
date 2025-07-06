@@ -28,6 +28,9 @@ interface WordCountPluginSettings {
 	showSentenceCount: boolean;      // Toggle for showing sentence count
 	// Link exclusion settings
 	excludeNonVisibleLinkPortions: boolean; // Toggle for excluding non-visible portions of links
+	// Code exclusion settings
+	excludeCodeBlocks: boolean;      // Toggle for excluding code blocks
+	excludeInlineCode: boolean;      // Toggle for excluding inline code
 	// Comment exclusion settings
 	excludeComments: boolean;        // Master toggle for comment exclusion
 	excludeObsidianComments: boolean; // Toggle for Obsidian comments (%% %%)
@@ -78,6 +81,9 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	showSentenceCount: false,        // Sentence count hidden by default
 	// Link exclusion defaults
 	excludeNonVisibleLinkPortions: false, // Link exclusion disabled by default
+	// Code exclusion defaults
+	excludeCodeBlocks: false,        // Code block exclusion disabled by default
+	excludeInlineCode: false,        // Inline code exclusion disabled by default
 	// Comment exclusion defaults
 	excludeComments: false,          // Comment exclusion disabled by default
 	excludeObsidianComments: false,  // Obsidian comment exclusion disabled by default
@@ -163,6 +169,51 @@ function getDisabledExclusionsFromFrontmatter(app: App): string[] {
 	}
 
 	return disabledItems;
+}
+
+/**
+ * Processes code blocks (```) in text according to settings.
+ * @param text The text to process.
+ * @param excludeCodeBlocks Whether to exclude code blocks.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text with code blocks removed if enabled.
+ */
+function processCodeBlocks(
+	text: string,
+	excludeCodeBlocks: boolean,
+	plugin?: CustomSelectedWordCountPlugin
+): string {
+	if (!excludeCodeBlocks) {
+		return text;
+	}
+
+	if (plugin) debugLog(plugin, 'Processing code blocks');
+
+	// Remove code blocks (both ``` and ~~~)
+	return text.replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, '');
+}
+
+/**
+ * Processes inline code (`) in text according to settings.
+ * @param text The text to process.
+ * @param excludeInlineCode Whether to exclude inline code.
+ * @param plugin The plugin instance for debug logging.
+ * @returns The processed text with inline code removed if enabled.
+ */
+function processInlineCode(
+	text: string,
+	excludeInlineCode: boolean,
+	plugin?: CustomSelectedWordCountPlugin
+): string {
+	if (!excludeInlineCode) {
+		return text;
+	}
+
+	if (plugin) debugLog(plugin, 'Processing inline code');
+
+	// Remove inline code (single backticks, but not within code blocks)
+	// This regex handles escaped backticks and ensures we match paired backticks
+	return text.replace(/`(?:[^`\\]|\\.)*`/g, '');
 }
 
 /**
@@ -465,6 +516,28 @@ function countSelectedCharacters(
 		return disabledExclusions.includes(exclusionId);
 	};
 	
+	// Process code blocks first (before inline code)
+	if (settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+		processedText = processCodeBlocks(
+			processedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after code block processing (char count):', processedText);
+	}
+	
+	// Process inline code after code blocks
+	if (settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+		processedText = processInlineCode(
+			processedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after inline code processing (char count):', processedText);
+	}
+	
 	// Process comments before character counting
 	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
 		// Process Obsidian comments
@@ -569,6 +642,28 @@ function countSelectedSentences(
 	const isExclusionDisabled = (exclusionId: string): boolean => {
 		return disabledExclusions.includes(exclusionId);
 	};
+	
+	// Process code blocks first (before inline code)
+	if (settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+		processedText = processCodeBlocks(
+			processedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after code block processing (sentence count):', processedText);
+	}
+	
+	// Process inline code after code blocks
+	if (settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+		processedText = processInlineCode(
+			processedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after inline code processing (sentence count):', processedText);
+	}
 	
 	// Process comments before sentence counting
 	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
@@ -772,6 +867,28 @@ function countSelectedWords(
 		return disabledExclusions.includes(exclusionId);
 	};
 
+	// Process code blocks first (before inline code)
+	if (settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+		selectedText = processCodeBlocks(
+			selectedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after code block processing:', selectedText);
+	}
+	
+	// Process inline code after code blocks
+	if (settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+		selectedText = processInlineCode(
+			selectedText,
+			true,
+			plugin
+		);
+		
+		if (plugin) debugLog(plugin, 'Text after inline code processing:', selectedText);
+	}
+
 	// Process comments before any other text processing
 	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
 		// Process Obsidian comments
@@ -835,8 +952,6 @@ function countSelectedWords(
 		if (plugin) debugLog(plugin, 'Text after words/phrases processing:', selectedText);
 	}
 
-	// Strip backticks before any other processing
-	selectedText = selectedText.replace(/`/g, '');
 
 	// Function to normalize path separators
 	const normalizePath = (str: string): string => {
@@ -1880,6 +1995,30 @@ class WordCountSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.excludeNonVisibleLinkPortions)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeNonVisibleLinkPortions = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Code Exclusion Settings
+		new Setting(containerEl).setName('Exclude code').setHeading();
+		
+		const codeContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(codeContainer)
+			.setName('Exclude code blocks')
+			.setDesc('Exclude text within triple backtick (```) or tilde (~~~) code blocks. • Property: exclude-code-blocks')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeCodeBlocks)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeCodeBlocks = value;
+					await this.plugin.saveSettings();
+				}));
+				
+		new Setting(codeContainer)
+			.setName('Exclude inline code')
+			.setDesc('Exclude text within single backticks (`). • Property: exclude-inline-code')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeInlineCode)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeInlineCode = value;
 					await this.plugin.saveSettings();
 				}));
 
