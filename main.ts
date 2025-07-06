@@ -160,6 +160,9 @@ function getDisabledExclusionsFromFrontmatter(app: App): string[] {
 	if (disabledItems.includes('all')) {
 		return [
 			'exclude-windows-paths',
+			'exclude-unix-paths',
+			'exclude-unc-paths',
+			'exclude-environment-paths',
 			'exclude-urls',
 			'exclude-code-blocks',
 			'exclude-inline-code',
@@ -990,7 +993,7 @@ function countSelectedWords(
 				return false;
 			}
 			
-			if (settings.excludeEnvironmentPaths) {
+			if (settings.excludeEnvironmentPaths && !isExclusionDisabled('exclude-environment-paths')) {
 				if (plugin) debugLog(plugin, 'Matched environment variable');
 				return true;
 			}
@@ -1000,7 +1003,7 @@ function countSelectedWords(
 
 		// UNC paths (\\server\share) - check original string
 		if (/^\\\\[^\\]+\\[^\\]+/.test(str)) {
-			if (settings.excludeUNCPaths) {
+			if (settings.excludeUNCPaths && !isExclusionDisabled('exclude-unc-paths')) {
 				if (plugin) debugLog(plugin, 'Matched UNC path');
 				return true;
 			}
@@ -1019,7 +1022,7 @@ function countSelectedWords(
 
 		// Unix paths (/usr/local)
 		if (/^\/[^\/]/.test(normalizedStr)) {
-			if (settings.excludeUnixPaths) {
+			if (settings.excludeUnixPaths && !isExclusionDisabled('exclude-unix-paths')) {
 				if (plugin) debugLog(plugin, 'Matched Unix path');
 				return true;
 			}
@@ -2016,9 +2019,10 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 		
 		// History settings
-		new Setting(containerEl)
+		const historyContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(historyContainer)
 			.setName('Show date/time in history')
-			.setDesc('Include timestamps when displaying word count history.')
+			.setDesc('Include timestamps when displaying word count history in the modal.')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.showDateTimeInHistory)
 				.onChange(async (value: boolean) => {
@@ -2043,7 +2047,8 @@ class WordCountSettingTab extends PluginSettingTab {
 		overrideContent.createEl('p', { text: 'Property values are shown next to each setting below (• Property: ...)' });
 
 		// Link Exclusion Settings
-		new Setting(containerEl)
+		const linkContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(linkContainer)
 			.setName('Exclude non-visible portions of links')
 			.setDesc('For [[Note Name|Alias]] links, only count "Alias". For [link text](url) links, only count "link text". • Property: exclude-urls')
 			.addToggle((toggle: any) => toggle
@@ -2117,7 +2122,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		new Setting(pathSettingsContainer)
 			.setName('Exclude Unix paths')
-			.setDesc('Exclude Unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled)')
+			.setDesc('Exclude Unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled) • Property: exclude-unix-paths')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeUnixPaths)
 				.onChange(async (value: boolean) => {
@@ -2127,7 +2132,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		new Setting(pathSettingsContainer)
 			.setName('Exclude UNC paths')
-			.setDesc('Exclude network paths starting with double backslash (e.g., \\\\server\\share). (Requires path exclusion to be enabled)')
+			.setDesc('Exclude network paths starting with double backslash (e.g., \\\\server\\share). (Requires path exclusion to be enabled) • Property: exclude-unc-paths')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeUNCPaths)
 				.onChange(async (value: boolean) => {
@@ -2137,7 +2142,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		new Setting(pathSettingsContainer)
 			.setName('Exclude environment paths')
-			.setDesc('Exclude environment variable paths (e.g., %USERPROFILE%, $HOME). (Requires path exclusion to be enabled)')
+			.setDesc('Exclude environment variable paths (e.g., %USERPROFILE%, $HOME). (Requires path exclusion to be enabled) • Property: exclude-environment-paths')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeEnvironmentPaths)
 				.onChange(async (value: boolean) => {
@@ -2489,7 +2494,8 @@ class WordCountSettingTab extends PluginSettingTab {
 		(this as any).renderPhrasesList = renderPhrasesList;
 
 
-		new Setting(containerEl)
+		const debugContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(debugContainer)
 			.setName('Enable debug logging')
 			.setDesc('Enable detailed logging for troubleshooting. May impact performance.')
 			.addToggle((toggle: any) => toggle
