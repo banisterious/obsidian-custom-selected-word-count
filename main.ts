@@ -1,6 +1,6 @@
 // BUILD: 2025-05-07
 
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, parseYaml } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -117,6 +117,52 @@ function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...arg
 	if (plugin.settings.enableDebugLogging) {
 		console.log(`[Word Count Debug] ${message}`, ...args);
 	}
+}
+
+/**
+ * Gets the disabled exclusions from the frontmatter of the active file.
+ * @param app The Obsidian app instance.
+ * @returns Array of exclusion identifiers to disable, or empty array if none.
+ */
+function getDisabledExclusionsFromFrontmatter(app: App): string[] {
+	const activeFile = app.workspace.getActiveFile();
+	if (!activeFile) {
+		return [];
+	}
+
+	const cache = app.metadataCache.getFileCache(activeFile);
+	if (!cache || !cache.frontmatter) {
+		return [];
+	}
+
+	const cswcDisable = cache.frontmatter['cswc-disable'];
+	if (!cswcDisable) {
+		return [];
+	}
+
+	// Handle both array and single string formats
+	let disabledItems: string[] = [];
+	if (Array.isArray(cswcDisable)) {
+		disabledItems = cswcDisable.filter(item => typeof item === 'string');
+	} else if (typeof cswcDisable === 'string') {
+		disabledItems = [cswcDisable];
+	}
+
+	// If "all" is present, return all possible exclusion identifiers
+	if (disabledItems.includes('all')) {
+		return [
+			'exclude-windows-paths',
+			'exclude-urls',
+			'exclude-code-blocks',
+			'exclude-inline-code',
+			'exclude-comments',
+			'exclude-headings',
+			'exclude-specific-headings',
+			'exclude-words-phrases'
+		];
+	}
+
+	return disabledItems;
 }
 
 /**
@@ -398,13 +444,15 @@ function processWordsAndPhrases(
  * @param mode Character counting mode: 'all', 'no-spaces', or 'letters-only'.
  * @param settings The plugin settings.
  * @param plugin The plugin instance for debug logging.
+ * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns The character count as an integer.
  */
 function countSelectedCharacters(
 	selectedText: string,
 	mode: 'all' | 'no-spaces' | 'letters-only' = 'all',
 	settings?: WordCountPluginSettings,
-	plugin?: CustomSelectedWordCountPlugin
+	plugin?: CustomSelectedWordCountPlugin,
+	disabledExclusions: string[] = []
 ): number {
 	if (!selectedText) return 0;
 	
@@ -412,8 +460,13 @@ function countSelectedCharacters(
 	
 	let processedText = selectedText;
 	
+	// Helper function to check if exclusion is disabled
+	const isExclusionDisabled = (exclusionId: string): boolean => {
+		return disabledExclusions.includes(exclusionId);
+	};
+	
 	// Process comments before character counting
-	if (settings?.excludeComments) {
+	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
 		// Process Obsidian comments
 		if (settings.excludeObsidianComments) {
 			processedText = processObsidianComments(
@@ -438,7 +491,7 @@ function countSelectedCharacters(
 	}
 	
 	// Process links after comments but before character counting
-	if (settings?.excludeNonVisibleLinkPortions) {
+	if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
 		processedText = processLinks(
 			processedText,
 			true,
@@ -449,7 +502,7 @@ function countSelectedCharacters(
 	}
 	
 	// Process headings after links but before character counting
-	if (settings?.excludeHeadings) {
+	if (settings?.excludeHeadings && !isExclusionDisabled('exclude-headings')) {
 		processedText = processHeadings(
 			processedText,
 			true,
@@ -463,7 +516,7 @@ function countSelectedCharacters(
 	}
 	
 	// Process words and phrases after headings but before character counting
-	if (settings?.excludeWordsAndPhrases) {
+	if (settings?.excludeWordsAndPhrases && !isExclusionDisabled('exclude-words-phrases')) {
 		processedText = processWordsAndPhrases(
 			processedText,
 			true,
@@ -497,12 +550,14 @@ function countSelectedCharacters(
  * @param selectedText The text to analyze.
  * @param settings The plugin settings.
  * @param plugin The plugin instance for debug logging.
+ * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns The sentence count as an integer.
  */
 function countSelectedSentences(
 	selectedText: string,
 	settings?: WordCountPluginSettings,
-	plugin?: CustomSelectedWordCountPlugin
+	plugin?: CustomSelectedWordCountPlugin,
+	disabledExclusions: string[] = []
 ): number {
 	if (!selectedText) return 0;
 	
@@ -510,8 +565,13 @@ function countSelectedSentences(
 	
 	let processedText = selectedText;
 	
+	// Helper function to check if exclusion is disabled
+	const isExclusionDisabled = (exclusionId: string): boolean => {
+		return disabledExclusions.includes(exclusionId);
+	};
+	
 	// Process comments before sentence counting
-	if (settings?.excludeComments) {
+	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
 		// Process Obsidian comments
 		if (settings.excludeObsidianComments) {
 			processedText = processObsidianComments(
@@ -536,7 +596,7 @@ function countSelectedSentences(
 	}
 	
 	// Process links after comments but before sentence counting
-	if (settings?.excludeNonVisibleLinkPortions) {
+	if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
 		processedText = processLinks(
 			processedText,
 			true,
@@ -640,6 +700,8 @@ function countSelectedSentences(
  * @param excludedExtensions Array of file extensions to exclude (e.g., ['.jpg', '.png']).
  * @param stripEmojis Whether to strip emojis from the count (default: true).
  * @param settings The plugin settings.
+ * @param plugin The plugin instance.
+ * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns Object containing both word and character counts.
  */
 function countSelectedText(
@@ -647,7 +709,8 @@ function countSelectedText(
 	excludedExtensions: string[] = [],
 	stripEmojis: boolean = true,
 	settings?: WordCountPluginSettings,
-	plugin?: CustomSelectedWordCountPlugin
+	plugin?: CustomSelectedWordCountPlugin,
+	disabledExclusions: string[] = []
 ): CountResult {
 	if (!selectedText) return { words: 0, characters: 0, sentences: 0 };
 
@@ -656,14 +719,16 @@ function countSelectedText(
 		selectedText, 
 		settings?.characterCountMode || 'all',
 		settings,
-		plugin
+		plugin,
+		disabledExclusions
 	);
 
 	// Count sentences from the original text
 	const sentenceCount = countSelectedSentences(
 		selectedText,
 		settings,
-		plugin
+		plugin,
+		disabledExclusions
 	);
 
 	// Now perform word counting (keeping existing logic)
@@ -672,7 +737,8 @@ function countSelectedText(
 		excludedExtensions,
 		stripEmojis,
 		settings,
-		plugin
+		plugin,
+		disabledExclusions
 	);
 
 	return { words: wordCount, characters: characterCount, sentences: sentenceCount };
@@ -684,6 +750,8 @@ function countSelectedText(
  * @param excludedExtensions Array of file extensions to exclude (e.g., ['.jpg', '.png']).
  * @param stripEmojis Whether to strip emojis from the count (default: true).
  * @param settings The plugin settings.
+ * @param plugin The plugin instance.
+ * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns The word count as an integer.
  */
 function countSelectedWords(
@@ -691,15 +759,21 @@ function countSelectedWords(
 	excludedExtensions: string[] = [],
 	stripEmojis: boolean = true,
 	settings?: WordCountPluginSettings,
-	plugin?: CustomSelectedWordCountPlugin
+	plugin?: CustomSelectedWordCountPlugin,
+	disabledExclusions: string[] = []
 ): number {
 	if (!selectedText) return 0;
 
 	// Debug logging
 	if (plugin) debugLog(plugin, 'Initial text:', selectedText);
 
+	// Helper function to check if exclusion is disabled
+	const isExclusionDisabled = (exclusionId: string): boolean => {
+		return disabledExclusions.includes(exclusionId);
+	};
+
 	// Process comments before any other text processing
-	if (settings?.excludeComments) {
+	if (settings?.excludeComments && !isExclusionDisabled('exclude-comments')) {
 		// Process Obsidian comments
 		if (settings.excludeObsidianComments) {
 			selectedText = processObsidianComments(
@@ -724,7 +798,7 @@ function countSelectedWords(
 	}
 
 	// Process links after comments but before other text processing
-	if (settings?.excludeNonVisibleLinkPortions) {
+	if (settings?.excludeNonVisibleLinkPortions && !isExclusionDisabled('exclude-urls')) {
 		selectedText = processLinks(
 			selectedText,
 			true,
@@ -735,7 +809,7 @@ function countSelectedWords(
 	}
 	
 	// Process headings after links but before other text processing
-	if (settings?.excludeHeadings) {
+	if (settings?.excludeHeadings && !isExclusionDisabled('exclude-headings')) {
 		selectedText = processHeadings(
 			selectedText,
 			true,
@@ -749,7 +823,7 @@ function countSelectedWords(
 	}
 	
 	// Process words and phrases after headings but before other text processing
-	if (settings?.excludeWordsAndPhrases) {
+	if (settings?.excludeWordsAndPhrases && !isExclusionDisabled('exclude-words-phrases')) {
 		selectedText = processWordsAndPhrases(
 			selectedText,
 			true,
@@ -779,7 +853,7 @@ function countSelectedWords(
 		// Check each path type with its original format
 		// Windows drive letter paths (C:\ or C:/)
 		if (/^[A-Za-z]:[\/\\]/.test(str)) {
-			if (settings.excludeWindowsPaths) {
+			if (settings.excludeWindowsPaths && !isExclusionDisabled('exclude-windows-paths')) {
 				if (plugin) debugLog(plugin, 'Matched Windows drive path');
 				return true;
 			}
@@ -791,7 +865,7 @@ function countSelectedWords(
 		if (/^(?:%[^%]+%|\$[A-Za-z_][A-Za-z0-9_]*)/.test(str)) {
 			// Check if this is a Windows path with an environment variable
 			if (/^%[^%]+%[\/\\]/.test(str)) {
-				if (settings.excludeWindowsPaths) {
+				if (settings.excludeWindowsPaths && !isExclusionDisabled('exclude-windows-paths')) {
 					if (plugin) debugLog(plugin, 'Matched Windows path with environment variable');
 					return true;
 				}
@@ -1194,7 +1268,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 			this.log('Processing selection:', selectedText);
 			const exclusions = this.settings.exclusionList.split(',').map(e => e.trim()).filter(e => e);
-			const countResult = countSelectedText(selectedText, exclusions, true, this.settings, this);
+			const disabledExclusions = getDisabledExclusionsFromFrontmatter(this.app);
+			const countResult = countSelectedText(selectedText, exclusions, true, this.settings, this, disabledExclusions);
 
 			// Update status bar if it exists
 			if (this.statusBarItem) {
@@ -1280,12 +1355,14 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			return;
 		}
 
+		const disabledExclusions = getDisabledExclusionsFromFrontmatter(this.app);
 		const wordCount = count ?? countSelectedWords(
 			selectedText,
 			this.settings.exclusionList.split(',').map(e => e.trim()).filter(e => e),
 			true,
 			this.settings,
-			this
+			this,
+			disabledExclusions
 		);
 
 		// Add live indicator if enabled

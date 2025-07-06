@@ -73,6 +73,14 @@ cswc-disable: exclude-windows-paths
 ```
 (Should support both array and single string format for convenience)
 
+#### Example 4: Disable all exclusions
+```yaml
+---
+cswc-disable: all
+---
+```
+(Using the special value "all" disables all exclusion rules for the note)
+
 ## Technical Considerations
 
 1. **Property Reading**: Need to parse YAML frontmatter and extract the `cswc-disable` property value.
