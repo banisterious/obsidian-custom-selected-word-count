@@ -29,6 +29,7 @@ interface WordCountPluginSettings {
 	// Link exclusion settings
 	excludeNonVisibleLinkPortions: boolean; // Toggle for excluding non-visible portions of links
 	// Code exclusion settings
+	excludeCode: boolean;            // Master toggle for code exclusion
 	excludeCodeBlocks: boolean;      // Toggle for excluding code blocks
 	excludeInlineCode: boolean;      // Toggle for excluding inline code
 	// Comment exclusion settings
@@ -82,6 +83,7 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	// Link exclusion defaults
 	excludeNonVisibleLinkPortions: false, // Link exclusion disabled by default
 	// Code exclusion defaults
+	excludeCode: false,              // Code exclusion disabled by default
 	excludeCodeBlocks: false,        // Code block exclusion disabled by default
 	excludeInlineCode: false,        // Inline code exclusion disabled by default
 	// Comment exclusion defaults
@@ -517,7 +519,7 @@ function countSelectedCharacters(
 	};
 	
 	// Process code blocks first (before inline code)
-	if (settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+	if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
 		processedText = processCodeBlocks(
 			processedText,
 			true,
@@ -528,7 +530,7 @@ function countSelectedCharacters(
 	}
 	
 	// Process inline code after code blocks
-	if (settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+	if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
 		processedText = processInlineCode(
 			processedText,
 			true,
@@ -644,7 +646,7 @@ function countSelectedSentences(
 	};
 	
 	// Process code blocks first (before inline code)
-	if (settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+	if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
 		processedText = processCodeBlocks(
 			processedText,
 			true,
@@ -655,7 +657,7 @@ function countSelectedSentences(
 	}
 	
 	// Process inline code after code blocks
-	if (settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+	if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
 		processedText = processInlineCode(
 			processedText,
 			true,
@@ -868,7 +870,7 @@ function countSelectedWords(
 	};
 
 	// Process code blocks first (before inline code)
-	if (settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
+	if (settings?.excludeCode && settings?.excludeCodeBlocks && !isExclusionDisabled('exclude-code-blocks')) {
 		selectedText = processCodeBlocks(
 			selectedText,
 			true,
@@ -879,7 +881,7 @@ function countSelectedWords(
 	}
 	
 	// Process inline code after code blocks
-	if (settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
+	if (settings?.excludeCode && settings?.excludeInlineCode && !isExclusionDisabled('exclude-inline-code')) {
 		selectedText = processInlineCode(
 			selectedText,
 			true,
@@ -1931,9 +1933,11 @@ class WordCountSettingTab extends PluginSettingTab {
 					this.updateSettingsUI();
 				}));
 
+		// Status bar sub-settings container
+		const statusBarSettingsContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-status-bar-settings' });
+		
 		// Live Update Setting
-		const liveUpdateContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
-		new Setting(liveUpdateContainer)
+		new Setting(statusBarSettingsContainer)
 			.setName('Enable live updates')
 			.setDesc('Update the status bar count automatically when text is selected. (Requires status bar to be enabled)')
 			.addToggle((toggle: any) => toggle
@@ -1945,8 +1949,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Hide Core Word Count Setting
-		const hideWordCountContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
-		new Setting(hideWordCountContainer)
+		new Setting(statusBarSettingsContainer)
 			.setName('Hide core word count')
 			.setDesc('Hide Obsidian\'s built-in word count when the selected word count is enabled. (Requires status bar to be enabled)')
 			.addToggle((toggle: any) => toggle
@@ -1958,8 +1961,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Status Bar Label Setting
-		const labelContainer = statusBarContainer.createDiv({ cls: 'word-count-container-indented' });
-		new Setting(labelContainer)
+		new Setting(statusBarSettingsContainer)
 			.setName('Status bar label')
 			.setDesc('Customize the label shown before the count in the status bar. (Requires status bar to be enabled)')
 			.addText((text: any) => text
@@ -1969,6 +1971,50 @@ class WordCountSettingTab extends PluginSettingTab {
 					this.plugin.settings.statusBarLabel = value;
 					await this.plugin.saveSettings();
 					this.plugin.setupStatusBar();
+				}));
+
+		// Character Count Settings
+		new Setting(containerEl).setName('Character counting').setHeading();
+
+		const charCountContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(charCountContainer)
+			.setName('Show character count')
+			.setDesc('Display character count alongside word count in the modal.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.showCharacterCount)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.showCharacterCount = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+
+		const charCountSettingsContainer = charCountContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-char-settings' });
+
+		// Character counting mode
+		const charModeContainer = charCountSettingsContainer.createDiv({ cls: 'word-count-container-indented' });
+		new Setting(charModeContainer)
+			.setName('Character counting mode')
+			.setDesc('Choose how characters are counted. (Requires character count to be enabled)')
+			.addDropdown((dropdown: any) => dropdown
+				.addOption('all', 'All characters (including spaces)')
+				.addOption('no-spaces', 'All characters (excluding spaces)')
+				.addOption('letters-only', 'Letters only')
+				.setValue(this.plugin.settings.characterCountMode)
+				.onChange(async (value: 'all' | 'no-spaces' | 'letters-only') => {
+					this.plugin.settings.characterCountMode = value;
+					await this.plugin.saveSettings();
+				}));
+
+		// Sentence count settings
+		const sentenceCountContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
+		new Setting(sentenceCountContainer)
+			.setName('Show sentence count')
+			.setDesc('Display sentence count alongside word count in the modal.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.showSentenceCount)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.showSentenceCount = value;
+					await this.plugin.saveSettings();
 				}));
 
 		// Per-note Override Information
@@ -1999,12 +2045,23 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Code Exclusion Settings
-		new Setting(containerEl).setName('Exclude code').setHeading();
-		
 		const codeContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(codeContainer)
+			.setName('Exclude code')
+			.setDesc('When enabled, code will be excluded from word, character, and sentence counts.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.excludeCode)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.excludeCode = value;
+					await this.plugin.saveSettings();
+					this.updateSettingsUI();
+				}));
+		
+		const codeSettingsContainer = codeContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-code-settings' });
+		
+		new Setting(codeSettingsContainer)
 			.setName('Exclude code blocks')
-			.setDesc('Exclude text within triple backtick (```) or tilde (~~~) code blocks. • Property: exclude-code-blocks')
+			.setDesc('Exclude text within triple backtick (```) or tilde (~~~) code blocks. (Requires code exclusion to be enabled) • Property: exclude-code-blocks')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeCodeBlocks)
 				.onChange(async (value: boolean) => {
@@ -2012,9 +2069,9 @@ class WordCountSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 				
-		new Setting(codeContainer)
+		new Setting(codeSettingsContainer)
 			.setName('Exclude inline code')
-			.setDesc('Exclude text within single backticks (`). • Property: exclude-inline-code')
+			.setDesc('Exclude text within single backticks (`). (Requires code exclusion to be enabled) • Property: exclude-inline-code')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeInlineCode)
 				.onChange(async (value: boolean) => {
@@ -2079,49 +2136,6 @@ class WordCountSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		// Character Count Settings
-		new Setting(containerEl).setName('Character counting').setHeading();
-
-		const charCountContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
-		new Setting(charCountContainer)
-			.setName('Show character count')
-			.setDesc('Display character count alongside word count in the modal.')
-			.addToggle((toggle: any) => toggle
-				.setValue(this.plugin.settings.showCharacterCount)
-				.onChange(async (value: boolean) => {
-					this.plugin.settings.showCharacterCount = value;
-					await this.plugin.saveSettings();
-					this.updateSettingsUI();
-				}));
-
-		const charCountSettingsContainer = charCountContainer.createDiv({ cls: 'word-count-container-indented word-count-settings-group word-count-char-settings' });
-
-		// Character counting mode
-		const charModeContainer = charCountSettingsContainer.createDiv({ cls: 'word-count-container-indented' });
-		new Setting(charModeContainer)
-			.setName('Character counting mode')
-			.setDesc('Choose how characters are counted. (Requires character count to be enabled)')
-			.addDropdown((dropdown: any) => dropdown
-				.addOption('all', 'All characters (including spaces)')
-				.addOption('no-spaces', 'All characters (excluding spaces)')
-				.addOption('letters-only', 'Letters only')
-				.setValue(this.plugin.settings.characterCountMode)
-				.onChange(async (value: 'all' | 'no-spaces' | 'letters-only') => {
-					this.plugin.settings.characterCountMode = value;
-					await this.plugin.saveSettings();
-				}));
-
-		// Sentence count settings
-		const sentenceCountContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
-		new Setting(sentenceCountContainer)
-			.setName('Show sentence count')
-			.setDesc('Display sentence count alongside word count in the modal.')
-			.addToggle((toggle: any) => toggle
-				.setValue(this.plugin.settings.showSentenceCount)
-				.onChange(async (value: boolean) => {
-					this.plugin.settings.showSentenceCount = value;
-					await this.plugin.saveSettings();
-				}));
 
 		// Comment Exclusion Settings
 		new Setting(containerEl).setName('Exclude comments').setHeading();
@@ -2626,9 +2640,8 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Helper method to update UI visibility based on settings
 		this.updateSettingsUI = () => {
-			liveUpdateContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
-			hideWordCountContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
-			labelContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
+			statusBarSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.showStatusBar);
+			codeSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludeCode);
 			pathSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.excludePaths);
 			charCountSettingsContainer.toggleClass('word-count-hidden', !this.plugin.settings.showCharacterCount);
 			charModeContainer.toggleClass('word-count-hidden', !this.plugin.settings.showCharacterCount);

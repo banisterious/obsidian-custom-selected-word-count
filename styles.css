@@ -738,10 +738,12 @@ details.word-count-override-info {
     }
 
     /* Path settings specific styling */
+    .word-count-status-bar-settings,
     .word-count-path-settings,
     .word-count-char-settings,
     .word-count-comment-settings,
     .word-count-heading-settings,
+    .word-count-code-settings,
     .word-count-words-phrases-settings {
         margin-left: 5px;
         padding-left: 15px;
