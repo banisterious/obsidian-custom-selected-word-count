@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.5.0] - 2025-07-06
 ### Added
 - **Per-Note Exclusion Override System**
   - Added YAML frontmatter property `cswc-disable` to override global exclusion settings per note
@@ -30,6 +32,9 @@
   - Added collapsible "Using per-note exclusion overrides" help section with examples
   - Reorganized settings with better grouping and visual hierarchy
   - Improved section headings and descriptions for clarity
+- **CSS Class Namespacing**
+  - Added `word-count-` prefix to all Lucide icon classes to prevent conflicts
+  - Ensures proper scoping for plugin-specific styles
 
 ### Technical
 - **Override Processing Implementation**
@@ -37,6 +42,13 @@
   - Added `processTextWithOverrides()` function for inline comment handling
   - Updated all counting functions to respect override settings
   - Minimal performance impact with efficient caching
+
+### Documentation
+- **Comprehensive Documentation Update**
+  - Updated architecture overview with per-note override system
+  - Overhauled all user guides to include new features
+  - Added detailed examples and use cases
+  - Updated settings reference with all new options
 
 ## [1.4.0] - 2025-07-04
 ### Added
