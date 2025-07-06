@@ -1974,8 +1974,6 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Character Count Settings
-		new Setting(containerEl).setName('Character counting').setHeading();
-
 		const charCountContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(charCountContainer)
 			.setName('Show character count')
@@ -2014,6 +2012,17 @@ class WordCountSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.showSentenceCount)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.showSentenceCount = value;
+					await this.plugin.saveSettings();
+				}));
+		
+		// History settings
+		new Setting(containerEl)
+			.setName('Show date/time in history')
+			.setDesc('Include timestamps when displaying word count history.')
+			.addToggle((toggle: any) => toggle
+				.setValue(this.plugin.settings.showDateTimeInHistory)
+				.onChange(async (value: boolean) => {
+					this.plugin.settings.showDateTimeInHistory = value;
 					await this.plugin.saveSettings();
 				}));
 
@@ -2138,8 +2147,6 @@ class WordCountSettingTab extends PluginSettingTab {
 
 
 		// Comment Exclusion Settings
-		new Setting(containerEl).setName('Exclude comments').setHeading();
-
 		const commentContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(commentContainer)
 			.setName('Exclude comments from text analysis')
@@ -2201,8 +2208,6 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		// Heading Exclusion Settings
-		new Setting(containerEl).setName('Exclude headings').setHeading();
-
 		const headingContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(headingContainer)
 			.setName('Exclude headings from text analysis')
@@ -2361,8 +2366,6 @@ class WordCountSettingTab extends PluginSettingTab {
 		(this as any).renderHeadingsList = renderHeadingsList;
 
 		// Words and Phrases Exclusion Settings
-		new Setting(containerEl).setName('Exclude words and phrases').setHeading();
-
 		const wordsAndPhrasesContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(wordsAndPhrasesContainer)
 			.setName('Exclude words and phrases from text analysis')
@@ -2485,18 +2488,6 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Store reference for updates
 		(this as any).renderPhrasesList = renderPhrasesList;
 
-		// History & Debug Settings
-		new Setting(containerEl).setName('History & debug').setHeading();
-
-		new Setting(containerEl)
-			.setName('Show date/time in history')
-			.setDesc('Include timestamps when displaying word count history.')
-			.addToggle((toggle: any) => toggle
-				.setValue(this.plugin.settings.showDateTimeInHistory)
-				.onChange(async (value: boolean) => {
-					this.plugin.settings.showDateTimeInHistory = value;
-					await this.plugin.saveSettings();
-				}));
 
 		new Setting(containerEl)
 			.setName('Enable debug logging')
@@ -2526,7 +2517,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const advSep = containerEl.createEl('hr', { cls: 'word-count-advanced-separator' });
 		const advancedSection = containerEl.createEl('details', { cls: 'word-count-advanced-section' });
 		const advSummary = advancedSection.createEl('summary', { 
-			text: '⚠️ Custom Word Detection Regex (Expert Only)',
+			text: '⚠️ Custom word detection regex (expert only)',
 			cls: 'word-count-advanced-summary'
 		});
 

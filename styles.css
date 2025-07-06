@@ -527,8 +527,10 @@ details.word-count-override-info {
 
 /* Advanced Section Styles */
 .word-count-advanced-section {
-    margin-left: 20px;
     margin-bottom: 2em;
+    padding: .5em;
+    border: var(--input-border-width) solid var(--text-warning);
+    border-radius: 4px;
 }
 
 .word-count-regex-sample {
@@ -647,7 +649,6 @@ details.word-count-override-info {
         > div {
             margin-top: 1em;
             padding-left: 1em;
-            border-left: 2px solid var(--background-modifier-border);
         }
     }
 
