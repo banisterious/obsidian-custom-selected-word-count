@@ -1856,10 +1856,26 @@ class WordCountSettingTab extends PluginSettingTab {
 					this.plugin.setupStatusBar();
 				}));
 
+		// Per-note Override Information
+		const overrideInfo = containerEl.createEl('details', { cls: 'word-count-override-info' });
+		const overrideSummary = overrideInfo.createEl('summary', { text: 'ℹ️ Using per-note exclusion overrides' });
+		
+		const overrideContent = overrideInfo.createDiv({ cls: 'word-count-override-content' });
+		overrideContent.createEl('p', { text: 'You can override any exclusion setting for individual notes by adding a cswc-disable property to the note\'s frontmatter:' });
+		
+		const examplePre = overrideContent.createEl('pre', { cls: 'word-count-override-example' });
+		examplePre.createEl('code', { text: '---\ncswc-disable: [exclude-urls, exclude-comments]\n---' });
+		
+		overrideContent.createEl('p', { text: 'Use "all" to disable all exclusions:' });
+		const examplePre2 = overrideContent.createEl('pre', { cls: 'word-count-override-example' });
+		examplePre2.createEl('code', { text: '---\ncswc-disable: all\n---' });
+		
+		overrideContent.createEl('p', { text: 'Property values are shown next to each setting below (• Property: ...)' });
+
 		// Link Exclusion Settings
 		new Setting(containerEl)
 			.setName('Exclude non-visible portions of links')
-			.setDesc('For [[Note Name|Alias]] links, only count "Alias". For [link text](url) links, only count "link text".')
+			.setDesc('For [[Note Name|Alias]] links, only count "Alias". For [link text](url) links, only count "link text". • Property: exclude-urls')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeNonVisibleLinkPortions)
 				.onChange(async (value: boolean) => {
@@ -1886,7 +1902,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Sub-settings for each path type
 		new Setting(pathSettingsContainer)
 			.setName('Exclude Windows paths')
-			.setDesc('Exclude paths starting with drive letters (e.g., C:\\). (Requires path exclusion to be enabled)')
+			.setDesc('Exclude paths starting with drive letters (e.g., C:\\). (Requires path exclusion to be enabled) • Property: exclude-windows-paths')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeWindowsPaths)
 				.onChange(async (value: boolean) => {
@@ -1974,7 +1990,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const commentContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(commentContainer)
 			.setName('Exclude comments from text analysis')
-			.setDesc('When enabled, comments will be excluded from word, character, and sentence counts.')
+			.setDesc('When enabled, comments will be excluded from word, character, and sentence counts. • Property: exclude-comments')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeComments)
 				.onChange(async (value: boolean) => {
@@ -2037,7 +2053,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const headingContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(headingContainer)
 			.setName('Exclude headings from text analysis')
-			.setDesc('When enabled, markdown headings will be excluded from word, character, and sentence counts.')
+			.setDesc('When enabled, markdown headings will be excluded from word, character, and sentence counts. • Property: exclude-headings')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeHeadings)
 				.onChange(async (value: boolean) => {
@@ -2197,7 +2213,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const wordsAndPhrasesContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(wordsAndPhrasesContainer)
 			.setName('Exclude words and phrases from text analysis')
-			.setDesc('When enabled, specific words and phrases will be excluded from word, character, and sentence counts.')
+			.setDesc('When enabled, specific words and phrases will be excluded from word, character, and sentence counts. • Property: exclude-words-phrases')
 			.addToggle((toggle: any) => toggle
 				.setValue(this.plugin.settings.excludeWordsAndPhrases)
 				.onChange(async (value: boolean) => {
