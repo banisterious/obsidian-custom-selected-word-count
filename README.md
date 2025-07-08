@@ -2,6 +2,8 @@
 
 A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text analysis for selected text across all view modes. Features advanced word counting, character counting, and sentence counting with customizable path exclusion, modern UI design, and detailed history tracking.
 
+![Downloads](https://img.shields.io/badge/dynamic/json?label=Downloads&query=%24%5B%22custom-selected-word-count%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)
+
 ## Plugin in Action
 
 See the Custom Selected Word Count plugin in active use, demonstrating how it provides real-time feedback in your editor.
