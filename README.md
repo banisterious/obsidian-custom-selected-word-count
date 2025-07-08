@@ -2,6 +2,30 @@
 
 A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text analysis for selected text across all view modes. Features advanced word counting, character counting, and sentence counting with customizable path exclusion, modern UI design, and detailed history tracking.
 
+## Plugin in Action
+
+See the Custom Selected Word Count plugin in active use, demonstrating how it provides real-time feedback in your editor.
+
+<p align="center">
+  <img src="docs/images/demo.gif" alt="Animated demonstration of selecting text in Obsidian with an arrow pointing to the live word count update in the status bar" width="900">
+</p>
+<p align="center">
+  <em>Selecting text automatically displays the word count in the status bar, with live updates as you adjust your selection.</em>
+</p>
+
+## Settings Overview
+
+This animated overview showcases the various configuration options available within the Custom Selected Word Count plugin.
+
+<p align="center">
+  <img src="docs/images/settings.gif" alt="Animated overview of the Custom Selected Word Count plugin's configuration settings across five different screenshots" width="900">
+</p>
+<p align="center">
+  <em>Explore the comprehensive settings, from basic display options to advanced exclusion rules.</em>
+</p>
+
+---
+
 ## Features
 
 ### Text Analysis
@@ -24,6 +48,22 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
 - Optional status bar integration showing live word count
 - Optional ribbon button for quick access
 - Customizable status bar label
+
+---
+
+## Detailed Configuration & Screenshots
+
+For a comprehensive look at all of the plugin's settings and how they are presented, refer to the screenshots below:
+
+| Screenshot | Description |
+| :--------- | :---------- |
+| <img src="docs/images/settings-01.png" alt="Screenshot of the Custom Selected Word Count plugin's settings interface, displaying Status bar and Modal configuration options" width="600"> | **Status bar:** Show count in status bar, Enable live updates, Hide core wordcount, Status bar label<br />**Modal**: Show character count, Character counting mode, show sentence count, Show date/time in history |
+| <img src="docs/images/settings-02.png" alt="Screenshot of plugin settings for excluding code, code blocks, inline code, and various file path types" width="600"> | **Code:** Exclude code, Exclude code blocks, Exclude inline code<br />**Paths:**<br />Exclude paths from word count, Exclude Windows paths, Exclude Unix paths, Exclude UNC paths, Exclude environment paths |
+| <img src="docs/images/settings-03.png" alt="Screenshot of plugin settings for excluding Obsidian and HTML comments, and various heading options" width="600"> | **Comments:** Exclude Obsidian comments, Exclude Obsidian comment content, Exclude HTML comments, Exclude HTML comment content<br />**Headings:** Exclude heading markers only, Exclude entire heading lines, Exclude heading sections |
+| <img src="docs/images/settings-04.png" alt="Screenshot of plugin settings for excluding specific words and phrases, logging levels, and the start of custom word detection regex" width="600"> | **Words and phrases:** Exclude words, Exclude phrases<br />**Logging:** Enable debug logging, Logging level (not shown)<br />**Custom word detection regex** |
+| <img src="docs/images/settings-05.png" alt="Screenshot of plugin settings continuing the custom word detection regex configuration" width="600"> | **Custom word detection regex** (continued) |
+
+---
 
 ### Advanced Features
 - **Link processing** for accurate text analysis:
@@ -93,24 +133,6 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 - **[Word Counting Principles](docs/user/concepts/word-counting-principles.md)** - How the plugin counts words
 - **[Developer Documentation](docs/developer/architecture/overview.md)** - Technical specifications and architecture
 
-## Settings
-
-<table align="center">
-<tr>
-<td>
-  <a href="docs/images/settings-top.png" target="_blank">
-    <img src="docs/images/settings-top.png" alt="Settings interface - UI and Character options (click to enlarge)" width="400" style="cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"/>
-  </a>
-</td>
-<td>
-  <a href="docs/images/settings-bottom.png" target="_blank">
-    <img src="docs/images/settings-bottom.png" alt="Settings interface - Link processing and exclusion options (click to enlarge)" width="400" style="cursor: pointer; border: 1px solid #ddd; border-radius: 4px;"/>
-  </a>
-</td>
-</tr>
-</table>
-<p align="center"><em>Settings interface (click images to enlarge)</em></p>
-
 ### UI Elements
 - **Show Ribbon Button**: Add a button to the ribbon menu for quick access (requires restart)
 - **Show Count in Status Bar**: Display the word count in the status bar
@@ -163,9 +185,9 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 
 ### Path Exclusion
 - **Exclude Paths from Word Count**: Toggle path exclusion (**disabled by default**)
-  - **Exclude Windows Paths**: Skip Windows-style paths (C:\) (**disabled by default**)
-  - **Exclude UNC Paths**: Skip network paths (\\server) (**disabled by default**)
-  - **Exclude Unix Paths**: Skip Unix-style paths (/usr/local) (**disabled by default**)
+  - **Exclude Windows Paths**: Skip Windows-style paths (`C:\`) (**disabled by default**)
+  - **Exclude UNC Paths**: Skip network paths (`\\server`) (**disabled by default**)
+  - **Exclude Unix Paths**: Skip Unix-style paths (`/usr/local`) (**disabled by default**)
   - **Exclude Environment Paths**: Skip paths with environment variables (**disabled by default**)
 
 ### Advanced: Custom Word Detection Regex (Expert Only)
@@ -177,12 +199,12 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 - Helper texts explain each feature and guide you through safe usage
 
 ### Other Settings
-- **Show Date/Time in History**: Include timestamps in word count history
+- **Show Date/Time in History**: Include timestamps in modal word count history
 - **Enable Debug Logging**: Enable detailed console logging for troubleshooting
 
-## Exclusion Logic Details (New in Settings)
+## Exclusion Logic Details
 
-The settings page now includes a detailed "Exclusion Logic Details" section. For each exclusion type (Windows Paths, UNC Paths, Unix Paths, Environment Variable Paths, File Extension Exclusion, file:/// Protocol), you will see:
+The settings page now includes a detailed "Exclusion Logic Details" section. For each exclusion type (Windows Paths, UNC Paths, Unix Paths, Environment Variable Paths, File Extension Exclusion, `file:///` Protocol), you will see:
 
 - The regex pattern used
 - A plain-English explanation
@@ -191,8 +213,6 @@ The settings page now includes a detailed "Exclusion Logic Details" section. For
 - All details are in a collapsible section for clarity
 
 This makes it easy to understand what is being excluded and why.
-
-**UI improvement:** The sub-settings for "Exclude Paths" are now indented to match the style of the "Show Count in Status Bar" children, for a more consistent and visually appealing settings page.
 
 ## Per-Note Exclusion Overrides
 
@@ -234,7 +254,7 @@ You can also use Obsidian comment syntax: `%% cswc-disable %%` and `%% cswc-enab
 
 ## Support
 
-If you encounter any issues or have feature requests, please file them in the [GitHub issues](https://github.com/yourusername/obsidian-selected-word-counter/issues).
+If you encounter any issues or have a feature request, please create a [GitHub issue](https://github.com/yourusername/obsidian-selected-word-counter/issues).
 
 ## Mobile Compatibility
 
