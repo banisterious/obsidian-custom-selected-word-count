@@ -23,7 +23,8 @@ The plugin uses a sophisticated approach to identify words that goes beyond simp
 - Case variations: "Word", "WORD", "wOrD"
 
 **Compound Terms:**
-- Contractions: "I'm", "don't", "we'll"
+- Contractions with straight quotes: "I'm", "don't", "we'll"
+- Contractions with smart quotes: "I'm", "don't", "we'll"
 - Hyphenated words: "state-of-the-art", "twenty-five"
 - Underscore-connected terms: "file_name", "user_id"
 
@@ -47,7 +48,7 @@ The plugin strips certain elements before counting:
 **Preserved Elements:**
 - Hyphens and underscores within words
 - Periods in decimal numbers
-- Apostrophes in contractions
+- Apostrophes (straight and smart quotes) in contractions
 
 ### 1.3. Word Boundary Logic
 
@@ -308,10 +309,10 @@ The plugin allows expert users to define custom word recognition patterns using 
 
 **Default Pattern Breakdown:**
 ```regex
-[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*
+[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*
 ```
 - `[A-Za-z0-9]+`: One or more alphanumeric characters
-- `(?:[-_][A-Za-z0-9]+)*`: Zero or more hyphen/underscore followed by alphanumeric sequences
+- `(?:[\u2018\u2019'-_][A-Za-z0-9]+)*`: Zero or more apostrophe/hyphen/underscore followed by alphanumeric sequences
 
 ### 12.2. Pattern Testing Concepts
 

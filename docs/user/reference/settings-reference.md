@@ -252,7 +252,7 @@ Settings are organized into logical groups:
 
 **Purpose:** Defines the regular expression used for word recognition.
 
-**Default Pattern:** `[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*`
+**Default Pattern:** `[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*`
 
 **Pattern Components:**
 - Character classes: `[A-Za-z0-9]`

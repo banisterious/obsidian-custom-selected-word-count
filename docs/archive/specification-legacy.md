@@ -52,7 +52,7 @@ For end-user documentation and usage instructions, see [USAGE.md](USAGE.md).
 ### 3.1.1. Word Recognition Algorithm
 
 - The plugin uses a sophisticated regex pattern to recognize words:
-  - **Default Pattern:** `[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*`
+  - **Default Pattern:** `[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*`
   - **Matches:**
     * Standard words
     * Contractions (e.g., "I'm", "don't")

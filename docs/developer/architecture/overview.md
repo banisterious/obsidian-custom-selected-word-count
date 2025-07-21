@@ -114,11 +114,12 @@ OCSWC Plugin
 
 The plugin uses a sophisticated regex pattern for word recognition:
 
-**Default Pattern:** `[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*`
+**Default Pattern:** `[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*`
 
 **Recognized Elements:**
 - Standard alphabetic words
-- Contractions (e.g., "I'm", "don't")
+- Contractions with straight apostrophes (e.g., "I'm", "don't")
+- Contractions with smart quotes (e.g., "I'm", "don't")
 - Decimal numbers (e.g., "3.5")
 - Hyphenated words (e.g., "Sun-Kissed")
 - Underscore-separated words (e.g., "foo_bar")
@@ -409,6 +410,21 @@ The plugin provides powerful per-note override capabilities allowing users to se
 - High contrast design elements
 - Consistent button styling and interaction patterns
 
+**Icon System:**
+- **Native Obsidian Integration:** Uses Obsidian's built-in `setIcon()` function for all icons
+- **Theme-Aware Colors:** Icons automatically adapt to light and dark themes using Obsidian CSS variables:
+  - `--text-normal` for primary icons (header, count card labels)
+  - `--text-muted` for secondary icons (history title, clear button)
+  - `--text-faint` for subtle icons (history copy buttons)
+- **Consistent Sizing:** Standardized icon dimensions across components (14px-16px)
+- **Perfect Alignment:** Precise vertical positioning with `transform: translateY()` for pixel-perfect text baseline alignment
+- **Icon Library:** All icons sourced from Obsidian's included Lucide icon set:
+  - Header: `chart-no-axes-column`
+  - Count cards: `type`, `hash`, `list-ordered`  
+  - Actions: `copy`, `check` (with visual feedback), `clock`, `trash-2`
+- **Visual Feedback:** Copy buttons show temporary check mark with accent color highlighting
+- **No Fallbacks Required:** Eliminates emoji fallbacks since Obsidian provides comprehensive icon support
+
 #### 3.2.2. Status Bar Integration
 
 **Display Options:**
@@ -600,6 +616,6 @@ The status bar integration supports multiple Obsidian view types through a tiere
 
 ---
 
-*Last updated: July 4, 2025*
+*Last updated: July 21, 2025*
 
 *This document serves as the primary architectural reference for the Custom Selected Word Count plugin development and maintenance.* 

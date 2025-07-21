@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+## [1.6.0] - 2025-07-21
+### Fixed
+- **Smart Quote Contraction Support**
+  - Fixed issue where contractions with smart quotes (e.g., "don't", "I'm") were incorrectly counted as multiple words
+  - Updated word recognition regex to include Unicode smart quotes (U+2018, U+2019) alongside straight apostrophes
+  - Modified text processing to preserve apostrophes during quote stripping phase
+  - Updated all documentation to reflect enhanced contraction handling
+
+### Enhanced
+- **Canvas Status Bar Integration**
+  - Completed full Canvas view support for status bar word counting
+  - Implemented polling mechanism to detect text selection within Canvas iframes
+  - Added clickable status bar functionality to open modal from Canvas views
+  - Enhanced view detection with tiered fallback system (MarkdownView → Canvas → Universal)
+- **Modal Design System Overhaul**
+  - Completed card-based modal redesign with professional styling
+  - Implemented native Obsidian icon system using `setIcon()` function
+  - Added theme-aware icon coloring that adapts automatically to light/dark modes
+  - Enhanced copy button functionality with visual feedback animations
+  - Implemented dynamic font sizing for large count numbers with thousands separators
+  - Perfected icon alignment with pixel-precise positioning adjustments
+  - Removed "Done" button to reduce clutter and improve UX flow
+
+### Technical
+- **Icon System Modernization**
+  - Migrated from emoji fallbacks to Obsidian's native Lucide icon integration
+  - Implemented consistent icon sizing standards (14px-16px) across all components
+  - Added proper CSS variables for theme compatibility (`--text-normal`, `--text-muted`, `--text-faint`)
+- **Custom Regex Settings Improvement**
+  - Fixed settings initialization to prevent pre-population of custom regex field
+  - Corrected reset functionality to clear field instead of populating with default pattern
+  - Enhanced field validation to only use custom regex when actually specified by user
+
 ## [1.5.0] - 2025-07-06
 ### Added
 - **Per-Note Exclusion Override System**

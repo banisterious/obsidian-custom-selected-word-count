@@ -1,6 +1,6 @@
 // BUILD: 2025-05-07
 
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, parseYaml } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, parseYaml, setIcon } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -56,11 +56,11 @@ interface WordCountPluginSettings {
 
 const DEFAULT_EXCLUSION_LIST = '.jpg, .jpeg, .png, .gif, .svg, .md, .pdf, .docx, .xlsx, .pptx, .zip, .mp3, .mp4, .wav, .ogg, .webm, .mov, .avi, .exe, .dll, .bat, .sh, .ps1, .js, .ts, .json, .csv, .yml, .yaml, .html, .css, .scss, .xml, .ini, .log, .tmp, .bak, .db, .sqlite, .7z, .rar, .tar, .gz, .bz2, .iso, .img, .bin, .apk, .app, .dmg, .pkg, .deb, .rpm, .msi, .sys, .dat, .sav, .bak, .old, .swp, .lock, .cache, .part, .crdownload, .torrent, .ics, .eml, .msg, .vcf, .txt';
 
-const DEFAULT_WORD_REGEX = '[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*';
+const DEFAULT_WORD_REGEX = '[A-Za-z0-9]+(?:[\\u2018\\u2019\'-_][A-Za-z0-9]+)*';
 
 const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	setting: 'default',
-	showDateTimeInHistory: false,
+	showDateTimeInHistory: true,
 	history: [],
 	exclusionList: DEFAULT_EXCLUSION_LIST,
 	// Path exclusion defaults
@@ -105,7 +105,7 @@ const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	enableDebugLogging: false,       // Debug logging disabled by default
 	// Advanced Regex
 	enableAdvancedRegex: false,
-	customWordRegex: DEFAULT_WORD_REGEX,
+	customWordRegex: '',
 }
 
 interface WordCountHistoryEntry {
@@ -1214,27 +1214,43 @@ function countSelectedWords(
 	if (plugin) debugLog(plugin, 'Filtered words:', filteredWords);
 	selectedText = filteredWords.join(' ');
 
-	// Strip quotes and emojis
-	selectedText = selectedText.replace(/["'''""]/g, '');
+	// Strip double quotes only (preserve all apostrophes for contractions) and emojis
+	selectedText = selectedText.replace(/["""]/g, '');
 	if (stripEmojis) {
 		selectedText = selectedText.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '');
 	}
 
 	// Use advanced regex if enabled and valid
 	let wordRegex: RegExp;
-	if (settings?.enableAdvancedRegex && settings.customWordRegex) {
+	if (settings?.enableAdvancedRegex && settings.customWordRegex && settings.customWordRegex.trim()) {
 		try {
 			wordRegex = new RegExp(settings.customWordRegex, 'giu');
 		} catch (e) {
 			if (plugin) debugLog(plugin, 'Invalid custom regex, falling back to default:', e);
-			wordRegex = /[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/giu;
+			wordRegex = /[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*/giu;
 		}
 	} else {
-		wordRegex = /[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*/giu;
+		wordRegex = /[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*/giu;
+	}
+
+	if (plugin) debugLog(plugin, 'Final text before regex matching:', selectedText);
+	if (plugin) debugLog(plugin, 'Using word regex pattern:', wordRegex.source);
+
+	// Test for smart quotes specifically
+	if (plugin && /[\u2018\u2019']/.test(selectedText)) {
+		debugLog(plugin, 'Smart quotes detected in text');
+		// Show the exact characters and their Unicode values
+		const smartQuoteMatches = selectedText.match(/[\u2018\u2019']/g);
+		if (smartQuoteMatches) {
+			debugLog(plugin, 'Smart quote characters found:', smartQuoteMatches.map(char => 
+				`'${char}' (U+${char.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')})`
+			));
+		}
 	}
 
 	// At the end, use wordRegex to match words
 	const matches = selectedText.match(wordRegex);
+	if (plugin) debugLog(plugin, 'Regex matches found:', matches);
 	return matches ? matches.length : 0;
 }
 
@@ -1952,193 +1968,255 @@ class WordCountModal extends Modal {
 		contentEl.empty();
 		contentEl.addClass('word-count-modal');
 
-		// Modal header
+		// Modal header with icon
 		const headerEl = contentEl.createDiv({cls: 'modal-header'});
-		const titleEl = headerEl.createEl('h2', {cls: 'modal-title'});
-		titleEl.createSpan({cls: 'lucide word-count-lucide-bar-chart-3'});
-		titleEl.appendText('Selection Analysis');
+		const headerIcon = headerEl.createSpan({cls: 'modal-header-icon', attr: {'aria-hidden': 'true'}});
+		setIcon(headerIcon, 'chart-no-axes-column');
+		const titleEl = headerEl.createEl('h2', {cls: 'modal-title', text: 'Selection Analysis'});
 
-		// Modal content
+		// Modal content with improved padding
 		const modalContentEl = contentEl.createDiv({cls: 'modal-content'});
 
-		// Count cards section
+		// Count cards section with enhanced layout
 		const countCardsEl = modalContentEl.createDiv({cls: 'count-cards'});
 		
 		// Word count card
-		const wordCountCard = countCardsEl.createDiv({cls: 'count-card'});
-		const wordCountHeader = wordCountCard.createDiv({cls: 'count-header'});
-		
-		const wordCountLabel = wordCountHeader.createDiv({cls: 'count-label'});
-		wordCountLabel.createSpan({cls: 'lucide word-count-lucide-type'});
-		wordCountLabel.appendText('Words');
-		
-		const copyWordButton = wordCountHeader.createEl('button', {
-			cls: 'copy-button'
-		});
-		copyWordButton.createSpan({cls: 'lucide word-count-lucide-copy'});
-		copyWordButton.appendText('Copy');
-		
-		wordCountCard.createDiv({cls: 'count-value', text: this.countResult.words.toString()});
-		wordCountCard.createDiv({cls: 'count-subtitle', text: 'advanced word detection'});
-		
-		copyWordButton.addEventListener('click', async () => {
-			await navigator.clipboard.writeText(this.countResult.words.toString());
-			new Notice('Word count copied to clipboard');
-		});
+		this.createCountCard(
+			countCardsEl,
+			'word-count-lucide-type',
+			'WORDS',
+			this.countResult.words,
+			'Advanced word detection including contractions, hyphenated words, and numbers',
+			'Copy Words Count'
+		);
 
 		// Character count card (if enabled in settings)
 		if (this.plugin?.settings.showCharacterCount) {
-			const charCountCard = countCardsEl.createDiv({cls: 'count-card'});
-			const charCountHeader = charCountCard.createDiv({cls: 'count-header'});
-			
-			const charCountLabel = charCountHeader.createDiv({cls: 'count-label'});
-			charCountLabel.createSpan({cls: 'lucide word-count-lucide-hash'});
-			charCountLabel.appendText('Characters');
-			
-			const copyCharButton = charCountHeader.createEl('button', {
-				cls: 'copy-button'
-			});
-			copyCharButton.createSpan({cls: 'lucide word-count-lucide-copy'});
-			copyCharButton.appendText('Copy');
-			
-			charCountCard.createDiv({cls: 'count-value', text: this.countResult.characters.toString()});
-			
-			const modeText = this.plugin.settings.characterCountMode === 'all' ? 'all characters (including spaces)' : 
-							this.plugin.settings.characterCountMode === 'no-spaces' ? 'all characters (excluding spaces)' : 'letters only';
-			charCountCard.createDiv({cls: 'count-subtitle', text: modeText});
-			
-			copyCharButton.addEventListener('click', async () => {
-				await navigator.clipboard.writeText(this.countResult.characters.toString());
-				new Notice('Character count copied to clipboard');
-			});
+			const modeText = this.plugin.settings.characterCountMode === 'all' 
+				? 'All characters including spaces, punctuation, and symbols'
+				: this.plugin.settings.characterCountMode === 'no-spaces' 
+				? 'All characters excluding whitespace'
+				: 'Only alphabetic characters (A-Z, a-z)';
+
+			this.createCountCard(
+				countCardsEl,
+				'word-count-lucide-hash',
+				'CHARACTERS',
+				this.countResult.characters,
+				modeText,
+				'Copy Characters Count'
+			);
 		}
 
 		// Sentence count card (if enabled in settings)
 		if (this.plugin?.settings.showSentenceCount) {
-			const sentenceCountCard = countCardsEl.createDiv({cls: 'count-card'});
-			const sentenceCountHeader = sentenceCountCard.createDiv({cls: 'count-header'});
-			
-			const sentenceCountLabel = sentenceCountHeader.createDiv({cls: 'count-label'});
-			sentenceCountLabel.createSpan({cls: 'lucide word-count-lucide-list-ordered'});
-			sentenceCountLabel.appendText('Sentences');
-			
-			const copySentenceButton = sentenceCountHeader.createEl('button', {
-				cls: 'copy-button'
-			});
-			copySentenceButton.createSpan({cls: 'lucide word-count-lucide-copy'});
-			copySentenceButton.appendText('Copy');
-			
-			sentenceCountCard.createDiv({cls: 'count-value', text: this.countResult.sentences.toString()});
-			sentenceCountCard.createDiv({cls: 'count-subtitle', text: 'based on punctuation patterns'});
-			
-			copySentenceButton.addEventListener('click', async () => {
-				await navigator.clipboard.writeText(this.countResult.sentences.toString());
-				new Notice('Sentence count copied to clipboard');
-			});
+			this.createCountCard(
+				countCardsEl,
+				'word-count-lucide-list-ordered',
+				'SENTENCES',
+				this.countResult.sentences,
+				'Smart sentence detection with abbreviation and decimal number handling',
+				'Copy Sentences Count'
+			);
 		}
+
+
 
 		// History section
 		if (this.history.length > 0) {
 			const historySection = modalContentEl.createDiv({cls: 'history-section'});
 			
 			const historyHeader = historySection.createDiv({cls: 'history-header'});
-			const historyTitle = historyHeader.createEl('h3', {cls: 'history-title'});
-			historyTitle.createSpan({cls: 'lucide word-count-lucide-clock'});
+			const historyTitle = historyHeader.createDiv({cls: 'history-title'});
+			const historyIcon = historyTitle.createSpan({cls: 'history-title-icon', attr: {'aria-hidden': 'true'}});
+			setIcon(historyIcon, 'clock');
 			historyTitle.appendText('Recent Counts');
 			
 			const clearButton = historyHeader.createEl('button', {
-				cls: 'clear-btn'
+				cls: 'clear-btn',
+				attr: {
+					'title': 'Clear all history entries',
+					'aria-label': 'Clear all history entries'
+				}
 			});
-			clearButton.createSpan({cls: 'lucide word-count-lucide-trash-2'});
+			const clearIcon = clearButton.createSpan({cls: 'clear-btn-icon', attr: {'aria-hidden': 'true'}});
+			setIcon(clearIcon, 'trash-2');
 			clearButton.appendText('Clear');
 			
 			clearButton.addEventListener('click', () => {
-				if (this.plugin) {
-					this.plugin.history = [];
-					this.plugin.saveHistory();
-					this.close();
+				// Add confirmation dialog
+				if (confirm('Clear all history entries?')) {
+					if (this.plugin) {
+						this.plugin.history = [];
+						this.plugin.saveHistory();
+						this.close();
+					}
 				}
 			});
 
 			const historyList = historySection.createDiv({cls: 'history-list'});
 
 			this.history.slice().reverse().forEach(entry => {
-				const historyEntry = historyList.createDiv({cls: 'history-entry'});
+				const entryDiv = historyList.createDiv({cls: 'history-entry'});
 				
-				let countText = this.showDateTime 
-					? `${entry.count} words (${entry.date.toLocaleString()})`
-					: `${entry.count} words`;
+				// Build the full count text
+				let countParts: string[] = [`${entry.count} words`];
 				
-				// Add character count if available and character count is enabled
 				if (entry.characterCount !== undefined && this.plugin?.settings.showCharacterCount) {
-					const charPart = this.showDateTime 
-						? `, ${entry.characterCount} chars`
-						: ` | ${entry.characterCount} chars`;
-					countText += charPart;
+					countParts.push(`${entry.characterCount} chars`);
 				}
-
-				// Add sentence count if available and sentence count is enabled
+				
 				if (entry.sentenceCount !== undefined && this.plugin?.settings.showSentenceCount) {
-					const sentencePart = this.showDateTime 
-						? `, ${entry.sentenceCount} sentences`
-						: ` | ${entry.sentenceCount} sentences`;
-					countText += sentencePart;
+					countParts.push(`${entry.sentenceCount} sentences`);
 				}
 				
-				historyEntry.createDiv({cls: 'history-text', text: countText});
+				const fullCountText = countParts.join(', ');
 				
-				const historyActions = historyEntry.createDiv({cls: 'history-actions'});
+				// Create content container for text and timestamp
+				const contentDiv = entryDiv.createDiv({cls: 'history-content'});
+				const textEl = contentDiv.createDiv({cls: 'history-text', text: fullCountText});
 				
-				const entryCopyButton = historyActions.createEl('button', {
-					cls: 'history-copy-btn'
+				// Add timestamp if enabled
+				if (this.showDateTime) {
+					const timestampEl = contentDiv.createDiv({cls: 'history-timestamp'});
+					timestampEl.textContent = entry.date.toLocaleString();
+				}
+				
+				const actionsDiv = entryDiv.createDiv({cls: 'history-actions'});
+				
+				// Single copy button that copies the entire count string
+				const copyButton = actionsDiv.createEl('button', {
+					cls: 'history-copy-btn',
+					attr: {
+						'title': 'Copy this count',
+						'aria-label': `Copy "${fullCountText}"`
+					}
 				});
-				entryCopyButton.createSpan({cls: 'lucide word-count-lucide-copy'});
-				entryCopyButton.appendText('Words');
+				const historyCopyIcon = copyButton.createSpan({cls: 'history-copy-icon', attr: {'aria-hidden': 'true'}});
+				setIcon(historyCopyIcon, 'copy');
+				copyButton.appendText('Copy');
 				
-				entryCopyButton.addEventListener('click', async () => {
-					await navigator.clipboard.writeText(entry.count.toString());
-					new Notice('Word count copied to clipboard');
+				copyButton.addEventListener('click', async () => {
+					await navigator.clipboard.writeText(fullCountText);
+					new Notice('Count copied to clipboard');
+					
+					// Visual feedback
+					historyCopyIcon.empty();
+					setIcon(historyCopyIcon, 'check');
+					copyButton.style.background = 'var(--interactive-accent)';
+					copyButton.style.color = 'var(--text-on-accent)';
+					
+					setTimeout(() => {
+						historyCopyIcon.empty();
+						setIcon(historyCopyIcon, 'copy');
+						copyButton.style.background = '';
+						copyButton.style.color = '';
+					}, 1000);
 				});
-
-				// Add character count copy button if character count exists and is enabled
-				if (entry.characterCount !== undefined && this.plugin?.settings.showCharacterCount) {
-					const entryCharCopyButton = historyActions.createEl('button', {
-						cls: 'history-copy-btn'
-					});
-					entryCharCopyButton.createSpan({cls: 'lucide word-count-lucide-copy'});
-					entryCharCopyButton.appendText('Chars');
-					
-					entryCharCopyButton.addEventListener('click', async () => {
-						await navigator.clipboard.writeText(entry.characterCount!.toString());
-						new Notice('Character count copied to clipboard');
-					});
-				}
-
-				// Add sentence count copy button if sentence count exists and is enabled
-				if (entry.sentenceCount !== undefined && this.plugin?.settings.showSentenceCount) {
-					const entrySentenceCopyButton = historyActions.createEl('button', {
-						cls: 'history-copy-btn'
-					});
-					entrySentenceCopyButton.createSpan({cls: 'lucide word-count-lucide-copy'});
-					entrySentenceCopyButton.appendText('Sentences');
-					
-					entrySentenceCopyButton.addEventListener('click', async () => {
-						await navigator.clipboard.writeText(entry.sentenceCount!.toString());
-						new Notice('Sentence count copied to clipboard');
-					});
-				}
 			});
 		}
 
-		// Modal footer
-		const footerEl = contentEl.createDiv({cls: 'modal-footer'});
-		const closeButton = footerEl.createEl('button', {cls: 'close-btn'});
-		closeButton.createSpan({cls: 'lucide word-count-lucide-check'});
-		closeButton.appendText('Done');
+
+	}
+
+	private createCountCard(
+		container: HTMLElement, 
+		iconClass: string, 
+		label: string, 
+		count: number, 
+		description: string, 
+		tooltipText: string
+	) {
+		const card = container.createDiv({cls: 'count-card'});
 		
-		closeButton.addEventListener('click', () => {
-			this.close();
+		// Card header with icon and label
+		const header = card.createDiv({cls: 'count-header'});
+		const labelDiv = header.createDiv({cls: 'count-label'});
+		const labelIcon = labelDiv.createSpan({cls: 'count-label-icon', attr: {'aria-hidden': 'true'}});
+		this.setCardIcon(labelIcon, iconClass);
+		labelDiv.appendText(label);
+		
+		// Count value container with number and copy button
+		const valueContainer = card.createDiv({cls: 'count-value-container'});
+		const formattedCount = count.toLocaleString(); // Add thousands separators
+		const valueEl = valueContainer.createDiv({cls: 'count-value', text: formattedCount});
+		
+		// Apply dynamic font sizing based on digit count
+		this.applyDynamicFontSize(valueEl, count);
+		
+		const copyButton = valueContainer.createEl('button', {
+			cls: 'copy-button',
+			attr: {
+				'title': tooltipText,
+				'aria-label': tooltipText
+			}
 		});
+		const copyIcon = copyButton.createSpan({cls: 'copy-button-icon', attr: {'aria-hidden': 'true'}});
+		setIcon(copyIcon, 'copy');
+		
+		// Description text
+		card.createDiv({cls: 'count-subtitle', text: description});
+		
+		// Copy button functionality
+		copyButton.addEventListener('click', async () => {
+			await navigator.clipboard.writeText(count.toString());
+			new Notice(`${label.toLowerCase()} count copied to clipboard`);
+			
+			// Visual feedback - briefly change button appearance
+			const originalIcon = copyIcon;
+			copyIcon.empty();
+			setIcon(copyIcon, 'check');
+			copyButton.style.background = 'var(--interactive-accent)';
+			copyButton.style.color = 'var(--text-on-accent)';
+			
+			setTimeout(() => {
+				copyIcon.empty();
+				setIcon(copyIcon, 'copy');
+				copyButton.style.background = '';
+				copyButton.style.color = '';
+			}, 1000);
+		});
+		
+		return card;
+	}
+
+	/**
+	 * Sets the appropriate icon for count card labels
+	 */
+	private setCardIcon(element: HTMLElement, iconClass: string): void {
+		if (iconClass.includes('type')) {
+			setIcon(element, 'type');
+		} else if (iconClass.includes('hash')) {
+			setIcon(element, 'hash');
+		} else if (iconClass.includes('list-ordered')) {
+			setIcon(element, 'list-ordered');
+		}
+	}
+
+	/**
+	 * Dynamically adjusts font size based on the number of digits to prevent layout overflow
+	 */
+	private applyDynamicFontSize(element: HTMLElement, count: number): void {
+		const digitCount = count.toString().length;
+		let fontSize: string;
+		
+		if (digitCount <= 2) {
+			fontSize = '4.5em'; // Full size for 1-2 digits
+		} else if (digitCount === 3) {
+			fontSize = '3.8em'; // Smaller for 3 digits
+		} else if (digitCount === 4) {
+			fontSize = '2.8em'; // Much more aggressive for 4 digits (like "5,473")
+		} else if (digitCount === 5) {
+			fontSize = '2.2em'; // Very aggressive for 5 digits (like "26,752")
+		} else if (digitCount === 6) {
+			fontSize = '1.8em'; // Even smaller for 6 digits
+		} else if (digitCount === 7) {
+			fontSize = '1.6em'; // Smaller for 7 digits
+		} else {
+			fontSize = '1.4em'; // Minimum size for 8+ digits
+		}
+		
+		element.style.fontSize = fontSize;
 	}
 
 	onClose() {
@@ -2842,10 +2920,10 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Regex Input Field
 		const regexSetting = new Setting(advDesc)
 			.setName('Custom word detection regex')
-			.setDesc('Define a regular expression pattern for word detection. Default: \\b\\w+\\b')
+			.setDesc('Define a regular expression pattern for word detection. Default: [A-Za-z0-9]+(?:[\\u2018\\u2019\'-_][A-Za-z0-9]+)*')
 			.addText((text: any) => text
-				.setPlaceholder('\\b\\w+\\b')
-				.setValue(this.plugin.settings.customWordRegex || '\\b\\w+\\b')
+				.setPlaceholder('[A-Za-z0-9]+(?:[\\u2018\\u2019\'-_][A-Za-z0-9]+)*')
+				.setValue(this.plugin.settings.customWordRegex || '')
 				.onChange(async (value: string) => {
 					this.plugin.settings.customWordRegex = value;
 					await this.plugin.saveSettings();
@@ -2858,12 +2936,12 @@ class WordCountSettingTab extends PluginSettingTab {
 			cls: 'mod-cta'
 		});
 		resetButton.onclick = async () => {
-			this.plugin.settings.customWordRegex = '\\b\\w+\\b';
+			this.plugin.settings.customWordRegex = '';
 			await this.plugin.saveSettings();
 			// Get the text input component and set its value
 			const textComponent = regexSetting.components.find(component => component.constructor.name.includes('Text'));
 			if (textComponent && 'setValue' in textComponent) {
-				(textComponent as any).setValue('\\b\\w+\\b');
+				(textComponent as any).setValue('');
 			}
 			this.updateRegexTest();
 		};
