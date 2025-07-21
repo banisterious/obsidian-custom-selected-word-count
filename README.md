@@ -1,6 +1,6 @@
 # Custom Selected Word Count for Obsidian
 
-A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text analysis for selected text across all view modes. Features advanced word counting, character counting, and sentence counting with customizable path exclusion, modern UI design, and detailed history tracking.
+A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text analysis for selected text across all view modes and Canvas cards. Features advanced word counting, character counting, and sentence counting with customizable path exclusion, modern UI design, and detailed history tracking.
 
 ![Downloads](https://img.shields.io/badge/dynamic/json?label=Downloads&query=%24%5B%22custom-selected-word-count%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)
 
@@ -30,7 +30,7 @@ This animated overview showcases the various configuration options available wit
 
 ## Key Features
 
-* **Comprehensive Text Analysis:** Advanced word, character (with configurable modes), and sentence counting with sophisticated detection.
+* **Comprehensive Text Analysis:** Advanced word, character (with configurable modes), and sentence counting with sophisticated detection across all view modes and Canvas cards.
 * **Modern User Interface:** Card-based modal design, individual copy buttons, multi-metric history tracking, command palette, and optional status bar/ribbon integration.
 * **Granular Exclusion Rules:** Fine-tune counting by excluding code, paths, comments, headings, specific words/phrases, and support for per-note overrides.
 * **Customization & Extensibility:** Define custom word detection via regex for expert users and enjoy flexible, persistent settings.
@@ -48,7 +48,7 @@ This animated overview showcases the various configuration options available wit
 
 ## Usage
 
-1.  Select text in any view mode
+1.  Select text in any view mode or Canvas card
 2.  Access the text analysis:
     * Use the command palette and search for "Count Selected Words"
     * Click the ribbon button (if enabled)
@@ -148,14 +148,14 @@ This makes it easy to understand what is being excluded and why.
 
 ---
 
-## Support
+## Getting Support
 
 If you encounter any issues or have a feature request, please create a [GitHub issue](https://github.com/yourusername/obsidian-selected-word-counter/issues).
 
-<h2>Mobile Compatibility</h2>
+### Mobile Compatibility
 
 This plugin is primarily developed and tested for Obsidian Desktop. While it may work on Obsidian Mobile, mobile support is currently untested. Some features—such as the ribbon button and status bar integration—are not available on mobile. If you use this plugin on mobile and encounter any issues or have suggestions, please report them on GitHub. Your feedback is appreciated and will help improve mobile compatibility in future updates.
 
-<h2>License</h2>
+### License
 
 [MIT License](LICENSE.md)
