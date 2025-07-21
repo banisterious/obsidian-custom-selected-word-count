@@ -1250,6 +1250,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	history: WordCountHistoryEntry[] = [];
 	public statusBarItem: HTMLElement | null = null;
 	public debounceTimer: NodeJS.Timeout | null = null;
+	public canvasPollingTimer: NodeJS.Timeout | null = null;
+	private lastCanvasSelection: string = '';
 	private ribbonButton: HTMLElement | null = null;
 
 	async onload() {
@@ -1350,6 +1352,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		}
 		
 		this.statusBarItem.addEventListener('click', () => {
+			this.log('Status bar clicked - cached Canvas selection:', this.lastCanvasSelection?.length || 0, 'chars');
 			this.handleWordCount();
 		});
 
@@ -1360,8 +1363,12 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			// Add the new listener
 			document.addEventListener('selectionchange', this.handleSelectionChange);
 			this.log('Selection change listener registered for live updates');
+			
+			// Start Canvas polling for iframe selection detection
+			this.startCanvasPolling();
 		} else {
 			this.log('Live updates disabled, no selection listener added');
+			this.stopCanvasPolling();
 		}
 
 		// Initial update of the status bar
@@ -1370,7 +1377,41 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	}
 
 	private handleSelectionChange = () => {
-		this.log('Selection changed event triggered');
+		if (!this.settings.enableLiveCount) {
+			this.log('Live count disabled, skipping selection change update');
+			return;
+		}
+		
+		// Enhanced debugging for Canvas integration
+		const selection = window.getSelection();
+		const selectedText = selection ? selection.toString() : '';
+		const activeLeaf = this.app.workspace.activeLeaf;
+		const viewType = activeLeaf?.view?.getViewType() || 'unknown';
+		
+		this.log('=== Selection Change Debug ===');
+		this.log('View type:', viewType);
+		this.log('Selected text length:', selectedText.length);
+		this.log('Selected text preview:', selectedText.substring(0, 100));
+		this.log('Status bar enabled:', this.settings.showStatusBar);
+		this.log('Status bar item exists:', !!this.statusBarItem);
+		this.log('Live count enabled:', this.settings.enableLiveCount);
+		
+		// Debug Canvas iframe in selection change
+		if (viewType === 'canvas') {
+			const iframe = document.activeElement as HTMLIFrameElement;
+			this.log('Selection change - Active element:', iframe?.tagName);
+			this.log('Selection change - Is iframe?', iframe?.tagName === 'IFRAME');
+			if (iframe?.tagName === 'IFRAME' && iframe.contentWindow) {
+				try {
+					const iframeSelection = iframe.contentWindow.getSelection();
+					const iframeText = iframeSelection?.toString() || '';
+					this.log('Selection change - Iframe selection:', iframeText.length, 'chars');
+					this.log('Selection change - Iframe text preview:', iframeText.substring(0, 50));
+				} catch (e) {
+					this.log('Selection change - Iframe error:', e.message);
+				}
+			}
+		}
 		
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer);
@@ -1381,6 +1422,60 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			this.updateStatusBar();
 		}, 300); // 300ms debounce
 	};
+
+	private startCanvasPolling() {
+		this.stopCanvasPolling(); // Clear any existing timer
+		
+		this.canvasPollingTimer = setInterval(() => {
+			const activeLeaf = this.app.workspace.activeLeaf;
+			const viewType = activeLeaf?.view?.getViewType();
+			
+			// Only poll if we're in Canvas view
+			if (viewType === 'canvas') {
+				const iframe = document.activeElement as HTMLIFrameElement;
+				if (iframe?.tagName === 'IFRAME' && iframe.contentWindow) {
+					try {
+						const iframeSelection = iframe.contentWindow.getSelection();
+						const currentSelection = iframeSelection?.toString() || '';
+						
+						// Always update cache, even if empty (to track clearing selection)
+						if (currentSelection !== this.lastCanvasSelection) {
+							this.lastCanvasSelection = currentSelection;
+							this.log('Canvas polling detected selection change:', currentSelection.length, 'chars');
+							this.log('Canvas cached selection updated to:', this.lastCanvasSelection.substring(0, 50));
+							this.updateStatusBar();
+						}
+					} catch (e) {
+						// Silently ignore iframe access errors
+					}
+				} else {
+					// No iframe focused - clear cached selection if we had one
+					if (this.lastCanvasSelection) {
+						this.log('Canvas iframe not focused - clearing cached selection');
+						this.lastCanvasSelection = '';
+						this.updateStatusBar();
+					}
+				}
+			} else {
+				// Not in Canvas view - clear cached selection
+				if (this.lastCanvasSelection) {
+					this.log('Not in Canvas view - clearing cached selection');
+					this.lastCanvasSelection = '';
+				}
+			}
+		}, 500); // Poll every 500ms
+		
+		this.log('Canvas polling started');
+	}
+
+	private stopCanvasPolling() {
+		if (this.canvasPollingTimer) {
+			clearInterval(this.canvasPollingTimer);
+			this.canvasPollingTimer = null;
+			this.lastCanvasSelection = '';
+			this.log('Canvas polling stopped');
+		}
+	}
 
 	private setupRibbonButton() {
 		// Remove existing button if it exists
@@ -1400,59 +1495,102 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	private async handleWordCount() {
 		try {
 			let selectedText = '';
-			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+			let viewType = 'unknown';
 			
-			if (!view) {
-				this.log('No active markdown view found');
-				new Notice('Please open a markdown file first');
-				return;
-			}
+			// First try to get a MarkdownView (traditional text editing views)
+			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			
+			if (markdownView) {
+				viewType = 'markdown';
+				this.log('HandleWordCount - MarkdownView mode:', markdownView.getMode());
 
-			this.log('View mode:', view.getMode());
-
-			if (view.getMode() === 'source') {
-				// Source mode
-				selectedText = view.editor.getSelection();
-				this.log('Source mode selection:', selectedText);
-			} else if (view.getMode() === 'preview') {
-				// Reading view mode
-				const selection = window.getSelection();
-				this.log('Reading view selection object:', selection);
-				
-				// First find the markdown preview container
-				const previewContainer = view.containerEl.querySelector('.markdown-preview-view');
-				this.log('Preview container:', previewContainer);
-				
-				if (selection && selection.rangeCount > 0 && previewContainer) {
-					const range = selection.getRangeAt(0);
-					this.log('Initial range text:', range?.toString());
+				if (markdownView.getMode() === 'source') {
+					// Source mode
+					selectedText = markdownView.editor.getSelection();
+					this.log('Source mode selection:', selectedText);
+				} else if (markdownView.getMode() === 'preview') {
+					// Reading view mode
+					const selection = window.getSelection();
+					this.log('Reading view selection object:', selection);
 					
-					if (range.toString().trim()) {
-						// Check if either the start or end container is within the preview
-						const startInPreview = previewContainer.contains(range.startContainer);
-						const endInPreview = previewContainer.contains(range.endContainer);
+					// First find the markdown preview container
+					const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
+					this.log('Preview container:', previewContainer);
+					
+					if (selection && selection.rangeCount > 0 && previewContainer) {
+						const range = selection.getRangeAt(0);
+						this.log('Initial range text:', range?.toString());
 						
-						this.log('Start container:', range.startContainer);
-						this.log('End container:', range.endContainer);
-						this.log('Start in preview:', startInPreview);
-						this.log('End in preview:', endInPreview);
-						
-						if (startInPreview || endInPreview) {
-							selectedText = range.toString();
-							this.log('Using selection from Reading view:', selectedText);
+						if (range.toString().trim()) {
+							// Check if either the start or end container is within the preview
+							const startInPreview = previewContainer.contains(range.startContainer);
+							const endInPreview = previewContainer.contains(range.endContainer);
+							
+							this.log('Start container:', range.startContainer);
+							this.log('End container:', range.endContainer);
+							this.log('Start in preview:', startInPreview);
+							this.log('End in preview:', endInPreview);
+							
+							if (startInPreview || endInPreview) {
+								selectedText = range.toString();
+								this.log('Using selection from Reading view:', selectedText);
+							} else {
+								this.log('Selection containers not within preview');
+							}
 						} else {
-							this.log('Selection containers not within preview');
+							this.log('Empty selection');
 						}
 					} else {
-						this.log('Empty selection');
+						this.log('No valid selection range found or preview container not found');
 					}
 				} else {
-					this.log('No valid selection range found or preview container not found');
+					// Live Preview mode
+					selectedText = markdownView.editor.getSelection();
+					this.log('Live Preview mode selection:', selectedText);
 				}
 			} else {
-				// Live Preview mode
-				selectedText = view.editor.getSelection();
-				this.log('Live Preview mode selection:', selectedText);
+				// Fallback for non-MarkdownView types (Canvas, etc.)
+				const activeLeaf = this.app.workspace.activeLeaf;
+				if (activeLeaf && activeLeaf.view) {
+					viewType = activeLeaf.view.getViewType();
+					this.log('HandleWordCount - non-MarkdownView type:', viewType);
+					
+					// Try multiple methods to get selected text for Canvas/other views
+					const windowSelection = window.getSelection();
+					let selectionText = windowSelection?.toString() || '';
+					
+					// For Canvas views, use cached selection or try iframe selection
+					if (!selectionText && viewType === 'canvas') {
+						// First try to use cached selection from polling
+						if (this.lastCanvasSelection) {
+							selectionText = this.lastCanvasSelection;
+							this.log('HandleWordCount - using cached Canvas selection:', selectionText.length, 'chars');
+						} else {
+							// Fallback: try to get fresh iframe selection
+							this.log('HandleWordCount - trying fresh Canvas iframe selection...');
+							
+							const iframe = document.activeElement as HTMLIFrameElement;
+							if (iframe && iframe.tagName === 'IFRAME' && iframe.contentWindow) {
+								try {
+									const iframeSelection = iframe.contentWindow.getSelection();
+									if (iframeSelection) {
+										selectionText = iframeSelection.toString();
+										this.log('HandleWordCount - fresh Canvas iframe selection found:', selectionText.length, 'chars');
+									}
+								} catch (e) {
+									this.log('HandleWordCount - Canvas iframe selection error:', e.message);
+								}
+							}
+						}
+					}
+					
+					selectedText = selectionText;
+					this.log('HandleWordCount - Final selected text for', viewType, ':', selectedText.length, 'chars');
+				} else {
+					this.log('No active view found');
+					new Notice('Please open a file first');
+					return;
+				}
 			}
 
 			if (!selectedText) {
@@ -1496,6 +1634,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer);
 		}
+		// Stop Canvas polling
+		this.stopCanvasPolling();
 		if (this.statusBarItem) {
 			this.statusBarItem.remove();
 		}
@@ -1520,29 +1660,103 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			return;
 		}
 
-		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!view) {
-			this.statusBarItem.setText('');
-			this.log('No active markdown view found');
-			return;
-		}
-
-		this.log('Updating status bar for view mode:', view.getMode());
-
+		// First try to get a MarkdownView (traditional text editing views)
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 		let selectedText = '';
-		if (view.getMode() === 'source') {
-			selectedText = view.editor.getSelection();
-		} else if (view.getMode() === 'preview') {
-			const selection = window.getSelection();
-			if (selection && selection.toString()) {
-				selectedText = selection.toString();
+		let viewType = 'unknown';
+
+		if (markdownView) {
+			viewType = 'markdown';
+			this.log('Updating status bar for MarkdownView mode:', markdownView.getMode());
+
+			if (markdownView.getMode() === 'source') {
+				selectedText = markdownView.editor.getSelection();
+			} else if (markdownView.getMode() === 'preview') {
+				const selection = window.getSelection();
+				if (selection && selection.toString()) {
+					selectedText = selection.toString();
+				}
+			} else {
+				// Live Preview mode (default case)
+				selectedText = markdownView.editor.getSelection();
 			}
 		} else {
-			// Live Preview mode (default case)
-			selectedText = view.editor.getSelection();
+			// Fallback for non-MarkdownView types (Canvas, etc.)
+			const activeLeaf = this.app.workspace.activeLeaf;
+			if (activeLeaf && activeLeaf.view) {
+				viewType = activeLeaf.view.getViewType();
+				this.log('Updating status bar for non-MarkdownView type:', viewType);
+				
+				// Debug Canvas view properties
+				if (viewType === 'canvas') {
+					this.log('Canvas view properties:', Object.keys(activeLeaf.view));
+					this.log('Canvas view container:', activeLeaf.view.containerEl);
+					
+					// Check for iframe access
+					const iframe = document.activeElement as HTMLIFrameElement;
+					if (iframe && iframe.tagName === 'IFRAME') {
+						this.log('Active iframe:', iframe);
+						this.log('Iframe content accessible:', !!iframe.contentDocument);
+						this.log('Iframe contentWindow accessible:', !!iframe.contentWindow);
+						
+						// Try to access iframe selection
+						if (iframe.contentWindow) {
+							try {
+								const iframeSelection = iframe.contentWindow.getSelection();
+								if (iframeSelection) {
+									this.log('Iframe selection text:', iframeSelection.toString());
+								}
+							} catch (e) {
+								this.log('Iframe selection error:', e.message);
+							}
+						}
+					}
+				}
+
+				// Try multiple methods to get selected text for Canvas/other views
+				const windowSelection = window.getSelection();
+				let selectionText = windowSelection?.toString() || '';
+				
+				// For Canvas views, check iframe selection
+				if (!selectionText && viewType === 'canvas') {
+					this.log('Trying Canvas iframe selection...');
+					
+					// Check if active element is an iframe (Canvas content)
+					const iframe = document.activeElement as HTMLIFrameElement;
+					this.log('Active element:', iframe?.tagName);
+					this.log('Is iframe?', iframe?.tagName === 'IFRAME');
+					this.log('Has contentWindow?', !!iframe?.contentWindow);
+					
+					if (iframe && iframe.tagName === 'IFRAME' && iframe.contentWindow) {
+						try {
+							const iframeSelection = iframe.contentWindow.getSelection();
+							this.log('Iframe selection object:', !!iframeSelection);
+							this.log('Iframe selection rangeCount:', iframeSelection?.rangeCount);
+							if (iframeSelection) {
+								selectionText = iframeSelection.toString();
+								this.log('Canvas iframe selection found:', selectionText.length, 'chars');
+								this.log('Canvas iframe selection text preview:', selectionText.substring(0, 50));
+							} else {
+								this.log('No iframe selection object found');
+							}
+						} catch (e) {
+							this.log('Canvas iframe selection error:', e.message);
+						}
+					} else {
+						this.log('Iframe detection failed - activeElement is not a suitable iframe');
+					}
+				}
+				
+				selectedText = selectionText;
+				this.log('Final selected text for', viewType, ':', selectedText.length, 'chars');
+			} else {
+				this.statusBarItem.setText('');
+				this.log('No active view found');
+				return;
+			}
 		}
 
-		this.log('Selected text length:', selectedText.length, 'Text preview:', selectedText.substring(0, 50));
+		this.log('View type:', viewType, 'Selected text length:', selectedText.length, 'Text preview:', selectedText.substring(0, 50));
 
 		if (!selectedText) {
 			this.statusBarItem.setText('');

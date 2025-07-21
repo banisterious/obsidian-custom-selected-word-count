@@ -31,6 +31,10 @@ docs/images/temp/
 # Temporary screenshot files
 docs/images/*.tmp
 docs/images/*.temp
+# External documentation and design files
+docs/obsidian-developer-docs
+docs/ui-mockups
+docs/modal-changes-20250721.md
 
 # Claude instructions file
 CLAUDE.md

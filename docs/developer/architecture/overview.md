@@ -420,6 +420,31 @@ The plugin provides powerful per-note override capabilities allowing users to se
 - **Live Updates:** Real-time count updates (with debouncing)
 - **Manual Updates:** Updates only when command is triggered
 
+**View Type Support:**
+The status bar integration supports multiple Obsidian view types through a tiered detection system:
+
+1. **MarkdownView Support (Primary)**
+   - Source mode: Uses `editor.getSelection()` from the active editor
+   - Preview mode: Falls back to `window.getSelection()` for rendered content
+   - Live Preview mode: Uses `editor.getSelection()` for hybrid editing
+
+2. **Canvas View Support (Full)**
+   - Detects Canvas views correctly (`viewType: 'canvas'`)
+   - Canvas content is rendered in iframes with `same-origin` sandbox permissions
+   - Uses `iframe.contentWindow.getSelection()` to access text selection within Canvas iframes
+   - Supports text selection from Canvas cards, sticky notes, and embedded content
+   - Falls back to standard `window.getSelection()` for non-iframe Canvas elements
+
+3. **Universal Fallback (Tertiary)**
+   - Works with any view type that supports standard DOM text selection
+   - Relies on browser's native `window.getSelection()` API
+   - Ensures plugin functionality across unknown or future view types
+
+**Implementation Details:**
+- View type logging helps identify which selection method is being used
+- Graceful degradation ensures no errors when switching between view types
+- Consistent text processing applies the same exclusion rules regardless of source view
+
 **Performance Features:**
 - 300ms debounce delay to prevent performance impact
 - Efficient text selection handling
