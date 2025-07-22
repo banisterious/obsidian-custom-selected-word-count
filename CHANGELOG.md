@@ -24,6 +24,11 @@
   - Implemented dynamic font sizing for large count numbers with thousands separators
   - Perfected icon alignment with pixel-precise positioning adjustments
   - Removed "Done" button to reduce clutter and improve UX flow
+- **Cross-Mode Consistency**
+  - Implemented automatic YAML frontmatter exclusion across all view modes
+  - Added `stripFrontmatter()` function for consistent processing in Source and Live Preview modes
+  - Ensured uniform behavior between Reading view (naturally excludes frontmatter) and editor modes
+  - Enhanced status bar and modal counting consistency regardless of view mode selection
 
 ### Technical
 - **Icon System Modernization**

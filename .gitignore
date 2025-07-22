@@ -36,6 +36,9 @@ docs/obsidian-developer-docs
 docs/ui-mockups
 docs/modal-changes-20250721.md
 
+# Debug logs
+logs/
+
 # Claude instructions file
 CLAUDE.md
 

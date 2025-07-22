@@ -128,6 +128,40 @@ function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...arg
 }
 
 /**
+ * Removes YAML frontmatter from the beginning of selected text.
+ * @param text The text to process.
+ * @returns The text with frontmatter removed.
+ */
+function stripFrontmatter(text: string): string {
+	// Only remove frontmatter if it starts at the very beginning
+	if (!text.startsWith('---')) {
+		return text;
+	}
+	
+	// Find the closing frontmatter delimiter
+	const lines = text.split('\n');
+	let frontmatterEnd = -1;
+	
+	// Start from line 1 (skip the opening ---)
+	for (let i = 1; i < lines.length; i++) {
+		const line = lines[i].trim();
+		if (line === '---' || line === '...') {
+			frontmatterEnd = i;
+			break;
+		}
+	}
+	
+	// If no closing delimiter found, assume the whole selection is frontmatter
+	if (frontmatterEnd === -1) {
+		return '';
+	}
+	
+	// Return everything after the frontmatter (including the newline after ---)
+	const remainingLines = lines.slice(frontmatterEnd + 1);
+	return remainingLines.join('\n');
+}
+
+/**
  * Gets the disabled exclusions from the frontmatter of the active file.
  * @param app The Obsidian app instance.
  * @returns Array of exclusion identifiers to disable, or empty array if none.
@@ -1269,6 +1303,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	public canvasPollingTimer: NodeJS.Timeout | null = null;
 	private lastCanvasSelection: string = '';
 	private ribbonButton: HTMLElement | null = null;
+	private ctrlAProcessed: number = 0;
+
 
 	async onload() {
 		await this.loadSettings();
@@ -1374,17 +1410,25 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 		// Register for selection changes if live updates are enabled
 		if (this.settings.enableLiveCount) {
-			// Remove any existing listener first
+			// Remove any existing listeners first
 			document.removeEventListener('selectionchange', this.handleSelectionChange);
-			// Add the new listener
+			document.removeEventListener('keydown', this.handleKeyDown);
+			
+			// Add the selection change listener
 			document.addEventListener('selectionchange', this.handleSelectionChange);
 			this.log('Selection change listener registered for live updates');
+			
+			// Add keyboard listener for CTRL-A detection in Reading view
+			document.addEventListener('keydown', this.handleKeyDown);
+			this.log('Keyboard listener registered for CTRL-A detection');
 			
 			// Start Canvas polling for iframe selection detection
 			this.startCanvasPolling();
 		} else {
 			this.log('Live updates disabled, no selection listener added');
 			this.stopCanvasPolling();
+			// Remove keyboard listener too
+			document.removeEventListener('keydown', this.handleKeyDown);
 		}
 
 		// Initial update of the status bar
@@ -1396,6 +1440,53 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		if (!this.settings.enableLiveCount) {
 			this.log('Live count disabled, skipping selection change update');
 			return;
+		}
+		
+		// Skip if we just processed CTRL-A (within last 2 seconds)
+		const now = Date.now();
+		const timeSinceCtrlA = now - this.ctrlAProcessed;
+		this.log('CTRL-A flag check:', {
+			ctrlAProcessed: this.ctrlAProcessed,
+			now: now,
+			timeSinceCtrlA: timeSinceCtrlA,
+			shouldSkip: this.ctrlAProcessed && timeSinceCtrlA < 2000
+		});
+		
+		if (this.ctrlAProcessed && timeSinceCtrlA < 2000) {
+			this.log('Skipping selection change - CTRL-A was recently processed');
+			return;
+		}
+		
+		// Additional check: if this looks like a CTRL-A selection in reading view, handle it properly
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (markdownView && markdownView.getMode() === 'preview') {
+			const selection = window.getSelection();
+			const selectedText = selection?.toString() || '';
+			const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
+			const contentText = previewContainer?.textContent || '';
+			
+			// If we have a very large selection that includes more than just content, it's likely CTRL-A
+			// In this case, show content-only word count instead of clearing
+			if (selectedText.length > contentText.length * 1.1 && this.statusBarItem && this.settings.showStatusBar) {
+				this.log('Selection change - Detected CTRL-A selection (includes title), showing content count');
+				
+				const disabledExclusions = getDisabledExclusionsFromFrontmatter(this.app);
+				const wordCount = countSelectedWords(
+					contentText,
+					this.settings.exclusionList.split(',').map(e => e.trim()).filter(e => e),
+					true,
+					this.settings,
+					this,
+					disabledExclusions
+				);
+				
+				const liveIndicator = this.settings.enableLiveCount ? ' (live)' : '';
+				const statusText = `${this.settings.statusBarLabel}${wordCount}${liveIndicator}`;
+				
+				this.log('Selection change - Setting CTRL-A status bar text:', statusText);
+				this.statusBarItem.setText(statusText);
+				return;
+			}
 		}
 		
 		// Enhanced debugging for Canvas integration
@@ -1429,6 +1520,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			}
 		}
 		
+
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer);
 		}
@@ -1437,6 +1529,60 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			this.log('Debounced selection change - updating status bar');
 			this.updateStatusBar();
 		}, 300); // 300ms debounce
+	};
+
+	private handleKeyDown = (event: KeyboardEvent) => {
+		// Detect CTRL-A and handle it directly since Reading view doesn't create proper selections
+		if (event.ctrlKey && event.key === 'a' && !event.shiftKey && !event.altKey) {
+			this.log('CTRL-A detected!');
+			
+			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (markdownView && markdownView.getMode() === 'preview') {
+				this.log('CTRL-A in Reading view - handling select all directly');
+				
+				// Set flag immediately to prevent selection change handler interference
+				this.ctrlAProcessed = Date.now();
+				this.log('CTRL-A flag set immediately:', this.ctrlAProcessed);
+				
+				// Get the preview container
+				const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
+				if (previewContainer && this.statusBarItem && this.settings.showStatusBar) {
+					// Use a longer timeout to ensure DOM is updated after CTRL-A
+					setTimeout(() => {
+						this.log('CTRL-A timeout - extracting full document content');
+						
+						// Get content text directly (this excludes title and frontmatter automatically)
+						const contentText = previewContainer.textContent || '';
+						
+						if (contentText.trim() && this.statusBarItem) {
+							this.log('CTRL-A - Processing document content:', contentText.length, 'chars');
+							
+							const disabledExclusions = getDisabledExclusionsFromFrontmatter(this.app);
+							const wordCount = countSelectedWords(
+								contentText,
+								this.settings.exclusionList.split(',').map(e => e.trim()).filter(e => e),
+								true,
+								this.settings,
+								this,
+								disabledExclusions
+							);
+							
+							const liveIndicator = this.settings.enableLiveCount ? ' (live)' : '';
+							const statusText = `${this.settings.statusBarLabel}${wordCount}${liveIndicator}`;
+							
+							this.log('CTRL-A - Setting status bar text:', statusText);
+							this.statusBarItem.setText(statusText);
+							
+							// Flag was already set immediately when CTRL-A was detected
+						} else {
+							this.log('CTRL-A - No content found in preview container or status bar not available');
+						}
+					}, 100); // Longer delay to ensure CTRL-A completes
+				}
+			} else if (markdownView) {
+				this.log('CTRL-A in', markdownView.getMode(), 'mode - will be handled by selection change');
+			}
+		}
 	};
 
 	private startCanvasPolling() {
@@ -1523,7 +1669,10 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				if (markdownView.getMode() === 'source') {
 					// Source mode
 					selectedText = markdownView.editor.getSelection();
-					this.log('Source mode selection:', selectedText);
+					this.log('Source mode selection (before frontmatter stripping):', selectedText);
+					// Strip frontmatter for consistency across all modes
+					selectedText = stripFrontmatter(selectedText);
+					this.log('Source mode selection (after frontmatter stripping):', selectedText);
 				} else if (markdownView.getMode() === 'preview') {
 					// Reading view mode
 					const selection = window.getSelection();
@@ -1562,7 +1711,10 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				} else {
 					// Live Preview mode
 					selectedText = markdownView.editor.getSelection();
-					this.log('Live Preview mode selection:', selectedText);
+					this.log('Live Preview mode selection (before frontmatter stripping):', selectedText);
+					// Strip frontmatter for consistency across all modes
+					selectedText = stripFrontmatter(selectedText);
+					this.log('Live Preview mode selection (after frontmatter stripping):', selectedText);
 				}
 			} else {
 				// Fallback for non-MarkdownView types (Canvas, etc.)
@@ -1658,8 +1810,9 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		if (this.ribbonButton) {
 			this.ribbonButton.remove();
 		}
-		// Remove the selection change listener
+		// Remove event listeners
 		document.removeEventListener('selectionchange', this.handleSelectionChange);
+		document.removeEventListener('keydown', this.handleKeyDown);
 		
 		// Remove our style element if it exists
 		const styleElement = document.getElementById('selected-word-counter-core-hide');
@@ -1687,14 +1840,64 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 			if (markdownView.getMode() === 'source') {
 				selectedText = markdownView.editor.getSelection();
+				// Strip frontmatter for consistency across all modes
+				selectedText = stripFrontmatter(selectedText);
 			} else if (markdownView.getMode() === 'preview') {
+				// Use the same sophisticated logic as handleWordCount for Reading view
 				const selection = window.getSelection();
-				if (selection && selection.toString()) {
-					selectedText = selection.toString();
+				this.log('Status bar - Reading view selection object:', selection);
+				
+				// First find the markdown preview container
+				const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
+				this.log('Status bar - Preview container:', previewContainer);
+				
+				if (selection && selection.rangeCount > 0 && previewContainer) {
+					const range = selection.getRangeAt(0);
+					this.log('Status bar - Range text:', range?.toString());
+					this.log('Status bar - Selection isCollapsed:', selection.isCollapsed);
+					this.log('Status bar - Range collapsed:', range.collapsed);
+					this.log('Status bar - Start container type:', range.startContainer.nodeType);
+					this.log('Status bar - End container type:', range.endContainer.nodeType);
+					this.log('Status bar - Start offset:', range.startOffset);
+					this.log('Status bar - End offset:', range.endOffset);
+					
+					// Check if either the start or end container is within the preview
+					const startInPreview = previewContainer.contains(range.startContainer);
+					const endInPreview = previewContainer.contains(range.endContainer);
+					
+					this.log('Status bar - Start in preview:', startInPreview);
+					this.log('Status bar - End in preview:', endInPreview);
+					
+					if (range.toString().trim()) {
+						if (startInPreview || endInPreview) {
+							selectedText = range.toString();
+							this.log('Status bar - Using selection from Reading view:', selectedText.length, 'chars');
+						} else {
+							this.log('Status bar - Selection containers not within preview');
+						}
+					} else if (!range.collapsed && (startInPreview || endInPreview)) {
+						// Try extracting text manually if range is non-collapsed but toString() is empty
+						try {
+							const clonedContents = range.cloneContents();
+							const extractedText = clonedContents.textContent || '';
+							if (extractedText.trim()) {
+								selectedText = extractedText;
+								this.log('Status bar - Extracted text manually:', selectedText.length, 'chars');
+							}
+						} catch (e) {
+							this.log('Status bar - Manual extraction failed:', e.message);
+						}
+					} else {
+						this.log('Status bar - Empty or collapsed selection');
+					}
+				} else {
+					this.log('Status bar - No valid selection range found or preview container not found');
 				}
 			} else {
 				// Live Preview mode (default case)
 				selectedText = markdownView.editor.getSelection();
+				// Strip frontmatter for consistency across all modes
+				selectedText = stripFrontmatter(selectedText);
 			}
 		} else {
 			// Fallback for non-MarkdownView types (Canvas, etc.)

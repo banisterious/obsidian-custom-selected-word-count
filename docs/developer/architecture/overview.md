@@ -173,7 +173,33 @@ The plugin includes sophisticated comment exclusion capabilities:
 - Separate content exclusion controls for each comment type
 - All settings default to OFF for backward compatibility
 
-#### 3.1.4. Link Processing System
+#### 3.1.4. Frontmatter Exclusion System
+
+The plugin automatically excludes YAML frontmatter from word counts across all view modes for consistent behavior:
+
+**Automatic Detection:**
+- **YAML Format:** Standard frontmatter delimited by `---` or `...`
+- **Position-Aware:** Only removes frontmatter at the very beginning of selected text
+- **Delimiter Support:** Handles both `---` and `...` closing delimiters
+
+**Cross-Mode Consistency:**
+- **Reading View:** Frontmatter automatically excluded (uses rendered content only)
+- **Source Mode:** Frontmatter stripped from raw editor selections
+- **Live Preview Mode:** Frontmatter stripped from raw editor selections
+- **Canvas Mode:** Frontmatter excluded from iframe selections
+
+**Implementation Details:**
+- **Function:** `stripFrontmatter()` processes editor-based selections
+- **Processing Order:** Applied before all other text analysis operations
+- **Preservation Logic:** Maintains original text structure after frontmatter removal
+- **Performance:** Minimal overhead with efficient line-by-line parsing
+
+**Configuration Options:**
+- **No User Settings:** Frontmatter exclusion is always enabled for consistency
+- **Automatic Operation:** No configuration required - works seamlessly across all modes
+- **Debug Logging:** Logs frontmatter detection and removal for troubleshooting
+
+#### 3.1.5. Link Processing System
 
 The plugin includes intelligent link processing capabilities to improve word count accuracy:
 
