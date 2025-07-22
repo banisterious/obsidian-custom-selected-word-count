@@ -4,11 +4,13 @@
 
 ## [1.6.1] - 2025-07-21
 ### Fixed
-- **CTRL-A Select All Support in Reading View**
-  - Fixed timing issue where CTRL-A word count would briefly flash and then disappear
+- **Select All Support in Reading View (Cross-Platform)**
+  - Fixed timing issue where Select All word count would briefly flash and then disappear
+  - Added support for both Windows/Linux (Ctrl+A) and macOS (Cmd+A) key combinations
   - Moved flag setting to immediate detection to prevent selection change handler interference
-  - Added comprehensive debug logging for CTRL-A flag state tracking
-  - Resolves issue where selecting all text with CTRL-A in Reading view didn't maintain status bar count
+  - Updated event detection to recognize both `ctrlKey` and `metaKey` modifiers
+  - Added comprehensive debug logging for Select All flag state tracking
+  - Ensures consistent Select All word counting across all operating systems
 
 ## [1.6.0] - 2025-07-21
 ### Fixed
