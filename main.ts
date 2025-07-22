@@ -1442,18 +1442,18 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			return;
 		}
 		
-		// Skip if we just processed CTRL-A (within last 2 seconds)
+		// Skip if we just processed Select All (within last 2 seconds)
 		const now = Date.now();
-		const timeSinceCtrlA = now - this.ctrlAProcessed;
-		this.log('CTRL-A flag check:', {
+		const timeSinceSelectAll = now - this.ctrlAProcessed;
+		this.log('Select All flag check:', {
 			ctrlAProcessed: this.ctrlAProcessed,
 			now: now,
-			timeSinceCtrlA: timeSinceCtrlA,
-			shouldSkip: this.ctrlAProcessed && timeSinceCtrlA < 2000
+			timeSinceSelectAll: timeSinceSelectAll,
+			shouldSkip: this.ctrlAProcessed && timeSinceSelectAll < 2000
 		});
 		
-		if (this.ctrlAProcessed && timeSinceCtrlA < 2000) {
-			this.log('Skipping selection change - CTRL-A was recently processed');
+		if (this.ctrlAProcessed && timeSinceSelectAll < 2000) {
+			this.log('Skipping selection change - Select All was recently processed');
 			return;
 		}
 		
@@ -1532,30 +1532,30 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	};
 
 	private handleKeyDown = (event: KeyboardEvent) => {
-		// Detect CTRL-A and handle it directly since Reading view doesn't create proper selections
-		if (event.ctrlKey && event.key === 'a' && !event.shiftKey && !event.altKey) {
-			this.log('CTRL-A detected!');
+		// Detect CTRL-A (Windows/Linux) or CMD-A (macOS) and handle it directly since Reading view doesn't create proper selections
+		if ((event.ctrlKey || event.metaKey) && event.key === 'a' && !event.shiftKey && !event.altKey) {
+			this.log('Select All detected (Ctrl+A or Cmd+A)!');
 			
 			const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			if (markdownView && markdownView.getMode() === 'preview') {
-				this.log('CTRL-A in Reading view - handling select all directly');
+				this.log('Select All in Reading view - handling select all directly');
 				
 				// Set flag immediately to prevent selection change handler interference
 				this.ctrlAProcessed = Date.now();
-				this.log('CTRL-A flag set immediately:', this.ctrlAProcessed);
+				this.log('Select All flag set immediately:', this.ctrlAProcessed);
 				
 				// Get the preview container
 				const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
 				if (previewContainer && this.statusBarItem && this.settings.showStatusBar) {
 					// Use a longer timeout to ensure DOM is updated after CTRL-A
 					setTimeout(() => {
-						this.log('CTRL-A timeout - extracting full document content');
+						this.log('Select All timeout - extracting full document content');
 						
 						// Get content text directly (this excludes title and frontmatter automatically)
 						const contentText = previewContainer.textContent || '';
 						
 						if (contentText.trim() && this.statusBarItem) {
-							this.log('CTRL-A - Processing document content:', contentText.length, 'chars');
+							this.log('Select All - Processing document content:', contentText.length, 'chars');
 							
 							const disabledExclusions = getDisabledExclusionsFromFrontmatter(this.app);
 							const wordCount = countSelectedWords(
@@ -1570,17 +1570,17 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 							const liveIndicator = this.settings.enableLiveCount ? ' (live)' : '';
 							const statusText = `${this.settings.statusBarLabel}${wordCount}${liveIndicator}`;
 							
-							this.log('CTRL-A - Setting status bar text:', statusText);
+							this.log('Select All - Setting status bar text:', statusText);
 							this.statusBarItem.setText(statusText);
 							
-							// Flag was already set immediately when CTRL-A was detected
+							// Flag was already set immediately when Select All was detected
 						} else {
-							this.log('CTRL-A - No content found in preview container or status bar not available');
+							this.log('Select All - No content found in preview container or status bar not available');
 						}
-					}, 100); // Longer delay to ensure CTRL-A completes
+					}, 100); // Longer delay to ensure Select All completes
 				}
 			} else if (markdownView) {
-				this.log('CTRL-A in', markdownView.getMode(), 'mode - will be handled by selection change');
+				this.log('Select All in', markdownView.getMode(), 'mode - will be handled by selection change');
 			}
 		}
 	};
