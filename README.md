@@ -9,7 +9,7 @@ A plugin for [Obsidian](https://obsidian.md) that provides comprehensive text an
 See the Custom Selected Word Count plugin in active use, demonstrating how it provides real-time feedback in your editor.
 
 <p align="center">
-  <img src="docs/images/demo.gif" alt="Animated demonstration of selecting text in Obsidian with an arrow pointing to the live word count update in the status bar" width="900">
+  <img src="docs/images/demo2.gif" alt="Animated demonstration of selecting text in Obsidian with an arrow pointing to the live word count update in the status bar" width="900">
 </p>
 <p align="center">
   <em>Selecting text automatically displays the word count in the status bar, with live updates as you adjust your selection.</em>
