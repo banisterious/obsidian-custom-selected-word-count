@@ -1,7 +1,7 @@
 {
 	"id": "custom-selected-word-count",
 	"name": "Custom Selected Word Count",
-	"version": "1.6.0",
+	"version": "1.6.1",
 	"minAppVersion": "0.15.0",
 	"description": "Comprehensive text analysis for selected text including word counting, character counting, and sentence counting with modern UI design.",
 	"author": "banisterious",
