@@ -1304,6 +1304,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	private lastCanvasSelection: string = '';
 	private ribbonButton: HTMLElement | null = null;
 	private ctrlAProcessed: number = 0;
+	private lastSelectedText: string = '';
 
 
 	async onload() {
@@ -1483,6 +1484,10 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				const liveIndicator = this.settings.enableLiveCount ? ' (live)' : '';
 				const statusText = `${this.settings.statusBarLabel}${wordCount}${liveIndicator}`;
 				
+				// Store the content for later use (e.g., when clicking status bar)
+				this.lastSelectedText = contentText;
+				this.log('Selection change - Stored CTRL-A content text, length:', contentText.length);
+				
 				this.log('Selection change - Setting CTRL-A status bar text:', statusText);
 				this.statusBarItem.setText(statusText);
 				return;
@@ -1572,6 +1577,10 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 							
 							this.log('Select All - Setting status bar text:', statusText);
 							this.statusBarItem.setText(statusText);
+							
+							// Store the content for later use (e.g., when clicking status bar)
+							this.lastSelectedText = contentText;
+							this.log('Select All - Stored content text, length:', contentText.length);
 							
 							// Flag was already set immediately when Select All was detected
 						} else {
@@ -1761,6 +1770,12 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				}
 			}
 
+			if (!selectedText && this.lastSelectedText) {
+				// Use the stored selection if we have one (e.g., after clicking status bar following select-all)
+				this.log('No current selection, using stored selection');
+				selectedText = this.lastSelectedText;
+			}
+			
 			if (!selectedText) {
 				this.log('No text selected');
 				new Notice('No text selected');
@@ -1979,9 +1994,14 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 		if (!selectedText) {
 			this.statusBarItem.setText('');
+			this.lastSelectedText = ''; // Clear stored selection
 			this.log('No text selected, clearing status bar');
 			return;
 		}
+
+		// Store the selected text for later use (e.g., when clicking status bar after select-all)
+		this.lastSelectedText = selectedText;
+		this.log('Storing selected text, length:', selectedText.length);
 
 		const disabledExclusions = getDisabledExclusionsFromFrontmatter(this.app);
 		const wordCount = count ?? countSelectedWords(
