@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.6.2] - 2025-08-08
+### Fixed
+- **Modal Opening After Select All in Reading Mode**
+  - Fixed issue where clicking status bar after Select All showed "No text selected" 
+  - Added storage of selected text when handling CTRL-A/Cmd-A in Reading Mode
+  - Modal now correctly opens with word count details after Select All
+  - Ensures consistent behavior across all selection methods
+
 ## [1.6.1] - 2025-07-21
 ### Fixed
 - **Select All Support in Reading View (Cross-Platform)**

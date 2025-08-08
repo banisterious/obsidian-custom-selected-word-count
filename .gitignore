@@ -28,6 +28,7 @@ docs/images/temp/
 *.xcf
 *.ai
 *.pdn
+*.stg
 # Temporary screenshot files
 docs/images/*.tmp
 docs/images/*.temp
