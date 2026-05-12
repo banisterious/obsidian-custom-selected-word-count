@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.6.5] - 2026-05-12
+### Internal
+- **Merged duplicate CSS selectors**
+  - Three pairs of duplicated rules in `styles.css` collapsed into single declarations: `.word-count-modal .modal-header` (lines 104 + 174), `.word-count-modal .modal-title` (lines 109 + 191), and `.word-count-settings-group` inside `.word-count-settings` (lines 667 + 852). Visually identical result; the cascade was already picking the same final values, and consolidating the rules makes the intent clearer.
+- **Dropped two redundant `!important` declarations**
+  - `.word-count-hidden { display: none; }` (was `!important`). The class is toggled via `toggleClass` on settings sub-section containers; nothing sets a competing inline `display`, so the class-based rule wins on cascade alone.
+  - `body.word-count-hide-core .status-bar-item.plugin-word-count { display: none; }` (was `!important`). The body-class + two-class selector has plenty of specificity to win against Obsidian's core word-count item, which carries no competing rule.
+
 ## [1.6.4] - 2026-05-12
 ### Fixed
 - **CSS syntax error flagged by the community-site rescan**
