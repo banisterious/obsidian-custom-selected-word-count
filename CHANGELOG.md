@@ -5,12 +5,26 @@
 - **Plugin failing the Obsidian Community automated review**
   - Replaced the dynamically-injected `<style>` element used to hide Obsidian's core word count with a body-class toggle and a static rule in `styles.css`
   - The plugin no longer creates runtime style elements, which is the pattern flagged by the community-site audit
+- **"Hide core word count" actually hides the core word count now**
+  - The setting has not worked as named for a long time. Three issues compounded: our own status-bar item was attaching the `plugin-word-count` class (colliding with Obsidian's core word-count item, since Obsidian auto-adds `plugin-custom-selected-word-count` from the manifest id already); the CSS selector excluded `.plugin-word-count` instead of targeting it, so the setting silently hid backlinks, properties, editor-status, etc., and left the core word count visible; and a companion CSS rule was commented out as "temporarily disabled" while the code still added the `hide-core-count` class
+  - Net effect post-fix: enabling "Hide core word count" hides Obsidian's built-in word count and nothing else
+- **Customized exclusion list no longer reset on every load**
+  - `loadSettings` unconditionally reassigned `this.settings.exclusionList` to the default and saved, destroying user customization on every plugin load. Removed the unconditional reset; `Object.assign({}, DEFAULT_SETTINGS, await this.loadData())` already handles default population for missing fields
+  - Note: customization made before this version was silently overwritten on disk and cannot be recovered; this fix prevents future loss only
+- **Character and sentence counts now persist in history entries**
+  - The persisted-settings shape for history was typed `{ count, date }` while the runtime shape carried optional `characterCount` and `sentenceCount`. The runtime `this.history` array and the persisted `this.settings.history` array were never synced, so new entries (and their character/sentence counts) never reached disk; saveSettings always wrote whatever was last loaded back. Fix syncs the two at the top of saveSettings (Date -> ISO string), and includes the extra counts in both the persisted shape and the load mapping. Existing history entries from prior versions were never actually persisted across sessions, so there is nothing to migrate; new entries now persist all three counts
 - **Buy Me a Coffee link in the README**
   - Restored the BMC button's `href` and inner image `src` after Markdown link syntax had been pasted into the HTML attributes, leaving the link non-functional in rendered Markdown
 
 ### Changed
 - **Mobile catalog visibility**
   - Flipped `manifest.isDesktopOnly` from `false` to `true` so the manifest matches the README's existing "Mobile Compatibility" note that mobile support is untested. Existing mobile installs continue to run; new mobile installations from the in-app community catalog are not offered until mobile testing lands in a future release
+- **Settings, button, and command text use Obsidian's sentence-case convention**
+  - The "Count Selected Words" command, the modal "Selection Analysis" title, several setting names, "Export Logs" / "Reset to Default" / "Reset Test" buttons, and every Setting description now follow Obsidian's UI sentence-case guideline. Functionally identical; cosmetic text update only
+- **Popout-window compatibility throughout**
+  - Replaced every bare `document.*` / `setTimeout` / `setInterval` / `clearTimeout` / `clearInterval` reference with Obsidian's `activeDocument` and `activeWindow.*` equivalents. Event listeners, the debounce timer, Canvas iframe polling, the Reading-view select-all timeout, and the copy-button flash animations all now resolve to the currently-focused window rather than the main Obsidian window, so they work correctly when the plugin is exercised from a popped-out leaf
+- **Replaced browser-native `confirm()` with an in-plugin modal**
+  - The "Clear all history entries?" confirmation in the count modal now opens a small `ConfirmModal` extending `obsidian.Modal` (Cancel / Clear buttons) instead of the browser's native `confirm()` dialog. Same UX intent; implementation now uses a documented Obsidian API
 
 ### Documentation
 - **Three-file release rule**
@@ -20,10 +34,30 @@
 
 ### Internal
 - **Flat-config lint migration**
-  - Replaced `.eslintrc` with `eslint.config.mjs`. Upgraded `eslint` to `^9`, `typescript-eslint` to `^8`, and TypeScript to `~4.9` to satisfy peer requirements. Added `eslint-plugin-obsidianmd@^0.2.9` so the project lints against the same Obsidian-specific rules used by the community-site automated review. Findings surfaced by the new plugin are tracked through audit plan Phases 1 through 3
+  - Replaced `.eslintrc` with `eslint.config.mjs`. Upgraded `eslint` to `^9`, `typescript-eslint` to `^8`, and TypeScript to `~4.9` to satisfy peer requirements. Added `eslint-plugin-obsidianmd@^0.2.9` so the project lints against the same Obsidian-specific rules used by the community-site automated review. All `obsidianmd/*` findings are now clear
+- **Obsidian DOM helpers throughout**
+  - Replaced every `document.createElement(...)` call with Obsidian's `createEl(...)` / parent `createDiv(...)` / `createSpan(...)` helpers. Affects the inline heading and phrase editors in the settings tab, the regex test-area's wordcount / matches / warning containers, and the log-export download link
+- **Settings tab callbacks are properly typed**
+  - The ~30 `addToggle((toggle: any) => ...)` and friends in the settings tab are now `(toggle: ToggleComponent)`, `(text: TextComponent)`, `(dropdown: DropdownComponent)`, `(button: ButtonComponent)` from `obsidian`. The advanced-regex Reset button keeps a direct reference to its `TextComponent` instead of looking it up via `regexSetting.components.find(c => c.constructor.name.includes('Text'))` and casting to `any`
+- **Inline DOM styles moved to CSS classes**
+  - Copy-button confirmation flash now toggles a `word-count-copy-confirmed` class with the accent-color rule in `styles.css` instead of writing `element.style.background` / `element.style.color`. The regex test-area warning visibility toggles the existing `word-count-hidden` utility class instead of `element.style.display`
+- **Platform API for OS detection**
+  - The log-export "system" object now reads `Platform.isMacOS` / `isWin` / `isLinux` / `isMobileApp` / `isDesktopApp` instead of substring-matching `navigator.userAgent`. The exported diagnostic payload is more accurate as a side benefit
+- **Deprecated API call replaced**
+  - The four `workspace.activeLeaf` reads in the Canvas / non-MarkdownView fallback paths now use `getMostRecentLeaf()`
+- **Settings heading uses Obsidian's helper**
+  - The lone `createEl('h4')` in the override-info `<details>` panel now uses `new Setting(...).setHeading()`
+- **Promise hygiene**
+  - Async callbacks passed to `addEventListener`, the `ConfirmModal`'s onConfirm, and similar fire-and-forget paths are now wrapped in sync arrows that explicitly `void` the returned promise. The `Plugin.onload` signature accepts `() => Promise<void> | void`; the targeted `@typescript-eslint/no-misused-promises` disable comment documents that
+- **Dead code removed**
+  - Removed an unused exclusion-info helper, an empty-body `setupRibbonButton` whose `ribbonButton` field was never assigned, an empty-body `updateClasses` no-op, the `saveHistory` delegate (call sites now use `saveSettings` directly), three unused imports from `obsidian` (`Editor`, `TFile`, `parseYaml`), and ten unused local declarations across the codebase. Two `(this as any).renderHeadingsList = renderHeadingsList` / `renderPhrasesList = renderPhrasesList` escape hatches were dead and have been removed
+- **Trivial lint sweeps**
+  - Eight unnecessary regex escapes inside character classes, a missing braces wrap on a `case` block with a lexical declaration, and a caught error binding `catch (e)` -> `catch` where the binding was unused
 - **Stale comments and version literal**
   - Removed the leading `// BUILD: 2025-05-07` and `// Remember to rename these classes and interfaces!` comments from the top of `main.ts`
   - Replaced the hardcoded `version: '1.1.0'` literal in the log-export payload with `this.plugin.manifest.version` so exported diagnostic bundles report the actually-running plugin version
+- **`builtin-modules` -> `node:module`**
+  - `esbuild.config.mjs` reads from `node:module`'s `builtinModules` export instead of the third-party `builtin-modules` package. The dependency is removed from `package.json`
 - **Removed orphan release artifact**
   - Deleted `custom-selected-word-count-v1.6.2.zip` from the working tree. The file matched the existing `.gitignore` `*.zip` rule but its presence at the repo root was misleading about what ships in releases
 
