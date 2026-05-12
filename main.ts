@@ -1313,7 +1313,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		// Add the command
 		this.addCommand({
 			id: 'count-selected-words',
-			name: 'Count Selected Words',
+			name: 'Count selected words',
 			callback: async () => {
 				await this.handleWordCount();
 			}
@@ -2133,7 +2133,7 @@ class WordCountModal extends Modal {
 		const headerEl = contentEl.createDiv({cls: 'modal-header'});
 		const headerIcon = headerEl.createSpan({cls: 'modal-header-icon', attr: {'aria-hidden': 'true'}});
 		setIcon(headerIcon, 'chart-no-axes-column');
-		headerEl.createEl('h2', {cls: 'modal-title', text: 'Selection Analysis'});
+		headerEl.createEl('h2', {cls: 'modal-title', text: 'Selection analysis'});
 
 		// Modal content with improved padding
 		const modalContentEl = contentEl.createDiv({cls: 'modal-content'});
@@ -2553,7 +2553,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Per-note Override Information
 		const overrideInfo = containerEl.createEl('details', { cls: 'word-count-override-info' });
-		overrideInfo.createEl('summary', { text: 'ℹ️ Using per-note exclusion overrides' });
+		overrideInfo.createEl('summary', { text: 'ℹ️ using per-note exclusion overrides' });
 		
 		const overrideContent = overrideInfo.createDiv({ cls: 'word-count-override-content' });
 		overrideContent.createEl('p', { text: 'You can override any exclusion setting for individual notes by adding a cswc-disable property to the note\'s frontmatter:' });
@@ -2565,13 +2565,14 @@ class WordCountSettingTab extends PluginSettingTab {
 		const examplePre2 = overrideContent.createEl('pre', { cls: 'word-count-override-example' });
 		examplePre2.createEl('code', { text: '---\ncswc-disable: all\n---' });
 		
-		overrideContent.createEl('p', { text: 'Property values are shown next to each setting below (• Property: ...)' });
+		overrideContent.createEl('p', { text: 'Property values are shown next to each setting below (• property: ...)' });
 		
 		new Setting(overrideContent)
 			.setName('Inline comment overrides')
 			.setHeading();
 		overrideContent.createEl('p', { text: 'You can also disable exclusions for specific sections within a note using comments:' });
 		const inlinePre = overrideContent.createEl('pre', { cls: 'word-count-override-example' });
+		// eslint-disable-next-line obsidianmd/ui/sentence-case -- example markdown content shown to the user; each sentence is intentionally capitalized as a user would actually type it
 		inlinePre.createEl('code', { text: 'This text is excluded.\n<!-- cswc-disable -->\nThis text is NOT excluded from counts.\n<!-- cswc-enable -->\nThis text is excluded again.' });
 		
 		overrideContent.createEl('p', { text: 'Supported comment formats: <!-- cswc-disable --> or %% cswc-disable %%' });
@@ -2580,7 +2581,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const linkContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(linkContainer)
 			.setName('Exclude non-visible portions of links')
-			.setDesc('For [[Note Name|Alias]] links, only count "Alias". For [link text](url) links, only count "link text". • Property: exclude-urls')
+			.setDesc('For [[note name|alias]] links, only count "alias". For [link text](URL) links, only count "link text". • property: exclude-urls')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeNonVisibleLinkPortions)
 				.onChange(async (value: boolean) => {
@@ -2641,8 +2642,8 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Sub-settings for each path type
 		new Setting(pathSettingsContainer)
-			.setName('Exclude Windows paths')
-			.setDesc('Exclude paths starting with drive letters (e.g., C:\\). (Requires path exclusion to be enabled) • Property: exclude-windows-paths')
+			.setName('Exclude windows paths')
+			.setDesc('Exclude paths starting with drive letters (e.g., c:\\). (Requires path exclusion to be enabled) • property: exclude-windows-paths')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeWindowsPaths)
 				.onChange(async (value: boolean) => {
@@ -2651,8 +2652,8 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(pathSettingsContainer)
-			.setName('Exclude Unix paths')
-			.setDesc('Exclude Unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled) • Property: exclude-unix-paths')
+			.setName('Exclude unix paths')
+			.setDesc('Exclude unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled) • property: exclude-unix-paths')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeUnixPaths)
 				.onChange(async (value: boolean) => {
@@ -2662,7 +2663,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		new Setting(pathSettingsContainer)
 			.setName('Exclude UNC paths')
-			.setDesc('Exclude network paths starting with double backslash (e.g., \\\\server\\share). (Requires path exclusion to be enabled) • Property: exclude-unc-paths')
+			.setDesc('Exclude network paths starting with double backslash (e.g., \\\\server\\share). (Requires path exclusion to be enabled) • property: exclude-unc-paths')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeUNCPaths)
 				.onChange(async (value: boolean) => {
@@ -2672,7 +2673,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		new Setting(pathSettingsContainer)
 			.setName('Exclude environment paths')
-			.setDesc('Exclude environment variable paths (e.g., %USERPROFILE%, $HOME). (Requires path exclusion to be enabled) • Property: exclude-environment-paths')
+			.setDesc('Exclude environment variable paths (e.g., %USERPROFILE%, $HOME). (Requires path exclusion to be enabled) • property: exclude-environment-paths')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeEnvironmentPaths)
 				.onChange(async (value: boolean) => {
@@ -2685,7 +2686,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const commentContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(commentContainer)
 			.setName('Exclude comments from text analysis')
-			.setDesc('When enabled, comments will be excluded from word, character, and sentence counts. • Property: exclude-comments')
+			.setDesc('When enabled, comments will be excluded from word, character, and sentence counts. • property: exclude-comments')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeComments)
 				.onChange(async (value: boolean) => {
@@ -2746,7 +2747,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const headingContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(headingContainer)
 			.setName('Exclude headings from text analysis')
-			.setDesc('When enabled, markdown headings will be excluded from word, character, and sentence counts. • Property: exclude-headings')
+			.setDesc('When enabled, Markdown headings will be excluded from word, character, and sentence counts. • property: exclude-headings')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeHeadings)
 				.onChange(async (value: boolean) => {
@@ -2902,7 +2903,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const wordsAndPhrasesContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(wordsAndPhrasesContainer)
 			.setName('Exclude words and phrases from text analysis')
-			.setDesc('When enabled, specific words and phrases will be excluded from word, character, and sentence counts. • Property: exclude-words-phrases')
+			.setDesc('When enabled, specific words and phrases will be excluded from word, character, and sentence counts. • property: exclude-words-phrases')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeWordsAndPhrases)
 				.onChange(async (value: boolean) => {
@@ -2919,7 +2920,7 @@ class WordCountSettingTab extends PluginSettingTab {
 			.setName('Excluded words')
 			.setDesc('Comma-separated list of words to exclude (case-insensitive, exact matches only). (Requires words/phrases exclusion to be enabled)')
 			.addText((text: TextComponent) => text
-				.setPlaceholder('the, and, or, but')
+				.setPlaceholder('The, and, or, but')
 				.setValue(this.plugin.settings.excludedWords)
 				.onChange(async (value: string) => {
 					this.plugin.settings.excludedWords = value;
@@ -3038,7 +3039,7 @@ class WordCountSettingTab extends PluginSettingTab {
 			.setName('Export log files')
 			.setDesc('Export debug log files with timestamp for troubleshooting. Format: ocswcp-logs-YYYYMMDD-HHMMSS.json')
 			.addButton((button: ButtonComponent) => button
-				.setButtonText('Export Logs')
+				.setButtonText('Export logs')
 				.setTooltip('Export current log files')
 				.onClick(async () => {
 					await this.exportLogFiles();
@@ -3049,7 +3050,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		containerEl.createEl('hr', { cls: 'word-count-advanced-separator' });
 		const advancedSection = containerEl.createEl('details', { cls: 'word-count-advanced-section' });
 		advancedSection.createEl('summary', {
-			text: '⚠️ Custom word detection regex (expert only)',
+			text: '⚠️ custom word detection regex (expert only)',
 			cls: 'word-count-advanced-summary'
 		});
 
@@ -3087,7 +3088,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Reset to Default Button
 		const resetButton = advDesc.createEl('button', {
-			text: 'Reset to Default',
+			text: 'Reset to default',
 			cls: 'mod-cta'
 		});
 		resetButton.onclick = async () => {
@@ -3117,7 +3118,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		const warningDisplay = testArea.createDiv({ cls: 'word-count-regex-warning' });
 
 		const resetTestBtn = testArea.createEl('button', {
-			text: 'Reset Test',
+			text: 'Reset test',
 			cls: 'word-count-test-reset-button'
 		});
 
