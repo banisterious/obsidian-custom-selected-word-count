@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [1.6.4] - 2026-05-12
+### Fixed
+- **CSS syntax error flagged by the community-site rescan**
+  - `styles.css` had a stray `}` inside the nested `.word-count-settings { ... }` block that prematurely closed the `.word-count-container-indented` rule. Everything below it (lines 687-882 of the pre-fix file) ended up accidentally at top level, including `&:has(...)` selectors that need a parent. The closing `}` for `.word-count-settings` then had no matching open, which the catalog CSS lint reported as an Error. Removing the stray brace lets the block nest naturally and balances the brace count.
+
+### Changed
+- **Timer functions now use `window.*` instead of `activeWindow.*`**
+  - The community-site rescan flagged `activeWindow.setTimeout` / `setInterval` / `clearTimeout` / `clearInterval` (introduced in 1.6.3 per `eslint-plugin-obsidianmd@0.2.9`'s `prefer-active-window-timers` rule) and asked for explicit `window.*` instead. Eight sites updated: debounce timer, canvas polling, Reading-view Select-All, two copy-button feedback flashes, and the onunload debounce-clear. `window.*` is more predictable for timer ids because `activeWindow` is a focus-following getter; a timer obtained from `activeWindow.setTimeout()` could end up tied to a different window than its corresponding `clearTimeout()` if focus shifted in between.
+
+### Internal
+- **Cleared `no-explicit-any` warnings**
+  - Nine `any` declarations remained after the 1.6.3 settings-callback typing pass. The two logging helpers (`debugLog`, `log`) now take `...args: unknown[]` (forwarded to `console.log` which accepts `unknown[]`). `getHeadingAtCursor(editor, cursor)` now uses `Editor` and `EditorPosition` from `obsidian`. The five `(this.app as any)` casts reaching internal Obsidian App members (`setting.open()`, `setting.openTabById()`, `appVersion`) now go through a locally-declared `AppInternals` interface and `AppWithInternals = App & AppInternals` intersection type, keeping the cast but removing the `any`.
+
 ## [1.6.3] - 2026-05-12
 ### Fixed
 - **Plugin failing the Obsidian Community automated review**
