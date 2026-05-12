@@ -100,22 +100,6 @@ body {
 
 
 
-/* Original Modal Header Styles (restored) */
-.word-count-modal .modal-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.word-count-modal .modal-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-normal);
-}
-
 .word-count-modal .modal-title .lucide {
     height: 18px;
     width: 18px;
@@ -170,7 +154,7 @@ body {
     transform: translateY(-2px);
 }
 
-/* Enhanced Modal Header - Unified Styles */
+/* Modal Header */
 .word-count-modal .modal-header {
     display: flex;
     align-items: center;
@@ -189,6 +173,9 @@ body {
 }
 
 .word-count-modal .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0;
     font-size: 18px;
     font-weight: 600;
@@ -666,10 +653,18 @@ details.word-count-override-info {
     /* Grouped settings containers */
     .word-count-settings-group {
         margin-bottom: 1em;
-        
+
         /* Settings that follow a heading should have reduced top padding */
         &:has(.setting-item-heading) + .setting-item {
             padding-top: 8px;
+        }
+
+        /* Visually indicate when dependent settings are inactive, but keep them interactive */
+        &:has(.setting-item:first-child .checkbox-container input:not(:checked)) {
+            .word-count-container-indented {
+                opacity: 0.6;
+                /* Removed pointer-events: none to keep settings interactive */
+            }
         }
     }
 
@@ -841,22 +836,11 @@ details.word-count-override-info {
 
     /* Visibility utility classes */
     .word-count-hidden {
-        display: none !important;
+        display: none;
     }
 
     .word-count-visible {
         display: block;
-    }
-
-    /* Settings that depend on other settings - visual indication only */
-    .word-count-settings-group {
-        /* Visually indicate when dependent settings are inactive, but keep them interactive */
-        &:has(.setting-item:first-child .checkbox-container input:not(:checked)) {
-            .word-count-container-indented {
-                opacity: 0.6;
-                /* Removed pointer-events: none to keep settings interactive */
-            }
-        }
     }
 
     /* Status bar related settings grouping */
@@ -895,7 +879,7 @@ details.word-count-override-info {
  * `word-count-hide-core` class on document.body in
  * addCoreWordCountStyle. */
 body.word-count-hide-core .status-bar-item.plugin-word-count {
-    display: none !important;
+    display: none;
 }
 
 /* Button row for the in-plugin confirmation dialog (ConfirmModal). */
