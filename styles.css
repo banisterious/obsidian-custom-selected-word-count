@@ -676,7 +676,6 @@ details.word-count-override-info {
     /* Indented/nested settings */
     .word-count-container-indented {
         padding-left: 20px;
-        }
 
         /* Further nested indentation */
         .word-count-container-indented {
