@@ -1,4 +1,18 @@
-import { App, ButtonComponent, DropdownComponent, MarkdownView, Modal, Notice, Platform, Plugin, PluginSettingTab, Setting, TextComponent, ToggleComponent, setIcon } from 'obsidian';
+import { App, ButtonComponent, DropdownComponent, Editor, EditorPosition, MarkdownView, Modal, Notice, Platform, Plugin, PluginSettingTab, Setting, TextComponent, ToggleComponent, setIcon } from 'obsidian';
+
+// Obsidian's App has internal members (the settings panel controller,
+// the running app version) that are not part of the published type
+// definitions but are stable enough that other community plugins
+// depend on them. Declaring a typed view lets us reach them without
+// `as any` casts.
+interface AppInternals {
+	setting: {
+		open(): void;
+		openTabById(id: string): void;
+	};
+	appVersion?: string;
+}
+type AppWithInternals = App & AppInternals;
 
 interface WordCountPluginSettings {
 	setting: string;
@@ -117,7 +131,7 @@ interface CountResult {
 	sentences: number;
 }
 
-function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...args: any[]) {
+function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...args: unknown[]) {
 	if (plugin.settings.enableDebugLogging) {
 		// eslint-disable-next-line obsidianmd/rule-custom-message -- intentional console.log gated behind the user-enabled enableDebugLogging setting
 		console.log(`[Word Count Debug] ${message}`, ...args);
@@ -1617,7 +1631,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		}
 	}
 
-	private log(message: string, ...args: any[]) {
+	private log(message: string, ...args: unknown[]) {
 		if (this.settings.enableDebugLogging) {
 			debugLog(this, message, ...args);
 		}
@@ -1982,7 +1996,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	 * @param cursor The cursor position
 	 * @returns The full heading text (including markers) if on a heading, null otherwise
 	 */
-	getHeadingAtCursor(editor: any, cursor: any): string | null {
+	getHeadingAtCursor(editor: Editor, cursor: EditorPosition): string | null {
 		try {
 			const lineText = editor.getLine(cursor.line);
 			const headingMatch = lineText.match(/^(#{1,6})\s+(.*)$/);
@@ -2027,8 +2041,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			new Notice(`Added "${trimmedHeading}" to heading exclusion list`);
 
 			// Open plugin settings using Obsidian API
-			(this.app as any).setting.open();
-			(this.app as any).setting.openTabById(this.manifest.id);
+			(this.app as AppWithInternals).setting.open();
+			(this.app as AppWithInternals).setting.openTabById(this.manifest.id);
 
 		} catch (error) {
 			console.error('Error adding excluded heading:', error);
@@ -2063,8 +2077,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			new Notice(`Added "${trimmedPhrase}" to exclusion list`);
 
 			// Open plugin settings using Obsidian API
-			(this.app as any).setting.open();
-			(this.app as any).setting.openTabById(this.manifest.id);
+			(this.app as AppWithInternals).setting.open();
+			(this.app as AppWithInternals).setting.openTabById(this.manifest.id);
 
 		} catch (error) {
 			console.error('Error adding excluded phrase:', error);
@@ -3205,7 +3219,7 @@ class WordCountSettingTab extends PluginSettingTab {
 						language: navigator.language
 					},
 					obsidian: {
-						version: (this.app as any).appVersion || 'unknown'
+						version: (this.app as AppWithInternals).appVersion || 'unknown'
 					}
 				};
 				
