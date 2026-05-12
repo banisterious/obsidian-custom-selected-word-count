@@ -2849,11 +2849,12 @@ class WordCountSettingTab extends PluginSettingTab {
 					// Create inline editor
 					const originalText = headingInfo.querySelector('.word-count-heading-text');
 					if (!originalText) return;
-					
-					const input = document.createElement('input');
-					input.type = 'text';
+
+					const input = createEl('input', {
+						type: 'text',
+						cls: 'word-count-heading-edit-input',
+					});
 					input.value = heading;
-					input.className = 'word-count-heading-edit-input';
 					
 					// Replace the text with input
 					originalText.replaceWith(input);
@@ -2970,10 +2971,11 @@ class WordCountSettingTab extends PluginSettingTab {
 
 				editButton.onclick = async () => {
 					// Create inline editor
-					const input = document.createElement('input');
-					input.type = 'text';
+					const input = createEl('input', {
+						type: 'text',
+						cls: 'word-count-phrase-edit-input',
+					});
 					input.value = phrase;
-					input.className = 'word-count-phrase-edit-input';
 					
 					// Replace the text with input
 					phraseText.replaceWith(input);
@@ -3098,7 +3100,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Test Area
 		const testArea = advDesc.createDiv({ cls: 'word-count-test-area' });
-		testArea.createEl('div', {
+		testArea.createDiv({
 			text: 'Use the box below to see exactly which text fragments your custom regex will match.',
 			cls: 'word-count-test-description'
 		});
@@ -3111,9 +3113,9 @@ class WordCountSettingTab extends PluginSettingTab {
 			}
 		});
 
-		const wordCountDisplay = testArea.createEl('div', { cls: 'word-count-regex-wordcount' });
-		const matchDisplay = testArea.createEl('div', { cls: 'word-count-regex-matches' });
-		const warningDisplay = testArea.createEl('div', { cls: 'word-count-regex-warning' });
+		const wordCountDisplay = testArea.createDiv({ cls: 'word-count-regex-wordcount' });
+		const matchDisplay = testArea.createDiv({ cls: 'word-count-regex-matches' });
+		const warningDisplay = testArea.createDiv({ cls: 'word-count-regex-warning' });
 
 		const resetTestBtn = testArea.createEl('button', {
 			text: 'Reset Test',
@@ -3212,8 +3214,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				const blob = new Blob([jsonString], { type: 'application/json' });
 				const url = URL.createObjectURL(blob);
 				
-				const a = document.createElement('a');
-				a.href = url;
+				const a = createEl('a', { href: url });
 				a.download = filename;
 				document.body.appendChild(a);
 				a.click();
