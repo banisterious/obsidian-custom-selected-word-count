@@ -647,14 +647,6 @@ details.word-count-override-info {
     padding-left: 20px;
 }
 
-/* Core Word Count Hide Style */
-#selected-word-counter-core-hide {
-    display: none;
-}
-
-#selected-word-counter-core-hide.active {
-    display: block;
-}
 
 /* Settings Styles for Custom Selected Word Count Plugin */
 .word-count-settings {
@@ -898,4 +890,12 @@ details.word-count-override-info {
 /* Global overrides for better integration - scoped to our plugin */
 .word-count-settings .setting-item-heading .setting-item-control {
     display: none; /* Hide any controls on heading items */
+}
+
+/* Hide Obsidian's core word count when the user toggles the setting,
+ * but never hide our own status-bar item. Activated by toggling the
+ * body class in addCoreWordCountStyle (replaces the dynamic style
+ * injection flagged by the community-site automated review). */
+body.word-count-hide-core .status-bar-item.mod-clickable:not(.plugin-word-count) {
+    display: none !important;
 }

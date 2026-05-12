@@ -1829,13 +1829,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		document.removeEventListener('selectionchange', this.handleSelectionChange);
 		document.removeEventListener('keydown', this.handleKeyDown);
 		
-		// Remove our style element if it exists
-		const styleElement = document.getElementById('selected-word-counter-core-hide');
-		if (styleElement) {
-			styleElement.remove();
-		}
-
-
+		// Drop the body class that hides Obsidian's core word count
+		document.body.removeClass('word-count-hide-core');
 	}
 
 	private updateStatusBar(count?: number) {
@@ -2022,27 +2017,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	}
 
 	public addCoreWordCountStyle() {
-		// Add or remove the CSS based on the setting
-		const styleId = 'selected-word-counter-core-hide';
-		let styleElement = document.getElementById(styleId);
-		
-		if (this.settings.hideCoreWordCount) {
-			if (!styleElement) {
-				styleElement = document.createElement('style');
-				styleElement.id = styleId;
-				styleElement.textContent = `
-					/* Hide Obsidian's core word count, but not our plugin */
-					.status-bar-item.mod-clickable:not(.plugin-word-count) {
-						display: none !important;
-					}
-				`;
-				document.head.appendChild(styleElement);
-			}
-		} else {
-			if (styleElement) {
-				styleElement.remove();
-			}
-		}
+		document.body.toggleClass('word-count-hide-core', this.settings.hideCoreWordCount);
 	}
 
 	/**
