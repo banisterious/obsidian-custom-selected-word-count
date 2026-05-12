@@ -119,6 +119,7 @@ interface CountResult {
 
 function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...args: any[]) {
 	if (plugin.settings.enableDebugLogging) {
+		// eslint-disable-next-line obsidianmd/rule-custom-message -- intentional console.log gated behind the user-enabled enableDebugLogging setting
 		console.log(`[Word Count Debug] ${message}`, ...args);
 	}
 }
@@ -1295,6 +1296,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	private lastSelectedText: string = '';
 
 
+	// eslint-disable-next-line @typescript-eslint/no-misused-promises -- Plugin.onload's signature is `() => Promise<void> | void`; returning a promise is valid.
 	async onload() {
 		await this.loadSettings();
 
@@ -1376,7 +1378,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 		this.statusBarItem.addEventListener('click', () => {
 			this.log('Status bar clicked - cached Canvas selection:', this.lastCanvasSelection?.length || 0, 'chars');
-			this.handleWordCount();
+			void this.handleWordCount();
 		});
 
 		// Register for selection changes if live updates are enabled
@@ -2206,7 +2208,7 @@ class WordCountModal extends Modal {
 				new ConfirmModal(this.app, 'Clear all history entries?', 'Clear', () => {
 					if (this.plugin) {
 						this.plugin.history = [];
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 						this.close();
 					}
 				}).open();
@@ -2254,7 +2256,7 @@ class WordCountModal extends Modal {
 				setIcon(historyCopyIcon, 'copy');
 				copyButton.appendText('Copy');
 				
-				copyButton.addEventListener('click', async () => {
+				copyButton.addEventListener('click', () => { void (async () => {
 					await navigator.clipboard.writeText(fullCountText);
 					new Notice('Count copied to clipboard');
 					
@@ -2268,7 +2270,7 @@ class WordCountModal extends Modal {
 						setIcon(historyCopyIcon, 'copy');
 						copyButton.removeClass('word-count-copy-confirmed');
 					}, 1000);
-				});
+				})(); });
 			});
 		}
 
@@ -2314,7 +2316,7 @@ class WordCountModal extends Modal {
 		card.createDiv({cls: 'count-subtitle', text: description});
 		
 		// Copy button functionality
-		copyButton.addEventListener('click', async () => {
+		copyButton.addEventListener('click', () => { void (async () => {
 			await navigator.clipboard.writeText(count.toString());
 			new Notice(`${label.toLowerCase()} count copied to clipboard`);
 			
@@ -2328,8 +2330,8 @@ class WordCountModal extends Modal {
 				setIcon(copyIcon, 'copy');
 				copyButton.removeClass('word-count-copy-confirmed');
 			}, 1000);
-		});
-		
+		})(); });
+
 		return card;
 	}
 
@@ -2875,14 +2877,14 @@ class WordCountSettingTab extends PluginSettingTab {
 					input.addEventListener('keydown', (e) => {
 						if (e.key === 'Enter') {
 							e.preventDefault();
-							saveEdit();
+							void saveEdit();
 						} else if (e.key === 'Escape') {
 							e.preventDefault();
 							cancelEdit();
 						}
 					});
-					
-					input.addEventListener('blur', saveEdit);
+
+					input.addEventListener('blur', () => void saveEdit());
 				};
 
 				deleteButton.onclick = async () => {
@@ -2996,14 +2998,14 @@ class WordCountSettingTab extends PluginSettingTab {
 					input.addEventListener('keydown', (e) => {
 						if (e.key === 'Enter') {
 							e.preventDefault();
-							saveEdit();
+							void saveEdit();
 						} else if (e.key === 'Escape') {
 							e.preventDefault();
 							cancelEdit();
 						}
 					});
-					
-					input.addEventListener('blur', saveEdit);
+
+					input.addEventListener('blur', () => void saveEdit());
 				};
 
 				deleteButton.onclick = async () => {
