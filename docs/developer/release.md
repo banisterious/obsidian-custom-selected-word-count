@@ -3,7 +3,10 @@
 ## Table of contents
 
 - [Required release artifacts](#required-release-artifacts)
+- [Release flow (CI-driven)](#release-flow-ci-driven)
+- [Trial-run procedure](#trial-run-procedure)
 - [Verifying a release locally](#verifying-a-release-locally)
+- [Recovering from a failed run](#recovering-from-a-failed-run)
 
 ## Required release artifacts
 
@@ -18,10 +21,85 @@ Every GitHub release for this plugin attaches exactly three files:
 The Obsidian in-app community catalog fetches these three URLs from a
 release's assets to install or update the plugin. No additional files
 should be attached: no source zip, no debug bundle, no archive of the
-entire repository. The audit plan's Phase 0 was triggered in part by
-finding a `custom-selected-word-count-v1.6.2.zip` source archive in
-the repo root, which is not part of how Obsidian installs plugins and
-should not appear in releases.
+entire repository.
+
+`main.js` and `main.js.map` are gitignored. Each release is built
+fresh by CI from the tagged source. `styles.css` and `manifest.json`
+are committed source files.
+
+## Release flow (CI-driven)
+
+The release pipeline lives at `.github/workflows/release.yml`. The
+trigger is a tag push matching plain SemVer (`1.6.6`, `2.0.0`) or a
+pre-release SemVer (`1.6.6-rc1`, `2.0.0-beta.2`). On any matching
+tag the workflow:
+
+1. Checks out the tagged commit and installs dependencies with
+   `npm ci`.
+2. Runs `npm run lint` (ESLint, including the
+   `eslint-plugin-obsidianmd` ruleset).
+3. Runs `npm run build` (typecheck plus esbuild production bundle).
+4. Calls `actions/attest-build-provenance@v2` against `main.js`,
+   `manifest.json`, and `styles.css` so each release asset carries a
+   verifiable GitHub artifact attestation.
+5. Creates a **draft** GitHub release with those three files
+   attached. Pre-release tags get `--prerelease`; plain SemVer tags
+   do not.
+
+The author then opens the draft release on the GitHub web UI, pastes
+the audited release-description markdown, and clicks Publish. The
+draft step is intentional: it preserves the editorial gate so the
+release description follows the project's writing-style conventions
+(minimal em-dashes, ASCII arrows, no AI attribution).
+
+### Cutting a release
+
+```sh
+# On main, with a clean working tree:
+npm --tag-version-prefix= version patch    # or minor / major
+git push origin main
+git push origin <new-tag>                   # e.g. 1.6.6
+```
+
+The `npm --tag-version-prefix=` flag matches the repo's plain
+SemVer tag convention. The project's `version` lifecycle script
+synchronizes `manifest.json` and `versions.json` with the bumped
+`package.json` version.
+
+Once the tag is pushed, the workflow runs (~3-5 minutes) and the
+draft release appears on the repo's Releases page.
+
+## Trial-run procedure
+
+Before tagging the actual next release, push a release-candidate tag
+first to validate the pipeline end-to-end:
+
+```sh
+git push                                    # any pending commits
+git tag <version>-rc1                       # e.g. 1.6.6-rc1
+git push origin <version>-rc1
+```
+
+Verify the run in the Actions tab. The workflow should:
+
+1. Pass all steps with green checkmarks.
+2. Produce a draft release flagged "Pre-release" with the three
+   assets attached.
+3. Carry a valid attestation. Download and verify with:
+   ```sh
+   gh release download <version>-rc1 --pattern main.js
+   gh attestation verify main.js --repo banisterious/obsidian-custom-selected-word-count
+   ```
+   Expected output: `Verification succeeded!`
+
+Cleanup the rc once verified:
+
+```sh
+gh release delete <version>-rc1 --yes --cleanup-tag
+```
+
+`--cleanup-tag` removes both the local and remote tags in a single
+command.
 
 ## Verifying a release locally
 
@@ -29,13 +107,28 @@ Before tagging:
 
 - `npm run build` produces a clean `main.js` (typecheck plus esbuild
   bundle).
-- `npm run lint` runs to completion. The audit plan's Phase 1 through
-  Phase 3 clear the current outstanding findings progressively; new
-  errors should be addressed or explicitly scoped before release.
+- `npm run lint` runs to completion. The catalog-acceptance ruleset
+  is `eslint-plugin-obsidianmd`; new errors flagged by that ruleset
+  should be addressed before tagging.
 - `CHANGELOG.md`'s `[Unreleased]` section reflects everything that
-  will ship with the tag, then is moved under a dated version heading
-  at release time.
+  will ship with the tag, then is moved under a dated version
+  heading at release time.
 
-A future Phase 6 task adds a GitHub release workflow with build-
-provenance attestations. Until then, releases are cut manually from
-the maintainer's workstation.
+## Recovering from a failed run
+
+If CI fails after a tag is pushed (lint regression, build break,
+attestation step error), the published tag is wrong and the draft
+release should be discarded:
+
+```sh
+# Delete the bad tag locally and on the remote:
+git tag -d <tag>
+git push --delete origin <tag>
+
+# If a draft release was created, delete it (the assets it carries
+# are stale):
+gh release delete <tag> --yes
+```
+
+Fix the underlying issue, commit, push, then re-tag and push the
+tag. The workflow re-runs from scratch.
