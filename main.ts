@@ -2123,9 +2123,6 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		} else {
 			this.history = [];
 		}
-		// Always ensure exclusionList is up to date with the default list
-		this.settings.exclusionList = DEFAULT_EXCLUSION_LIST;
-		await this.saveSettings();
 	}
 
 	async saveSettings() {
