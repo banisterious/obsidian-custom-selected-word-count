@@ -2565,7 +2565,9 @@ class WordCountSettingTab extends PluginSettingTab {
 		
 		overrideContent.createEl('p', { text: 'Property values are shown next to each setting below (• Property: ...)' });
 		
-		overrideContent.createEl('h4', { text: 'Inline comment overrides' });
+		new Setting(overrideContent)
+			.setName('Inline comment overrides')
+			.setHeading();
 		overrideContent.createEl('p', { text: 'You can also disable exclusions for specific sections within a note using comments:' });
 		const inlinePre = overrideContent.createEl('pre', { cls: 'word-count-override-example' });
 		inlinePre.createEl('code', { text: 'This text is excluded.\n<!-- cswc-disable -->\nThis text is NOT excluded from counts.\n<!-- cswc-enable -->\nThis text is excluded again.' });
