@@ -1,4 +1,4 @@
-import { App, ButtonComponent, DropdownComponent, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TextComponent, ToggleComponent, setIcon } from 'obsidian';
+import { App, ButtonComponent, DropdownComponent, MarkdownView, Modal, Notice, Platform, Plugin, PluginSettingTab, Setting, TextComponent, ToggleComponent, setIcon } from 'obsidian';
 
 interface WordCountPluginSettings {
 	setting: string;
@@ -3195,10 +3195,12 @@ class WordCountSettingTab extends PluginSettingTab {
 						settings: this.plugin.settings
 					},
 					system: {
-						userAgent: navigator.userAgent,
-						platform: navigator.userAgent.includes('Windows') ? 'Windows' : 
-								  navigator.userAgent.includes('Mac') ? 'macOS' : 
-								  navigator.userAgent.includes('Linux') ? 'Linux' : 'Unknown',
+						platform: Platform.isMacOS ? 'macOS'
+							: Platform.isWin ? 'Windows'
+							: Platform.isLinux ? 'Linux'
+							: 'Unknown',
+						isMobileApp: Platform.isMobileApp,
+						isDesktopApp: Platform.isDesktopApp,
 						language: navigator.language
 					},
 					obsidian: {
