@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, parseYaml, setIcon } from 'obsidian';
+import { App, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, setIcon } from 'obsidian';
 
 interface WordCountPluginSettings {
 	setting: string;
@@ -480,7 +480,6 @@ function processSelectiveHeadingSections(
 		if (headingMatch) {
 			// This is a heading line
 			const headingLevel = headingMatch[1].length;
-			const headingText = headingMatch[2].trim();
 			const fullHeading = line.trim(); // Full heading including markers
 			
 			// Check if this heading should be excluded
@@ -1257,7 +1256,7 @@ function countSelectedWords(
 			wordRegex = new RegExp(settings.customWordRegex, 'giu');
 		} catch (e) {
 			if (plugin) debugLog(plugin, 'Invalid custom regex, falling back to default:', e);
-			wordRegex = /[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*/giu;
+			wordRegex = new RegExp(DEFAULT_WORD_REGEX, 'giu');
 		}
 	} else {
 		wordRegex = /[A-Za-z0-9]+(?:[\u2018\u2019'-_][A-Za-z0-9]+)*/giu;
@@ -1284,13 +1283,6 @@ function countSelectedWords(
 	return matches ? matches.length : 0;
 }
 
-// Helper function to format date as yyyy-mm-dd HH:MM:SS
-function formatDateISO(date: Date): string {
-	const pad = (n: number) => n.toString().padStart(2, '0');
-	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
-		`${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-}
-
 export default class CustomSelectedWordCountPlugin extends Plugin {
 	settings: WordCountPluginSettings;
 	history: WordCountHistoryEntry[] = [];
@@ -1298,18 +1290,12 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	public debounceTimer: NodeJS.Timeout | null = null;
 	public canvasPollingTimer: NodeJS.Timeout | null = null;
 	private lastCanvasSelection: string = '';
-	private ribbonButton: HTMLElement | null = null;
 	private ctrlAProcessed: number = 0;
 	private lastSelectedText: string = '';
 
 
 	async onload() {
 		await this.loadSettings();
-
-
-
-		// Add necessary classes based on settings
-		this.updateClasses();
 
 		// Add status bar item if enabled
 		if (this.settings.showStatusBar) {
@@ -1369,14 +1355,6 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 		// Register the settings tab
 		this.addSettingTab(new WordCountSettingTab(this.app, this));
-	}
-
-	private updateClasses() {
-		// All styling is now handled directly by individual methods:
-		// - Status bar visibility: handled in setupStatusBar()
-		// - Core word count hiding: handled in addCoreWordCountStyle()
-		// - Live updates indicator: handled in updateStatusBar()
-		// - Path exclusion: handled in word counting logic, no UI styling needed
 	}
 
 	public setupStatusBar() {
@@ -1612,7 +1590,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 							this.log('Canvas cached selection updated to:', this.lastCanvasSelection.substring(0, 50));
 							this.updateStatusBar();
 						}
-					} catch (e) {
+					} catch {
 						// Silently ignore iframe access errors
 					}
 				} else {
@@ -1642,15 +1620,6 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			this.lastCanvasSelection = '';
 			this.log('Canvas polling stopped');
 		}
-	}
-
-	private setupRibbonButton() {
-		// Remove existing button if it exists
-		if (this.ribbonButton) {
-			this.ribbonButton.remove();
-			this.ribbonButton = null;
-		}
-		// Ribbon button functionality removed as per Obsidian guidelines
 	}
 
 	private log(message: string, ...args: any[]) {
@@ -1796,7 +1765,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				date: new Date() 
 			});
 			if (this.history.length > 50) this.history.pop();
-			await this.saveHistory();
+			await this.saveSettings();
 
 			this.log('Opening modal with counts:', countResult);
 			// Open the modal
@@ -1817,9 +1786,6 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		this.stopCanvasPolling();
 		if (this.statusBarItem) {
 			this.statusBarItem.remove();
-		}
-		if (this.ribbonButton) {
-			this.ribbonButton.remove();
 		}
 		// Remove event listeners
 		document.removeEventListener('selectionchange', this.handleSelectionChange);
@@ -2139,16 +2105,10 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			date: entry.date.toISOString(),
 		}));
 		await this.saveData(this.settings);
-		this.updateClasses();
 
 		// Update UI elements based on settings
 		this.setupStatusBar();
-		this.setupRibbonButton();
 		this.addCoreWordCountStyle();
-	}
-
-	async saveHistory() {
-		await this.saveSettings();
 	}
 }
 
@@ -2175,7 +2135,7 @@ class WordCountModal extends Modal {
 		const headerEl = contentEl.createDiv({cls: 'modal-header'});
 		const headerIcon = headerEl.createSpan({cls: 'modal-header-icon', attr: {'aria-hidden': 'true'}});
 		setIcon(headerIcon, 'chart-no-axes-column');
-		const titleEl = headerEl.createEl('h2', {cls: 'modal-title', text: 'Selection Analysis'});
+		headerEl.createEl('h2', {cls: 'modal-title', text: 'Selection Analysis'});
 
 		// Modal content with improved padding
 		const modalContentEl = contentEl.createDiv({cls: 'modal-content'});
@@ -2251,7 +2211,7 @@ class WordCountModal extends Modal {
 				if (confirm('Clear all history entries?')) {
 					if (this.plugin) {
 						this.plugin.history = [];
-						this.plugin.saveHistory();
+						this.plugin.saveSettings();
 						this.close();
 					}
 				}
@@ -2277,7 +2237,7 @@ class WordCountModal extends Modal {
 				
 				// Create content container for text and timestamp
 				const contentDiv = entryDiv.createDiv({cls: 'history-content'});
-				const textEl = contentDiv.createDiv({cls: 'history-text', text: fullCountText});
+				contentDiv.createDiv({cls: 'history-text', text: fullCountText});
 				
 				// Add timestamp if enabled
 				if (this.showDateTime) {
@@ -2366,7 +2326,6 @@ class WordCountModal extends Modal {
 			new Notice(`${label.toLowerCase()} count copied to clipboard`);
 			
 			// Visual feedback - briefly change button appearance
-			const originalIcon = copyIcon;
 			copyIcon.empty();
 			setIcon(copyIcon, 'check');
 			copyButton.style.background = 'var(--interactive-accent)';
@@ -2426,45 +2385,6 @@ class WordCountModal extends Modal {
 		const {contentEl} = this;
 		contentEl.empty();
 	}
-}
-
-// Helper function for exclusion info
-function addExclusionInfo(
-	container: HTMLElement,
-	title: string,
-	regex: string,
-	explanation: string,
-	matches: string[],
-	nonMatches: string[]
-) {
-	const section = container.createDiv({ cls: 'word-count-exclusion-section' });
-	section.createEl('strong', { text: title });
-
-	// Regex row with copy button
-	const regexRow = section.createDiv({ cls: 'word-count-regex-row' });
-	regexRow.createEl('span', { text: `Regex: ${regex}` });
-	const copyBtn = regexRow.createEl('button', { text: 'Copy Regex' });
-	copyBtn.onclick = () => {
-		navigator.clipboard.writeText(regex);
-		copyBtn.textContent = 'Copied!';
-		setTimeout(() => (copyBtn.textContent = 'Copy Regex'), 1200);
-	};
-
-	// Collapsible details
-	const details = section.createEl('details', { cls: 'word-count-exclusion-details' });
-	details.createEl('summary', { text: 'Show Explanation & Examples' });
-
-	details.createEl('div', { text: explanation, cls: 'word-count-explanation' });
-
-	// Example matches
-	const matchList = details.createEl('ul');
-	matchList.createEl('li', { text: 'Example matches:' });
-	matches.forEach(example => matchList.createEl('li', { text: example, cls: 'word-count-match' }));
-
-	// Example non-matches
-	const nonMatchList = details.createEl('ul');
-	nonMatchList.createEl('li', { text: 'Example non-matches:' });
-	nonMatches.forEach(example => nonMatchList.createEl('li', { text: example, cls: 'word-count-nonmatch' }));
 }
 
 // Settings tab for plugin options
@@ -2602,7 +2522,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Per-note Override Information
 		const overrideInfo = containerEl.createEl('details', { cls: 'word-count-override-info' });
-		const overrideSummary = overrideInfo.createEl('summary', { text: 'ℹ️ Using per-note exclusion overrides' });
+		overrideInfo.createEl('summary', { text: 'ℹ️ Using per-note exclusion overrides' });
 		
 		const overrideContent = overrideInfo.createDiv({ cls: 'word-count-override-content' });
 		overrideContent.createEl('p', { text: 'You can override any exclusion setting for individual notes by adding a cswc-disable property to the note\'s frontmatter:' });
@@ -3097,9 +3017,9 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Advanced Section
 		
-		const advSep = containerEl.createEl('hr', { cls: 'word-count-advanced-separator' });
+		containerEl.createEl('hr', { cls: 'word-count-advanced-separator' });
 		const advancedSection = containerEl.createEl('details', { cls: 'word-count-advanced-section' });
-		const advSummary = advancedSection.createEl('summary', { 
+		advancedSection.createEl('summary', {
 			text: '⚠️ Custom word detection regex (expert only)',
 			cls: 'word-count-advanced-summary'
 		});
@@ -3108,7 +3028,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		advDesc.createEl('p', { text: 'Enable and define a custom regex for word detection. Incorrect regex may cause inaccurate counts or performance issues. Use with caution.' });
 
 		// Enable toggle
-		const advToggle = new Setting(advDesc)
+		new Setting(advDesc)
 			.setName('Enable advanced regex (expert only)')
 			.setDesc('Allow custom regex for word detection. For advanced users only.')
 			.addToggle((toggle: any) => toggle
@@ -3123,9 +3043,9 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Regex Input Field
 		const regexSetting = new Setting(advDesc)
 			.setName('Custom word detection regex')
-			.setDesc('Define a regular expression pattern for word detection. Default: [A-Za-z0-9]+(?:[\\u2018\\u2019\'-_][A-Za-z0-9]+)*')
+			.setDesc(`Define a regular expression pattern for word detection. Default: ${DEFAULT_WORD_REGEX}`)
 			.addText((text: any) => text
-				.setPlaceholder('[A-Za-z0-9]+(?:[\\u2018\\u2019\'-_][A-Za-z0-9]+)*')
+				.setPlaceholder(DEFAULT_WORD_REGEX)
 				.setValue(this.plugin.settings.customWordRegex || '')
 				.onChange(async (value: string) => {
 					this.plugin.settings.customWordRegex = value;
@@ -3151,7 +3071,7 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Test Area
 		const testArea = advDesc.createDiv({ cls: 'word-count-test-area' });
-		const testDesc = testArea.createEl('div', {
+		testArea.createEl('div', {
 			text: 'Use the box below to see exactly which text fragments your custom regex will match.',
 			cls: 'word-count-test-description'
 		});
