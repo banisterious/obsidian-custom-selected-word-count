@@ -6,7 +6,7 @@
 	"description": "Comprehensive text analysis for selected text including word counting, character counting, and sentence counting with modern UI design.",
 	"author": "banisterious",
 	"authorUrl": "https://github.com/banisterious",
-	"isDesktopOnly": false,
+	"isDesktopOnly": true,
 	"fundingUrl": {
 		"Buy Me a Coffee": "https://www.buymeacoffee.com/banisterious",
 		"GitHub Sponsor": "https://github.com/sponsors/banisterious"
