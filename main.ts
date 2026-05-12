@@ -1372,13 +1372,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		}
 		
 		this.statusBarItem = this.addStatusBarItem();
-		this.statusBarItem.addClass('plugin-word-count');
 		this.log('Status bar item created and added');
-		
-		if (this.settings.hideCoreWordCount) {
-			this.statusBarItem.addClass('hide-core-count');
-		}
-		
+
 		this.statusBarItem.addEventListener('click', () => {
 			this.log('Status bar clicked - cached Canvas selection:', this.lastCanvasSelection?.length || 0, 'chars');
 			this.handleWordCount();

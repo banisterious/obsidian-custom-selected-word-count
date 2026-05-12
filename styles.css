@@ -505,11 +505,6 @@ body {
     background-color: var(--background-primary);
 }
 
-/* Hide Core Word Count (when enabled) - temporarily disabled
-.status-bar-item.plugin-word-count.hide-core-count {
-    display: none;
-} */
-
 /* Settings UI Styles */
 details.word-count-override-info {
     margin-bottom: 1em;
@@ -892,11 +887,15 @@ details.word-count-override-info {
     display: none; /* Hide any controls on heading items */
 }
 
-/* Hide Obsidian's core word count when the user toggles the setting,
- * but never hide our own status-bar item. Activated by toggling the
- * body class in addCoreWordCountStyle (replaces the dynamic style
- * injection flagged by the community-site automated review). */
-body.word-count-hide-core .status-bar-item.mod-clickable:not(.plugin-word-count) {
+/* Hide Obsidian's built-in Word Count core plugin's status-bar item.
+ * Targets `.plugin-word-count` (the class Obsidian gives that core
+ * plugin's status-bar item). Our own item carries
+ * `.plugin-custom-selected-word-count` (auto-added by Obsidian from
+ * our manifest id) and does not have `.plugin-word-count`, so this
+ * rule does not affect it. Activated by toggling the
+ * `word-count-hide-core` class on document.body in
+ * addCoreWordCountStyle. */
+body.word-count-hide-core .status-bar-item.plugin-word-count {
     display: none !important;
 }
 
