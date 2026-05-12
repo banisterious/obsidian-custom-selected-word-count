@@ -1288,8 +1288,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	settings: WordCountPluginSettings;
 	history: WordCountHistoryEntry[] = [];
 	public statusBarItem: HTMLElement | null = null;
-	public debounceTimer: NodeJS.Timeout | null = null;
-	public canvasPollingTimer: NodeJS.Timeout | null = null;
+	public debounceTimer: number | null = null;
+	public canvasPollingTimer: number | null = null;
 	private lastCanvasSelection: string = '';
 	private ctrlAProcessed: number = 0;
 	private lastSelectedText: string = '';
@@ -1382,24 +1382,24 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		// Register for selection changes if live updates are enabled
 		if (this.settings.enableLiveCount) {
 			// Remove any existing listeners first
-			document.removeEventListener('selectionchange', this.handleSelectionChange);
-			document.removeEventListener('keydown', this.handleKeyDown);
-			
+			activeDocument.removeEventListener('selectionchange', this.handleSelectionChange);
+			activeDocument.removeEventListener('keydown', this.handleKeyDown);
+
 			// Add the selection change listener
-			document.addEventListener('selectionchange', this.handleSelectionChange);
+			activeDocument.addEventListener('selectionchange', this.handleSelectionChange);
 			this.log('Selection change listener registered for live updates');
-			
+
 			// Add keyboard listener for CTRL-A detection in Reading view
-			document.addEventListener('keydown', this.handleKeyDown);
+			activeDocument.addEventListener('keydown', this.handleKeyDown);
 			this.log('Keyboard listener registered for CTRL-A detection');
-			
+
 			// Start Canvas polling for iframe selection detection
 			this.startCanvasPolling();
 		} else {
 			this.log('Live updates disabled, no selection listener added');
 			this.stopCanvasPolling();
 			// Remove keyboard listener too
-			document.removeEventListener('keydown', this.handleKeyDown);
+			activeDocument.removeEventListener('keydown', this.handleKeyDown);
 		}
 
 		// Initial update of the status bar
@@ -1480,7 +1480,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		
 		// Debug Canvas iframe in selection change
 		if (viewType === 'canvas') {
-			const iframe = document.activeElement as HTMLIFrameElement;
+			const iframe = activeDocument.activeElement as HTMLIFrameElement;
 			this.log('Selection change - Active element:', iframe?.tagName);
 			this.log('Selection change - Is iframe?', iframe?.tagName === 'IFRAME');
 			if (iframe?.tagName === 'IFRAME' && iframe.contentWindow) {
@@ -1497,10 +1497,10 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		
 
 		if (this.debounceTimer) {
-			clearTimeout(this.debounceTimer);
+			activeWindow.clearTimeout(this.debounceTimer);
 		}
-		
-		this.debounceTimer = setTimeout(() => {
+
+		this.debounceTimer = activeWindow.setTimeout(() => {
 			this.log('Debounced selection change - updating status bar');
 			this.updateStatusBar();
 		}, 300); // 300ms debounce
@@ -1523,7 +1523,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
 				if (previewContainer && this.statusBarItem && this.settings.showStatusBar) {
 					// Use a longer timeout to ensure DOM is updated after CTRL-A
-					setTimeout(() => {
+					activeWindow.setTimeout(() => {
 						this.log('Select All timeout - extracting full document content');
 						
 						// Get content text directly (this excludes title and frontmatter automatically)
@@ -1567,13 +1567,13 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	private startCanvasPolling() {
 		this.stopCanvasPolling(); // Clear any existing timer
 		
-		this.canvasPollingTimer = setInterval(() => {
+		this.canvasPollingTimer = activeWindow.setInterval(() => {
 			const activeLeaf = this.app.workspace.activeLeaf;
 			const viewType = activeLeaf?.view?.getViewType();
-			
+
 			// Only poll if we're in Canvas view
 			if (viewType === 'canvas') {
-				const iframe = document.activeElement as HTMLIFrameElement;
+				const iframe = activeDocument.activeElement as HTMLIFrameElement;
 				if (iframe?.tagName === 'IFRAME' && iframe.contentWindow) {
 					try {
 						const iframeSelection = iframe.contentWindow.getSelection();
@@ -1611,7 +1611,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 	private stopCanvasPolling() {
 		if (this.canvasPollingTimer) {
-			clearInterval(this.canvasPollingTimer);
+			activeWindow.clearInterval(this.canvasPollingTimer);
 			this.canvasPollingTimer = null;
 			this.lastCanvasSelection = '';
 			this.log('Canvas polling stopped');
@@ -1707,7 +1707,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 							// Fallback: try to get fresh iframe selection
 							this.log('HandleWordCount - trying fresh Canvas iframe selection...');
 							
-							const iframe = document.activeElement as HTMLIFrameElement;
+							const iframe = activeDocument.activeElement as HTMLIFrameElement;
 							if (iframe && iframe.tagName === 'IFRAME' && iframe.contentWindow) {
 								try {
 									const iframeSelection = iframe.contentWindow.getSelection();
@@ -1776,7 +1776,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 	onunload() {
 		if (this.debounceTimer) {
-			clearTimeout(this.debounceTimer);
+			activeWindow.clearTimeout(this.debounceTimer);
 		}
 		// Stop Canvas polling
 		this.stopCanvasPolling();
@@ -1784,11 +1784,11 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			this.statusBarItem.remove();
 		}
 		// Remove event listeners
-		document.removeEventListener('selectionchange', this.handleSelectionChange);
-		document.removeEventListener('keydown', this.handleKeyDown);
-		
+		activeDocument.removeEventListener('selectionchange', this.handleSelectionChange);
+		activeDocument.removeEventListener('keydown', this.handleKeyDown);
+
 		// Drop the body class that hides Obsidian's core word count
-		document.body.removeClass('word-count-hide-core');
+		activeDocument.body.removeClass('word-count-hide-core');
 	}
 
 	private updateStatusBar(count?: number) {
@@ -1878,9 +1878,9 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				if (viewType === 'canvas') {
 					this.log('Canvas view properties:', Object.keys(activeLeaf.view));
 					this.log('Canvas view container:', activeLeaf.view.containerEl);
-					
+
 					// Check for iframe access
-					const iframe = document.activeElement as HTMLIFrameElement;
+					const iframe = activeDocument.activeElement as HTMLIFrameElement;
 					if (iframe && iframe.tagName === 'IFRAME') {
 						this.log('Active iframe:', iframe);
 						this.log('Iframe content accessible:', !!iframe.contentDocument);
@@ -1907,9 +1907,9 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				// For Canvas views, check iframe selection
 				if (!selectionText && viewType === 'canvas') {
 					this.log('Trying Canvas iframe selection...');
-					
+
 					// Check if active element is an iframe (Canvas content)
-					const iframe = document.activeElement as HTMLIFrameElement;
+					const iframe = activeDocument.activeElement as HTMLIFrameElement;
 					this.log('Active element:', iframe?.tagName);
 					this.log('Is iframe?', iframe?.tagName === 'IFRAME');
 					this.log('Has contentWindow?', !!iframe?.contentWindow);
@@ -1975,7 +1975,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	}
 
 	public addCoreWordCountStyle() {
-		document.body.toggleClass('word-count-hide-core', this.settings.hideCoreWordCount);
+		activeDocument.body.toggleClass('word-count-hide-core', this.settings.hideCoreWordCount);
 	}
 
 	/**
@@ -2263,8 +2263,8 @@ class WordCountModal extends Modal {
 					setIcon(historyCopyIcon, 'check');
 					copyButton.style.background = 'var(--interactive-accent)';
 					copyButton.style.color = 'var(--text-on-accent)';
-					
-					setTimeout(() => {
+
+					activeWindow.setTimeout(() => {
 						historyCopyIcon.empty();
 						setIcon(historyCopyIcon, 'copy');
 						copyButton.style.background = '';
@@ -2325,8 +2325,8 @@ class WordCountModal extends Modal {
 			setIcon(copyIcon, 'check');
 			copyButton.style.background = 'var(--interactive-accent)';
 			copyButton.style.color = 'var(--text-on-accent)';
-			
-			setTimeout(() => {
+
+			activeWindow.setTimeout(() => {
 				copyIcon.empty();
 				setIcon(copyIcon, 'copy');
 				copyButton.style.background = '';
@@ -3216,9 +3216,9 @@ class WordCountSettingTab extends PluginSettingTab {
 				
 				const a = createEl('a', { href: url });
 				a.download = filename;
-				document.body.appendChild(a);
+				activeDocument.body.appendChild(a);
 				a.click();
-				document.body.removeChild(a);
+				activeDocument.body.removeChild(a);
 				URL.revokeObjectURL(url);
 				
 				new Notice(`Log files exported as ${filename}`);
