@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.6.3] - 2026-05-12
 ### Fixed
 - **Plugin failing the Obsidian Community automated review**
   - Replaced the dynamically-injected `<style>` element used to hide Obsidian's core word count with a body-class toggle and a static rule in `styles.css`
