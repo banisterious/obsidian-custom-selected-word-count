@@ -43,6 +43,9 @@ logs/
 # Claude instructions file
 CLAUDE.md
 
+# Claude session restore artifact
+.session-restore.md
+
 # UI mockups and temporary files
 docs/ui-mockups/
 *.html
