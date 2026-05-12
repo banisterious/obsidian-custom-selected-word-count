@@ -3,7 +3,7 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 interface WordCountPluginSettings {
 	setting: string;
 	showDateTimeInHistory: boolean;
-	history?: { count: number; date: string }[]; // Persisted as ISO strings
+	history?: { count: number; characterCount?: number; sentenceCount?: number; date: string }[]; // Persisted as ISO strings
 	exclusionList: string; // Comma-separated list of file extensions
 	// Path exclusion settings
 	excludePaths: boolean;           // Master toggle for path exclusion
@@ -2118,6 +2118,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		if (this.settings.history && Array.isArray(this.settings.history)) {
 			this.history = this.settings.history.map(entry => ({
 				count: entry.count,
+				characterCount: entry.characterCount,
+				sentenceCount: entry.sentenceCount,
 				date: new Date(entry.date)
 			}));
 		} else {
@@ -2126,9 +2128,19 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	}
 
 	async saveSettings() {
+		// Sync the runtime history into the persisted-settings shape
+		// (Date -> ISO string). Previously the runtime array and the
+		// persisted array drifted: new entries (and their character /
+		// sentence counts) never made it to disk.
+		this.settings.history = this.history.map(entry => ({
+			count: entry.count,
+			characterCount: entry.characterCount,
+			sentenceCount: entry.sentenceCount,
+			date: entry.date.toISOString(),
+		}));
 		await this.saveData(this.settings);
 		this.updateClasses();
-		
+
 		// Update UI elements based on settings
 		this.setupStatusBar();
 		this.setupRibbonButton();
