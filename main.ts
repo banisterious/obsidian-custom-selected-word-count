@@ -139,6 +139,17 @@ function debugLog(plugin: CustomSelectedWordCountPlugin, message: string, ...arg
 }
 
 /**
+ * Extracts a human-readable string from an unknown caught error.
+ * Catch-bound values are typed as `unknown` under
+ * useUnknownInCatchVariables (the modern default); narrowing through
+ * `instanceof Error` lets us safely read `.message` while falling back
+ * to `String(error)` for thrown primitives or non-Error objects.
+ */
+function errorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * Removes YAML frontmatter from the beginning of selected text.
  * @param text The text to process.
  * @returns The text with frontmatter removed.
@@ -188,7 +199,7 @@ function getDisabledExclusionsFromFrontmatter(app: App): string[] {
 		return [];
 	}
 
-	const cswcDisable = cache.frontmatter['cswc-disable'];
+	const cswcDisable: unknown = cache.frontmatter['cswc-disable'];
 	if (!cswcDisable) {
 		return [];
 	}
@@ -196,7 +207,7 @@ function getDisabledExclusionsFromFrontmatter(app: App): string[] {
 	// Handle both array and single string formats
 	let disabledItems: string[] = [];
 	if (Array.isArray(cswcDisable)) {
-		disabledItems = cswcDisable.filter(item => typeof item === 'string');
+		disabledItems = cswcDisable.filter((item): item is string => typeof item === 'string');
 	} else if (typeof cswcDisable === 'string') {
 		disabledItems = [cswcDisable];
 	}
@@ -1503,7 +1514,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 					this.log('Selection change - Iframe selection:', iframeText.length, 'chars');
 					this.log('Selection change - Iframe text preview:', iframeText.substring(0, 50));
 				} catch (e) {
-					this.log('Selection change - Iframe error:', e.message);
+					this.log('Selection change - Iframe error:', errorMessage(e));
 				}
 			}
 		}
@@ -1729,7 +1740,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 										this.log('HandleWordCount - fresh Canvas iframe selection found:', selectionText.length, 'chars');
 									}
 								} catch (e) {
-									this.log('HandleWordCount - Canvas iframe selection error:', e.message);
+									this.log('HandleWordCount - Canvas iframe selection error:', errorMessage(e));
 								}
 							}
 						}
@@ -1865,7 +1876,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 								this.log('Status bar - Extracted text manually:', selectedText.length, 'chars');
 							}
 						} catch (e) {
-							this.log('Status bar - Manual extraction failed:', e.message);
+							this.log('Status bar - Manual extraction failed:', errorMessage(e));
 						}
 					} else {
 						this.log('Status bar - Empty or collapsed selection');
@@ -1906,7 +1917,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 									this.log('Iframe selection text:', iframeSelection.toString());
 								}
 							} catch (e) {
-								this.log('Iframe selection error:', e.message);
+								this.log('Iframe selection error:', errorMessage(e));
 							}
 						}
 					}
@@ -1939,7 +1950,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 								this.log('No iframe selection object found');
 							}
 						} catch (e) {
-							this.log('Canvas iframe selection error:', e.message);
+							this.log('Canvas iframe selection error:', errorMessage(e));
 						}
 					} else {
 						this.log('Iframe detection failed - activeElement is not a suitable iframe');
@@ -2087,7 +2098,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const loaded = (await this.loadData()) as Partial<WordCountPluginSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
 		// Load history from settings, converting date strings to Date objects
 		if (this.settings.history && Array.isArray(this.settings.history)) {
 			this.history = this.settings.history.map(entry => ({
@@ -3158,7 +3170,7 @@ class WordCountSettingTab extends PluginSettingTab {
 			} catch (error) {
 				wordCountDisplay.textContent = 'Word count: Error';
 				matchDisplay.textContent = 'Matches: Invalid regex';
-				warningDisplay.textContent = `Error: ${error.message}`;
+				warningDisplay.textContent = `Error: ${errorMessage(error)}`;
 				warningDisplay.toggleClass('word-count-hidden', false);
 			}
 		};
@@ -3237,7 +3249,7 @@ class WordCountSettingTab extends PluginSettingTab {
 				
 				new Notice(`Log files exported as ${filename}`);
 			} catch (error) {
-				new Notice(`Failed to export log files: ${error.message}`);
+				new Notice(`Failed to export log files: ${errorMessage(error)}`);
 				console.error('Log export error:', error);
 			}
 		};
