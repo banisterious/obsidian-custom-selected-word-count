@@ -1,6 +1,31 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- **Plugin failing the Obsidian Community automated review**
+  - Replaced the dynamically-injected `<style>` element used to hide Obsidian's core word count with a body-class toggle and a static rule in `styles.css`
+  - The plugin no longer creates runtime style elements, which is the pattern flagged by the community-site audit
+- **Buy Me a Coffee link in the README**
+  - Restored the BMC button's `href` and inner image `src` after Markdown link syntax had been pasted into the HTML attributes, leaving the link non-functional in rendered Markdown
+
+### Changed
+- **Mobile catalog visibility**
+  - Flipped `manifest.isDesktopOnly` from `false` to `true` so the manifest matches the README's existing "Mobile Compatibility" note that mobile support is untested. Existing mobile installs continue to run; new mobile installations from the in-app community catalog are not offered until mobile testing lands in a future release
+
+### Documentation
+- **Three-file release rule**
+  - Added `docs/developer/release.md` documenting the exact three files (`main.js`, `manifest.json`, `styles.css`) attached to every GitHub release, and the local verification steps before tagging
+- **Removed dead documentation references**
+  - Cleared references to a not-yet-written `docs/developer/architecture/overview.md` from `README.md` and several files under `docs/`. The architecture overview lands in Phase 6 of the audit plan, at which point the references can be reintroduced
+
+### Internal
+- **Flat-config lint migration**
+  - Replaced `.eslintrc` with `eslint.config.mjs`. Upgraded `eslint` to `^9`, `typescript-eslint` to `^8`, and TypeScript to `~4.9` to satisfy peer requirements. Added `eslint-plugin-obsidianmd@^0.2.9` so the project lints against the same Obsidian-specific rules used by the community-site automated review. Findings surfaced by the new plugin are tracked through audit plan Phases 1 through 3
+- **Stale comments and version literal**
+  - Removed the leading `// BUILD: 2025-05-07` and `// Remember to rename these classes and interfaces!` comments from the top of `main.ts`
+  - Replaced the hardcoded `version: '1.1.0'` literal in the log-export payload with `this.plugin.manifest.version` so exported diagnostic bundles report the actually-running plugin version
+- **Removed orphan release artifact**
+  - Deleted `custom-selected-word-count-v1.6.2.zip` from the working tree. The file matched the existing `.gitignore` `*.zip` rule but its presence at the repo root was misleading about what ships in releases
 
 ## [1.6.2] - 2025-08-08
 ### Fixed
