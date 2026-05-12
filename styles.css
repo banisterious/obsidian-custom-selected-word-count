@@ -57,11 +57,11 @@ body {
 
 /* Make modals and plugin UI more mobile-friendly */
 @media (max-width: 600px) {
-  .modal, .word-count-label, .word-count-count, .word-count-buttons, .word-count-history, .word-count-advanced-section {
-    width: 95vw !important;
-    max-width: 95vw !important;
-    min-width: 0 !important;
-    padding: 1em !important;
+  .modal:has(.word-count-modal), .word-count-label, .word-count-count, .word-count-buttons, .word-count-history, .word-count-advanced-section {
+    width: 95vw;
+    max-width: 95vw;
+    min-width: 0;
+    padding: 1em;
     font-size: 1.05em;
   }
   .word-count-buttons button, .word-count-advanced-section button {
