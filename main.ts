@@ -1496,10 +1496,10 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		
 
 		if (this.debounceTimer) {
-			activeWindow.clearTimeout(this.debounceTimer);
+			window.clearTimeout(this.debounceTimer);
 		}
 
-		this.debounceTimer = activeWindow.setTimeout(() => {
+		this.debounceTimer = window.setTimeout(() => {
 			this.log('Debounced selection change - updating status bar');
 			this.updateStatusBar();
 		}, 300); // 300ms debounce
@@ -1522,7 +1522,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
 				if (previewContainer && this.statusBarItem && this.settings.showStatusBar) {
 					// Use a longer timeout to ensure DOM is updated after CTRL-A
-					activeWindow.setTimeout(() => {
+					window.setTimeout(() => {
 						this.log('Select All timeout - extracting full document content');
 						
 						// Get content text directly (this excludes title and frontmatter automatically)
@@ -1566,7 +1566,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	private startCanvasPolling() {
 		this.stopCanvasPolling(); // Clear any existing timer
 		
-		this.canvasPollingTimer = activeWindow.setInterval(() => {
+		this.canvasPollingTimer = window.setInterval(() => {
 			const activeLeaf = this.app.workspace.getMostRecentLeaf();
 			const viewType = activeLeaf?.view?.getViewType();
 
@@ -1610,7 +1610,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 	private stopCanvasPolling() {
 		if (this.canvasPollingTimer) {
-			activeWindow.clearInterval(this.canvasPollingTimer);
+			window.clearInterval(this.canvasPollingTimer);
 			this.canvasPollingTimer = null;
 			this.lastCanvasSelection = '';
 			this.log('Canvas polling stopped');
@@ -1775,7 +1775,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 
 	onunload() {
 		if (this.debounceTimer) {
-			activeWindow.clearTimeout(this.debounceTimer);
+			window.clearTimeout(this.debounceTimer);
 		}
 		// Stop Canvas polling
 		this.stopCanvasPolling();
@@ -2261,7 +2261,7 @@ class WordCountModal extends Modal {
 					setIcon(historyCopyIcon, 'check');
 					copyButton.addClass('word-count-copy-confirmed');
 
-					activeWindow.setTimeout(() => {
+					window.setTimeout(() => {
 						historyCopyIcon.empty();
 						setIcon(historyCopyIcon, 'copy');
 						copyButton.removeClass('word-count-copy-confirmed');
@@ -2321,7 +2321,7 @@ class WordCountModal extends Modal {
 			setIcon(copyIcon, 'check');
 			copyButton.addClass('word-count-copy-confirmed');
 
-			activeWindow.setTimeout(() => {
+			window.setTimeout(() => {
 				copyIcon.empty();
 				setIcon(copyIcon, 'copy');
 				copyButton.removeClass('word-count-copy-confirmed');
