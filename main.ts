@@ -2642,8 +2642,9 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Sub-settings for each path type
 		new Setting(pathSettingsContainer)
-			.setName('Exclude windows paths')
-			.setDesc('Exclude paths starting with drive letters (e.g., c:\\). (Requires path exclusion to be enabled) • property: exclude-windows-paths')
+			.setName('Exclude Windows paths')
+			// eslint-disable-next-line obsidianmd/ui/sentence-case -- `exclude-windows-paths` is a literal identifier parsed at runtime; the rule would suggest `exclude-Windows-paths` here, which would break cswc-disable lookups.
+			.setDesc('Exclude paths starting with drive letters (e.g., C:\\). (Requires path exclusion to be enabled) • property: exclude-windows-paths')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeWindowsPaths)
 				.onChange(async (value: boolean) => {
@@ -2652,8 +2653,9 @@ class WordCountSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(pathSettingsContainer)
-			.setName('Exclude unix paths')
-			.setDesc('Exclude unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled) • property: exclude-unix-paths')
+			.setName('Exclude Unix paths')
+			// eslint-disable-next-line obsidianmd/ui/sentence-case -- `exclude-unix-paths` is a literal identifier parsed at runtime; see exclude-windows-paths above.
+			.setDesc('Exclude Unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled) • property: exclude-unix-paths')
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeUnixPaths)
 				.onChange(async (value: boolean) => {

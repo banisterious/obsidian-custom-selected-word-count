@@ -29,16 +29,17 @@ export default tseslint.config(
 			"@typescript-eslint/ban-ts-comment": "off",
 			"no-prototype-builtins": "off",
 			"@typescript-eslint/no-empty-function": "off",
-			// UI strings that contain plugin identifiers like
-			// `exclude-windows-paths` must keep the identifier lowercase to
-			// match how it's parsed at runtime. Adding "Windows" / "Unix" to
-			// brands would capitalize them inside the identifier text too,
-			// breaking copy-paste from settings descriptions. Keep brands
-			// limited to terms that don't appear inside our identifiers.
+			// Brands preserve proper-noun capitalization in setting names
+			// and descriptions. Note: when one of these (e.g. "Windows") also
+			// appears inside our lowercase exclusion identifier text in a
+			// description (`exclude-windows-paths`), the rule will try to
+			// capitalize it inside the identifier too. Those few lines carry
+			// targeted `eslint-disable-next-line` comments so the identifier
+			// stays parseable by the runtime cswc-disable lookup.
 			"obsidianmd/ui/sentence-case": [
 				"error",
 				{
-					brands: ["Markdown", "Obsidian"],
+					brands: ["Markdown", "Obsidian", "Unix", "Windows", "macOS", "Linux", "iOS", "Android"],
 					acronyms: ["HTML", "URL", "UNC", "JSON", "CSS", "OS", "UI", "USERPROFILE", "HOME"],
 				},
 			],
