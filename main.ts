@@ -1,8 +1,4 @@
-// BUILD: 2025-05-07
-
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, parseYaml, setIcon } from 'obsidian';
-
-// Remember to rename these classes and interfaces!
 
 interface WordCountPluginSettings {
 	setting: string;
@@ -3240,7 +3236,7 @@ class WordCountSettingTab extends PluginSettingTab {
 					timestamp: now.toISOString(),
 					plugin: {
 						name: 'Custom Selected Word Count Plugin',
-						version: '1.1.0',
+						version: this.plugin.manifest.version,
 						settings: this.plugin.settings
 					},
 					system: {
