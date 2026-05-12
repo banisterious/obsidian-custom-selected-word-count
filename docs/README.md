@@ -12,7 +12,6 @@ Welcome to the Custom Selected Word Count (OCSWC) plugin documentation. This hub
 - **[Settings Reference](user/reference/settings-reference.md)** - Comprehensive configuration documentation
 
 ### For Developers
-- **[Architectural Overview](developer/architecture/overview.md)** - System design and technical specifications
 - **[Implementation Details](developer/implementation/)** - Code structure and development guides
 - **[Testing Guidelines](developer/testing/)** - Testing strategies and procedures
 - **[Contributing Guide](developer/contributing/)** - How to contribute to the project
@@ -41,7 +40,7 @@ Detailed reference materials for looking up specific information:
 
 #### Architecture (`developer/architecture/`)
 High-level system design and architectural decisions:
-- **[overview.md](developer/architecture/overview.md)** - Complete architectural specification
+- *Documentation to be added as the codebase split lands*
 
 #### Implementation (`developer/implementation/`)
 Code organization, patterns, and implementation details:
@@ -91,9 +90,8 @@ Historical documents and deprecated content:
 3. Consult the **[Settings Reference](user/reference/settings-reference.md)** for detailed configuration options
 
 ### Developers
-1. Read the **[Architectural Overview](developer/architecture/overview.md)** to understand the system design
-2. Explore the implementation documentation (coming soon)
-3. Review testing guidelines before contributing code
+1. Explore the implementation documentation (coming soon)
+2. Review testing guidelines before contributing code
 
 ### Contributors
 1. Check the contributing guidelines (coming soon)

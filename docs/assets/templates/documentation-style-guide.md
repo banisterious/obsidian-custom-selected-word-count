@@ -307,7 +307,7 @@ Consistent cross-referencing improves navigation and maintenance:
 
 ### 6.1. Table of Contents (TOC)
 
-- **Requirement:** Every documentation file (including this one, `docs/developer/architecture/overview.md`, `ISSUES.md`, `docs/developer/testing/testing-overview.md`, `docs/developer/architecture/specification.md`, `docs/user/guides/usage.md`, `CHANGELOG.md`, and any new `.md` documents) must include a Table of Contents at its top.
+- **Requirement:** Every documentation file (including this one, `ISSUES.md`, `docs/developer/testing/testing-overview.md`, `docs/user/guides/usage.md`, `CHANGELOG.md`, and any new `.md` documents) must include a Table of Contents at its top.
 - **Format:** The TOC should list all main headings (H1, H2, H3, etc.) present in the document.
 - **Interactivity:** Each entry in the TOC must be a clickable link that navigates directly to its corresponding heading within the document.
 - **Placement:** The TOC should be placed immediately after the document's main title (H1) and any introductory badges/images.

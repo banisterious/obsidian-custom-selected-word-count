@@ -336,7 +336,6 @@ A: Use the "Reset to Default Regex" button and test your patterns in the test ar
 ### 6.3. Getting Help
 
 For additional support:
-- Review the [architectural overview](../../developer/architecture/overview.md) for technical details
 - Check the [GitHub issues page](https://github.com/banisterious/obsidian-custom-selected-word-count/issues) for known issues
 - Report bugs or request features through GitHub issues
 

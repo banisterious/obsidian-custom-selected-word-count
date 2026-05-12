@@ -121,7 +121,7 @@ You can also use Obsidian comment syntax: `%% cswc-disable %%` and `%% cswc-enab
 
 If you find this plugin useful, please consider supporting its development!
 
-<a href="[https://www.buymeacoffee.com/banisterious](https://www.buymeacoffee.com/banisterious)" target="_blank"><img src="[https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+<a href="https://www.buymeacoffee.com/banisterious" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ## Documentation
 
@@ -130,7 +130,6 @@ For comprehensive documentation, visit the [Documentation Hub](docs/README.md) w
 -   **[Getting Started Guide](docs/user/guides/getting-started.md)** - Detailed usage instructions and examples
 -   **[Settings Reference](docs/user/reference/settings-reference.md)** - Complete settings documentation
 -   **[Word Counting Principles](docs/user/concepts/word-counting-principles.md)** - How the plugin counts words
--   **[Developer Documentation](docs/developer/architecture/overview.md)** - Technical specifications and architecture
 
 <details>
 <summary><h4>Exclusion Logic Details (Click to expand)</h4></summary>
