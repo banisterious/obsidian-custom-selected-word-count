@@ -1467,7 +1467,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		// Enhanced debugging for Canvas integration
 		const selection = window.getSelection();
 		const selectedText = selection ? selection.toString() : '';
-		const activeLeaf = this.app.workspace.activeLeaf;
+		const activeLeaf = this.app.workspace.getMostRecentLeaf();
 		const viewType = activeLeaf?.view?.getViewType() || 'unknown';
 		
 		this.log('=== Selection Change Debug ===');
@@ -1568,7 +1568,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		this.stopCanvasPolling(); // Clear any existing timer
 		
 		this.canvasPollingTimer = activeWindow.setInterval(() => {
-			const activeLeaf = this.app.workspace.activeLeaf;
+			const activeLeaf = this.app.workspace.getMostRecentLeaf();
 			const viewType = activeLeaf?.view?.getViewType();
 
 			// Only poll if we're in Canvas view
@@ -1688,7 +1688,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				}
 			} else {
 				// Fallback for non-MarkdownView types (Canvas, etc.)
-				const activeLeaf = this.app.workspace.activeLeaf;
+				const activeLeaf = this.app.workspace.getMostRecentLeaf();
 				if (activeLeaf && activeLeaf.view) {
 					viewType = activeLeaf.view.getViewType();
 					this.log('HandleWordCount - non-MarkdownView type:', viewType);
@@ -1869,7 +1869,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			}
 		} else {
 			// Fallback for non-MarkdownView types (Canvas, etc.)
-			const activeLeaf = this.app.workspace.activeLeaf;
+			const activeLeaf = this.app.workspace.getMostRecentLeaf();
 			if (activeLeaf && activeLeaf.view) {
 				viewType = activeLeaf.view.getViewType();
 				this.log('Updating status bar for non-MarkdownView type:', viewType);
