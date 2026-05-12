@@ -1300,6 +1300,18 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		// Register live-update listeners on the main window's document and
+		// on every popout that opens. handleSelectionChange and handleKeyDown
+		// gate themselves on enableLiveCount, so the listeners are safe to
+		// register unconditionally. registerDomEvent cleans them up on
+		// plugin unload automatically.
+		this.registerDomEvent(window.document, 'selectionchange', this.handleSelectionChange);
+		this.registerDomEvent(window.document, 'keydown', this.handleKeyDown);
+		this.registerEvent(this.app.workspace.on('window-open', (_workspaceWindow, win) => {
+			this.registerDomEvent(win.document, 'selectionchange', this.handleSelectionChange);
+			this.registerDomEvent(win.document, 'keydown', this.handleKeyDown);
+		}));
+
 		// Add status bar item if enabled
 		if (this.settings.showStatusBar) {
 			this.setupStatusBar();
@@ -1381,27 +1393,12 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			void this.handleWordCount();
 		});
 
-		// Register for selection changes if live updates are enabled
+		// Canvas iframe polling tracks selection inside Canvas iframes
+		// where selectionchange events do not surface.
 		if (this.settings.enableLiveCount) {
-			// Remove any existing listeners first
-			activeDocument.removeEventListener('selectionchange', this.handleSelectionChange);
-			activeDocument.removeEventListener('keydown', this.handleKeyDown);
-
-			// Add the selection change listener
-			activeDocument.addEventListener('selectionchange', this.handleSelectionChange);
-			this.log('Selection change listener registered for live updates');
-
-			// Add keyboard listener for CTRL-A detection in Reading view
-			activeDocument.addEventListener('keydown', this.handleKeyDown);
-			this.log('Keyboard listener registered for CTRL-A detection');
-
-			// Start Canvas polling for iframe selection detection
 			this.startCanvasPolling();
 		} else {
-			this.log('Live updates disabled, no selection listener added');
 			this.stopCanvasPolling();
-			// Remove keyboard listener too
-			activeDocument.removeEventListener('keydown', this.handleKeyDown);
 		}
 
 		// Initial update of the status bar
@@ -1433,7 +1430,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		// Additional check: if this looks like a CTRL-A selection in reading view, handle it properly
 		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (markdownView && markdownView.getMode() === 'preview') {
-			const selection = window.getSelection();
+			const selection = activeWindow.getSelection();
 			const selectedText = selection?.toString() || '';
 			const previewContainer = markdownView.containerEl.querySelector('.markdown-preview-view');
 			const contentText = previewContainer?.textContent || '';
@@ -1467,7 +1464,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		}
 		
 		// Enhanced debugging for Canvas integration
-		const selection = window.getSelection();
+		const selection = activeWindow.getSelection();
 		const selectedText = selection ? selection.toString() : '';
 		const activeLeaf = this.app.workspace.getMostRecentLeaf();
 		const viewType = activeLeaf?.view?.getViewType() || 'unknown';
@@ -1647,7 +1644,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 					this.log('Source mode selection (after frontmatter stripping):', selectedText);
 				} else if (markdownView.getMode() === 'preview') {
 					// Reading view mode
-					const selection = window.getSelection();
+					const selection = activeWindow.getSelection();
 					this.log('Reading view selection object:', selection);
 					
 					// First find the markdown preview container
@@ -1696,7 +1693,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 					this.log('HandleWordCount - non-MarkdownView type:', viewType);
 					
 					// Try multiple methods to get selected text for Canvas/other views
-					const windowSelection = window.getSelection();
+					const windowSelection = activeWindow.getSelection();
 					let selectionText = windowSelection?.toString() || '';
 					
 					// For Canvas views, use cached selection or try iframe selection
@@ -1785,9 +1782,8 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 		if (this.statusBarItem) {
 			this.statusBarItem.remove();
 		}
-		// Remove event listeners
-		activeDocument.removeEventListener('selectionchange', this.handleSelectionChange);
-		activeDocument.removeEventListener('keydown', this.handleKeyDown);
+		// Live-update listeners registered via this.registerDomEvent are
+		// cleaned up automatically by the Plugin base class on unload.
 
 		// Drop the body class that hides Obsidian's core word count
 		activeDocument.body.removeClass('word-count-hide-core');
@@ -1814,7 +1810,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				selectedText = stripFrontmatter(selectedText);
 			} else if (markdownView.getMode() === 'preview') {
 				// Use the same sophisticated logic as handleWordCount for Reading view
-				const selection = window.getSelection();
+				const selection = activeWindow.getSelection();
 				this.log('Status bar - Reading view selection object:', selection);
 				
 				// First find the markdown preview container
@@ -1903,7 +1899,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 				}
 
 				// Try multiple methods to get selected text for Canvas/other views
-				const windowSelection = window.getSelection();
+				const windowSelection = activeWindow.getSelection();
 				let selectionText = windowSelection?.toString() || '';
 				
 				// For Canvas views, check iframe selection
