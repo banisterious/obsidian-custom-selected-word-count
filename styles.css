@@ -906,3 +906,11 @@ body.word-count-hide-core .status-bar-item.plugin-word-count {
     justify-content: flex-end;
     margin-top: 12px;
 }
+
+/* Briefly applied to copy buttons after a successful clipboard copy
+ * (1s flash). Replaces the old inline element.style.background and
+ * element.style.color toggles flagged by obsidianmd/no-static-styles-assignment. */
+.word-count-copy-confirmed {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}

@@ -2261,14 +2261,12 @@ class WordCountModal extends Modal {
 					// Visual feedback
 					historyCopyIcon.empty();
 					setIcon(historyCopyIcon, 'check');
-					copyButton.style.background = 'var(--interactive-accent)';
-					copyButton.style.color = 'var(--text-on-accent)';
+					copyButton.addClass('word-count-copy-confirmed');
 
 					activeWindow.setTimeout(() => {
 						historyCopyIcon.empty();
 						setIcon(historyCopyIcon, 'copy');
-						copyButton.style.background = '';
-						copyButton.style.color = '';
+						copyButton.removeClass('word-count-copy-confirmed');
 					}, 1000);
 				});
 			});
@@ -2323,14 +2321,12 @@ class WordCountModal extends Modal {
 			// Visual feedback - briefly change button appearance
 			copyIcon.empty();
 			setIcon(copyIcon, 'check');
-			copyButton.style.background = 'var(--interactive-accent)';
-			copyButton.style.color = 'var(--text-on-accent)';
+			copyButton.addClass('word-count-copy-confirmed');
 
 			activeWindow.setTimeout(() => {
 				copyIcon.empty();
 				setIcon(copyIcon, 'copy');
-				copyButton.style.background = '';
-				copyButton.style.color = '';
+				copyButton.removeClass('word-count-copy-confirmed');
 			}, 1000);
 		});
 		
@@ -3132,22 +3128,22 @@ class WordCountSettingTab extends PluginSettingTab {
 					wordCountDisplay.textContent = 'Word count: 0';
 					matchDisplay.textContent = 'Matches: (enter sample text above)';
 					warningDisplay.textContent = '';
-					warningDisplay.style.display = 'none';
+					warningDisplay.toggleClass('word-count-hidden', true);
 					return;
 				}
 
 				const regex = new RegExp(customRegex, 'g');
 				const matches = sampleText.match(regex) || [];
-				
+
 				wordCountDisplay.textContent = `Word count: ${matches.length}`;
 				matchDisplay.textContent = `Matches: [${matches.join(', ')}]`;
 				warningDisplay.textContent = '';
-				warningDisplay.style.display = 'none';
+				warningDisplay.toggleClass('word-count-hidden', true);
 			} catch (error) {
 				wordCountDisplay.textContent = 'Word count: Error';
 				matchDisplay.textContent = 'Matches: Invalid regex';
 				warningDisplay.textContent = `Error: ${error.message}`;
-				warningDisplay.style.display = 'block';
+				warningDisplay.toggleClass('word-count-hidden', false);
 			}
 		};
 
