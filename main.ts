@@ -389,13 +389,13 @@ function processLinks(
 	let processedText = text;
 
 	// Process internal links with aliases: [[Note Name|Alias]] -> Alias
-	processedText = processedText.replace(/\[\[([^\|\]]+)\|([^\]]+)\]\]/g, '$2');
+	processedText = processedText.replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, '$2');
 	
 	// Process internal links without aliases: [[Note Name]] -> Note Name
 	processedText = processedText.replace(/\[\[([^\]]+)\]\]/g, '$1');
 	
 	// Process external links: [link text](url) -> link text
-	processedText = processedText.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+	processedText = processedText.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 
 	if (plugin) debugLog(plugin, 'Text after link processing:', processedText);
 
@@ -707,10 +707,11 @@ function countSelectedCharacters(
 			// Count all characters except whitespace
 			processedText = processedText.replace(/\s/g, '');
 			return processedText.length;
-		case 'letters-only':
+		case 'letters-only': {
 			// Count only letters (alphabetic characters)
 			const matches = processedText.match(/[A-Za-z]/g);
 			return matches ? matches.length : 0;
+		}
 		default:
 			return processedText.length;
 	}
@@ -840,7 +841,7 @@ function countSelectedSentences(
 	
 	// Remove URLs and file paths to avoid counting periods in them
 	processedText = processedText.replace(/https?:\/\/[^\s]+/g, ' ');
-	processedText = processedText.replace(/[a-zA-Z]:[\\\/][^\s]+/g, ' ');
+	processedText = processedText.replace(/[a-zA-Z]:[\\/][^\s]+/g, ' ');
 	
 	// Advanced sentence boundary detection
 	// This regex handles:
@@ -1064,7 +1065,7 @@ function countSelectedWords(
 
 	// Function to normalize path separators
 	const normalizePath = (str: string): string => {
-		return str.replace(/[\/\\]+/g, '/');
+		return str.replace(/[/\\]+/g, '/');
 	};
 
 	// Function to check if a string looks like a path
@@ -1076,7 +1077,7 @@ function countSelectedWords(
 
 		// Check each path type with its original format
 		// Windows drive letter paths (C:\ or C:/)
-		if (/^[A-Za-z]:[\/\\]/.test(str)) {
+		if (/^[A-Za-z]:[/\\]/.test(str)) {
 			if (settings.excludeWindowsPaths && !isExclusionDisabled('exclude-windows-paths')) {
 				if (plugin) debugLog(plugin, 'Matched Windows drive path');
 				return true;
@@ -1088,7 +1089,7 @@ function countSelectedWords(
 		// Environment variables - check original string
 		if (/^(?:%[^%]+%|\$[A-Za-z_][A-Za-z0-9_]*)/.test(str)) {
 			// Check if this is a Windows path with an environment variable
-			if (/^%[^%]+%[\/\\]/.test(str)) {
+			if (/^%[^%]+%[/\\]/.test(str)) {
 				if (settings.excludeWindowsPaths && !isExclusionDisabled('exclude-windows-paths')) {
 					if (plugin) debugLog(plugin, 'Matched Windows path with environment variable');
 					return true;
@@ -1125,7 +1126,7 @@ function countSelectedWords(
 		}
 
 		// Unix paths (/usr/local)
-		if (/^\/[^\/]/.test(normalizedStr)) {
+		if (/^\/[^/]/.test(normalizedStr)) {
 			if (settings.excludeUnixPaths && !isExclusionDisabled('exclude-unix-paths')) {
 				if (plugin) debugLog(plugin, 'Matched Unix path');
 				return true;
@@ -1147,7 +1148,7 @@ function countSelectedWords(
 		}
 		
 		str = str.toLowerCase();  // normalize to lowercase
-		const filename = str.split(/[\/\\]/).pop() || '';
+		const filename = str.split(/[/\\]/).pop() || '';
 		
 		if (!filename.includes('.')) {
 			return false;
@@ -2207,14 +2208,13 @@ class WordCountModal extends Modal {
 			clearButton.appendText('Clear');
 			
 			clearButton.addEventListener('click', () => {
-				// Add confirmation dialog
-				if (confirm('Clear all history entries?')) {
+				new ConfirmModal(this.app, 'Clear all history entries?', 'Clear', () => {
 					if (this.plugin) {
 						this.plugin.history = [];
 						this.plugin.saveSettings();
 						this.close();
 					}
-				}
+				}).open();
 			});
 
 			const historyList = historySection.createDiv({cls: 'history-list'});
@@ -2384,6 +2384,44 @@ class WordCountModal extends Modal {
 	onClose() {
 		const {contentEl} = this;
 		contentEl.empty();
+	}
+}
+
+// Minimal confirm dialog so the plugin can drop the browser-native
+// `confirm()` call (flagged by `no-alert` and not Obsidian-idiomatic).
+class ConfirmModal extends Modal {
+	private message: string;
+	private confirmLabel: string;
+	private onConfirm: () => void;
+
+	constructor(app: App, message: string, confirmLabel: string, onConfirm: () => void) {
+		super(app);
+		this.message = message;
+		this.confirmLabel = confirmLabel;
+		this.onConfirm = onConfirm;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.createEl('p', { text: this.message });
+
+		const buttons = contentEl.createDiv({ cls: 'word-count-confirm-buttons' });
+
+		const cancelButton = buttons.createEl('button', { text: 'Cancel' });
+		cancelButton.addEventListener('click', () => this.close());
+
+		const confirmButton = buttons.createEl('button', {
+			text: this.confirmLabel,
+			cls: 'mod-warning',
+		});
+		confirmButton.addEventListener('click', () => {
+			this.onConfirm();
+			this.close();
+		});
+	}
+
+	onClose() {
+		this.contentEl.empty();
 	}
 }
 
@@ -2864,9 +2902,6 @@ class WordCountSettingTab extends PluginSettingTab {
 		// Initial render
 		renderHeadingsList();
 
-		// Store reference for updates
-		(this as any).renderHeadingsList = renderHeadingsList;
-
 		// Words and Phrases Exclusion Settings
 		const wordsAndPhrasesContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });
 		new Setting(wordsAndPhrasesContainer)
@@ -2986,9 +3021,6 @@ class WordCountSettingTab extends PluginSettingTab {
 
 		// Initial render
 		renderPhrasesList();
-
-		// Store reference for updates
-		(this as any).renderPhrasesList = renderPhrasesList;
 
 
 		const debugContainer = containerEl.createDiv({ cls: 'word-count-settings-group' });

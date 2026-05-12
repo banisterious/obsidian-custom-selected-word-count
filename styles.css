@@ -899,3 +899,11 @@ details.word-count-override-info {
 body.word-count-hide-core .status-bar-item.mod-clickable:not(.plugin-word-count) {
     display: none !important;
 }
+
+/* Button row for the in-plugin confirmation dialog (ConfirmModal). */
+.word-count-confirm-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
