@@ -1,4 +1,4 @@
-import { App, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, setIcon } from 'obsidian';
+import { App, ButtonComponent, DropdownComponent, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TextComponent, ToggleComponent, setIcon } from 'obsidian';
 
 interface WordCountPluginSettings {
 	setting: string;
@@ -2442,7 +2442,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(statusBarContainer)
 			.setName('Show count in status bar')
 			.setDesc('Show the selected word count in the status bar next to Obsidian\'s built-in word count.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.showStatusBar)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.showStatusBar = value;
@@ -2462,7 +2462,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(statusBarSettingsContainer)
 			.setName('Enable live updates')
 			.setDesc('Update the status bar count automatically when text is selected. (Requires status bar to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.enableLiveCount)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.enableLiveCount = value;
@@ -2474,7 +2474,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(statusBarSettingsContainer)
 			.setName('Hide core word count')
 			.setDesc('Hide Obsidian\'s built-in word count when the selected word count is enabled. (Requires status bar to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.hideCoreWordCount)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.hideCoreWordCount = value;
@@ -2486,7 +2486,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(statusBarSettingsContainer)
 			.setName('Status bar label')
 			.setDesc('Customize the label shown before the count in the status bar. (Requires status bar to be enabled)')
-			.addText((text: any) => text
+			.addText((text: TextComponent) => text
 				.setPlaceholder('Selected: ')
 				.setValue(this.plugin.settings.statusBarLabel)
 				.onChange(async (value: string) => {
@@ -2500,7 +2500,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(charCountContainer)
 			.setName('Show character count')
 			.setDesc('Display character count alongside word count in the modal.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.showCharacterCount)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.showCharacterCount = value;
@@ -2515,7 +2515,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(charModeContainer)
 			.setName('Character counting mode')
 			.setDesc('Choose how characters are counted. (Requires character count to be enabled)')
-			.addDropdown((dropdown: any) => dropdown
+			.addDropdown((dropdown: DropdownComponent) => dropdown
 				.addOption('all', 'All characters (including spaces)')
 				.addOption('no-spaces', 'All characters (excluding spaces)')
 				.addOption('letters-only', 'Letters only')
@@ -2530,7 +2530,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(sentenceCountContainer)
 			.setName('Show sentence count')
 			.setDesc('Display sentence count alongside word count in the modal.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.showSentenceCount)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.showSentenceCount = value;
@@ -2542,7 +2542,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(historyContainer)
 			.setName('Show date/time in history')
 			.setDesc('Include timestamps when displaying word count history in the modal.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.showDateTimeInHistory)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.showDateTimeInHistory = value;
@@ -2577,7 +2577,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(linkContainer)
 			.setName('Exclude non-visible portions of links')
 			.setDesc('For [[Note Name|Alias]] links, only count "Alias". For [link text](url) links, only count "link text". • Property: exclude-urls')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeNonVisibleLinkPortions)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeNonVisibleLinkPortions = value;
@@ -2589,7 +2589,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(codeContainer)
 			.setName('Exclude code')
 			.setDesc('When enabled, code will be excluded from word, character, and sentence counts.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeCode)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeCode = value;
@@ -2602,7 +2602,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(codeSettingsContainer)
 			.setName('Exclude code blocks')
 			.setDesc('Exclude text within triple backtick (```) or tilde (~~~) code blocks. (Requires code exclusion to be enabled) • Property: exclude-code-blocks')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeCodeBlocks)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeCodeBlocks = value;
@@ -2612,7 +2612,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(codeSettingsContainer)
 			.setName('Exclude inline code')
 			.setDesc('Exclude text within single backticks (`). (Requires code exclusion to be enabled) • Property: exclude-inline-code')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeInlineCode)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeInlineCode = value;
@@ -2625,7 +2625,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(pathContainer)
 			.setName('Exclude paths from word count')
 			.setDesc('When enabled, file paths will not be counted as words.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludePaths)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludePaths = value;
@@ -2639,7 +2639,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(pathSettingsContainer)
 			.setName('Exclude Windows paths')
 			.setDesc('Exclude paths starting with drive letters (e.g., C:\\). (Requires path exclusion to be enabled) • Property: exclude-windows-paths')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeWindowsPaths)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeWindowsPaths = value;
@@ -2649,7 +2649,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(pathSettingsContainer)
 			.setName('Exclude Unix paths')
 			.setDesc('Exclude Unix-style paths starting with forward slash (e.g., /usr/local). (Requires path exclusion to be enabled) • Property: exclude-unix-paths')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeUnixPaths)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeUnixPaths = value;
@@ -2659,7 +2659,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(pathSettingsContainer)
 			.setName('Exclude UNC paths')
 			.setDesc('Exclude network paths starting with double backslash (e.g., \\\\server\\share). (Requires path exclusion to be enabled) • Property: exclude-unc-paths')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeUNCPaths)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeUNCPaths = value;
@@ -2669,7 +2669,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(pathSettingsContainer)
 			.setName('Exclude environment paths')
 			.setDesc('Exclude environment variable paths (e.g., %USERPROFILE%, $HOME). (Requires path exclusion to be enabled) • Property: exclude-environment-paths')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeEnvironmentPaths)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeEnvironmentPaths = value;
@@ -2682,7 +2682,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(commentContainer)
 			.setName('Exclude comments from text analysis')
 			.setDesc('When enabled, comments will be excluded from word, character, and sentence counts. • Property: exclude-comments')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeComments)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeComments = value;
@@ -2696,7 +2696,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(commentSettingsContainer)
 			.setName('Exclude Obsidian comments (%% %%)')
 			.setDesc('Exclude Obsidian-style comments from text analysis. (Requires comment exclusion to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeObsidianComments)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeObsidianComments = value;
@@ -2708,7 +2708,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(obsidianCommentContentContainer)
 			.setName('Exclude Obsidian comment content')
 			.setDesc('When unchecked, only the comment markers (%% %%) are excluded, but the content inside is still counted. (Requires Obsidian comment exclusion to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeObsidianCommentContent)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeObsidianCommentContent = value;
@@ -2719,7 +2719,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(commentSettingsContainer)
 			.setName('Exclude HTML comments (<!-- -->)')
 			.setDesc('Exclude HTML-style comments from text analysis. (Requires comment exclusion to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeHtmlComments)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeHtmlComments = value;
@@ -2731,7 +2731,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(htmlCommentContentContainer)
 			.setName('Exclude HTML comment content')
 			.setDesc('When unchecked, only the comment markers (<!-- -->) are excluded, but the content inside is still counted. (Requires HTML comment exclusion to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeHtmlCommentContent)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeHtmlCommentContent = value;
@@ -2743,7 +2743,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(headingContainer)
 			.setName('Exclude headings from text analysis')
 			.setDesc('When enabled, markdown headings will be excluded from word, character, and sentence counts. • Property: exclude-headings')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeHeadings)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeHeadings = value;
@@ -2757,7 +2757,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(headingSettingsContainer)
 			.setName('Exclude heading markers only')
 			.setDesc('Exclude only the # symbols but count the heading text. (Requires heading exclusion to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeHeadingMarkersOnly)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeHeadingMarkersOnly = value;
@@ -2774,7 +2774,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(headingSettingsContainer)
 			.setName('Exclude entire heading lines')
 			.setDesc('Exclude complete heading lines including the text. (Requires heading exclusion to be enabled)')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeEntireHeadingLines)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeEntireHeadingLines = value;
@@ -2899,7 +2899,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(wordsAndPhrasesContainer)
 			.setName('Exclude words and phrases from text analysis')
 			.setDesc('When enabled, specific words and phrases will be excluded from word, character, and sentence counts. • Property: exclude-words-phrases')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.excludeWordsAndPhrases)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.excludeWordsAndPhrases = value;
@@ -2914,7 +2914,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(wordsSubsection)
 			.setName('Excluded words')
 			.setDesc('Comma-separated list of words to exclude (case-insensitive, exact matches only). (Requires words/phrases exclusion to be enabled)')
-			.addText((text: any) => text
+			.addText((text: TextComponent) => text
 				.setPlaceholder('the, and, or, but')
 				.setValue(this.plugin.settings.excludedWords)
 				.onChange(async (value: string) => {
@@ -3020,7 +3020,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(debugContainer)
 			.setName('Enable debug logging')
 			.setDesc('Enable detailed logging for troubleshooting. May impact performance.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.enableDebugLogging)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.enableDebugLogging = value;
@@ -3033,7 +3033,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(exportLogsContainer)
 			.setName('Export log files')
 			.setDesc('Export debug log files with timestamp for troubleshooting. Format: ocswcp-logs-YYYYMMDD-HHMMSS.json')
-			.addButton((button: any) => button
+			.addButton((button: ButtonComponent) => button
 				.setButtonText('Export Logs')
 				.setTooltip('Export current log files')
 				.onClick(async () => {
@@ -3056,7 +3056,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		new Setting(advDesc)
 			.setName('Enable advanced regex (expert only)')
 			.setDesc('Allow custom regex for word detection. For advanced users only.')
-			.addToggle((toggle: any) => toggle
+			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(this.plugin.settings.enableAdvancedRegex ?? false)
 				.onChange(async (value: boolean) => {
 					this.plugin.settings.enableAdvancedRegex = value;
@@ -3066,17 +3066,20 @@ class WordCountSettingTab extends PluginSettingTab {
 			);
 
 		// Regex Input Field
-		const regexSetting = new Setting(advDesc)
+		let regexTextComponent: TextComponent | null = null;
+		new Setting(advDesc)
 			.setName('Custom word detection regex')
 			.setDesc(`Define a regular expression pattern for word detection. Default: ${DEFAULT_WORD_REGEX}`)
-			.addText((text: any) => text
-				.setPlaceholder(DEFAULT_WORD_REGEX)
-				.setValue(this.plugin.settings.customWordRegex || '')
-				.onChange(async (value: string) => {
-					this.plugin.settings.customWordRegex = value;
-					await this.plugin.saveSettings();
-					this.updateRegexTest();
-				}));
+			.addText((text: TextComponent) => {
+				regexTextComponent = text;
+				text.setPlaceholder(DEFAULT_WORD_REGEX)
+					.setValue(this.plugin.settings.customWordRegex || '')
+					.onChange(async (value: string) => {
+						this.plugin.settings.customWordRegex = value;
+						await this.plugin.saveSettings();
+						this.updateRegexTest();
+					});
+			});
 
 		// Reset to Default Button
 		const resetButton = advDesc.createEl('button', {
@@ -3086,11 +3089,7 @@ class WordCountSettingTab extends PluginSettingTab {
 		resetButton.onclick = async () => {
 			this.plugin.settings.customWordRegex = '';
 			await this.plugin.saveSettings();
-			// Get the text input component and set its value
-			const textComponent = regexSetting.components.find(component => component.constructor.name.includes('Text'));
-			if (textComponent && 'setValue' in textComponent) {
-				(textComponent as any).setValue('');
-			}
+			regexTextComponent?.setValue('');
 			this.updateRegexTest();
 		};
 
