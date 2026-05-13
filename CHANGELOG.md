@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Internal
+- **Phase 6 cleanup (closes the architectural audit)**
+  - Archived two completed pre-audit planning docs (`new-exclusions-feature.md`, `per-note-exclusion-overrides.md`) to `docs/planning/archive/`. The `archive/` subdirectory is created with these as its first inhabitants.
+  - Deduplicated the sentence-count abbreviation alternation regex in `src/counting/sentences.ts`. Nine duplicate tokens removed (`mil`, `museum`, `name`, `pro`, `travel`, `xxx`, `tel`); 53 alternations down to 44 unique. Behavior-preserving (regex alternations are set-based), and per Phase 4 finding #2 the guard never actually fires at runtime anyway — the cleanup is a readability fix. The three `LOCKED quirk:` tests that confirm `"Mr."`, `"Dr."`, `"etc."` produce false splits continue to pass.
+  - Canvas polling architecture review: kept the 500 ms `setInterval` and documented why. Cross-frame `selectionchange` events don't bubble from Canvas iframe `contentDocument`s to the parent document, so an event-driven alternative would need a `MutationObserver` plus per-iframe listener management with uncertain cross-frame event reliability. The polling is well-isolated (gated by `enableLiveCount`, no-ops outside Canvas view) and cheap (2 callbacks/sec). Reasoning lives in `docs/planning/audit-phase-6-cleanup.md` § Findings.
+  - Mobile decision revisit: kept `isDesktopOnly: true`. Obsidian's developer docs explicitly state that custom status bar items are not supported on Obsidian mobile apps and `addStatusBarItem()` is "Not available on mobile." The status bar is substantial in this plugin's UX (five settings reference it), so partial mobile support would require a `Platform.isMobileApp` gate on five settings plus re-validation of selection mechanics on real devices. Cost/benefit doesn't favor the partial approach right now; revisit if Obsidian adds mobile status-bar support or specific user interest surfaces.
+  - **New: `docs/architecture/overview.md`** — describes the post-Phase-5 module tree, data flow for counting a selection, `applyExclusions`'s pipeline shape, settings persistence (interface + bidirectional runtime/persisted translation), the override mechanism (frontmatter + inline markers), status bar + Canvas polling caveat, build/test/lint commands, the release pipeline, and a "where to make changes" how-to-modify guide keyed by common scenarios. Intended as the first stop for navigating the codebase.
+  - The audit master plan (`docs/planning/audit-implementation-plan.md`) now ticks all seven phases as shipped. Three intermediate patch releases (1.6.4, 1.6.5, 1.6.6) that landed during the audit but weren't on the original plan are footnoted.
+
 ## [1.7.0] - 2026-05-13
 
 ### Internal
