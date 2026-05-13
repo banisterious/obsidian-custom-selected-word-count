@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-05-13
+
 ### Internal
 - **Phase 6 cleanup (closes the architectural audit)**
   - Archived two completed pre-audit planning docs (`new-exclusions-feature.md`, `per-note-exclusion-overrides.md`) to `docs/planning/archive/`. The `archive/` subdirectory is created with these as its first inhabitants.
