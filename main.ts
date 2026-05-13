@@ -14,7 +14,7 @@ interface AppInternals {
 }
 type AppWithInternals = App & AppInternals;
 
-interface WordCountPluginSettings {
+export interface WordCountPluginSettings {
 	setting: string;
 	showDateTimeInHistory: boolean;
 	history?: { count: number; characterCount?: number; sentenceCount?: number; date: string }[]; // Persisted as ISO strings
@@ -64,11 +64,11 @@ interface WordCountPluginSettings {
 	customWordRegex?: string;        // User-defined regex pattern
 }
 
-const DEFAULT_EXCLUSION_LIST = '.jpg, .jpeg, .png, .gif, .svg, .md, .pdf, .docx, .xlsx, .pptx, .zip, .mp3, .mp4, .wav, .ogg, .webm, .mov, .avi, .exe, .dll, .bat, .sh, .ps1, .js, .ts, .json, .csv, .yml, .yaml, .html, .css, .scss, .xml, .ini, .log, .tmp, .bak, .db, .sqlite, .7z, .rar, .tar, .gz, .bz2, .iso, .img, .bin, .apk, .app, .dmg, .pkg, .deb, .rpm, .msi, .sys, .dat, .sav, .bak, .old, .swp, .lock, .cache, .part, .crdownload, .torrent, .ics, .eml, .msg, .vcf, .txt';
+export const DEFAULT_EXCLUSION_LIST = '.jpg, .jpeg, .png, .gif, .svg, .md, .pdf, .docx, .xlsx, .pptx, .zip, .mp3, .mp4, .wav, .ogg, .webm, .mov, .avi, .exe, .dll, .bat, .sh, .ps1, .js, .ts, .json, .csv, .yml, .yaml, .html, .css, .scss, .xml, .ini, .log, .tmp, .bak, .db, .sqlite, .7z, .rar, .tar, .gz, .bz2, .iso, .img, .bin, .apk, .app, .dmg, .pkg, .deb, .rpm, .msi, .sys, .dat, .sav, .bak, .old, .swp, .lock, .cache, .part, .crdownload, .torrent, .ics, .eml, .msg, .vcf, .txt';
 
 const DEFAULT_WORD_REGEX = '[A-Za-z0-9]+(?:[\\u2018\\u2019\'-_][A-Za-z0-9]+)*';
 
-const DEFAULT_SETTINGS: WordCountPluginSettings = {
+export const DEFAULT_SETTINGS: WordCountPluginSettings = {
 	setting: 'default',
 	showDateTimeInHistory: true,
 	history: [],
@@ -125,7 +125,7 @@ interface WordCountHistoryEntry {
 	date: Date;
 }
 
-interface CountResult {
+export interface CountResult {
 	words: number;
 	characters: number;
 	sentences: number;
@@ -154,7 +154,7 @@ function errorMessage(error: unknown): string {
  * @param text The text to process.
  * @returns The text with frontmatter removed.
  */
-function stripFrontmatter(text: string): string {
+export function stripFrontmatter(text: string): string {
 	// Only remove frontmatter if it starts at the very beginning
 	if (!text.startsWith('---')) {
 		return text;
@@ -188,7 +188,7 @@ function stripFrontmatter(text: string): string {
  * @param app The Obsidian app instance.
  * @returns Array of exclusion identifiers to disable, or empty array if none.
  */
-function getDisabledExclusionsFromFrontmatter(app: App): string[] {
+export function getDisabledExclusionsFromFrontmatter(app: App): string[] {
 	const activeFile = app.workspace.getActiveFile();
 	if (!activeFile) {
 		return [];
@@ -239,7 +239,7 @@ function getDisabledExclusionsFromFrontmatter(app: App): string[] {
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text.
  */
-function processTextWithOverrides(
+export function processTextWithOverrides(
 	text: string,
 	processFunc: (text: string) => string,
 	plugin?: CustomSelectedWordCountPlugin
@@ -298,7 +298,7 @@ function processTextWithOverrides(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with code blocks removed if enabled.
  */
-function processCodeBlocks(
+export function processCodeBlocks(
 	text: string,
 	excludeCodeBlocks: boolean,
 	plugin?: CustomSelectedWordCountPlugin
@@ -320,7 +320,7 @@ function processCodeBlocks(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with inline code removed if enabled.
  */
-function processInlineCode(
+export function processInlineCode(
 	text: string,
 	excludeInlineCode: boolean,
 	plugin?: CustomSelectedWordCountPlugin
@@ -344,7 +344,7 @@ function processInlineCode(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with comments handled according to settings.
  */
-function processObsidianComments(
+export function processObsidianComments(
 	text: string,
 	excludeComments: boolean,
 	excludeContent: boolean,
@@ -373,7 +373,7 @@ function processObsidianComments(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with comments handled according to settings.
  */
-function processHtmlComments(
+export function processHtmlComments(
 	text: string,
 	excludeComments: boolean,
 	excludeContent: boolean,
@@ -401,7 +401,7 @@ function processHtmlComments(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with links handled according to settings.
  */
-function processLinks(
+export function processLinks(
 	text: string,
 	excludeNonVisible: boolean,
 	plugin?: CustomSelectedWordCountPlugin
@@ -438,7 +438,7 @@ function processLinks(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with headings handled according to settings.
  */
-function processHeadings(
+export function processHeadings(
 	text: string,
 	excludeHeadings: boolean,
 	excludeMarkersOnly: boolean,
@@ -486,7 +486,7 @@ function processHeadings(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with specified heading sections removed.
  */
-function processSelectiveHeadingSections(
+export function processSelectiveHeadingSections(
 	selectedText: string,
 	excludeHeadingSections: string[],
 	plugin?: CustomSelectedWordCountPlugin
@@ -563,7 +563,7 @@ function processSelectiveHeadingSections(
  * @param plugin The plugin instance for debug logging.
  * @returns The processed text with words and phrases excluded according to settings.
  */
-function processWordsAndPhrases(
+export function processWordsAndPhrases(
 	text: string,
 	excludeWordsAndPhrases: boolean,
 	excludedWords: string,
@@ -617,7 +617,7 @@ function processWordsAndPhrases(
  * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns The character count as an integer.
  */
-function countSelectedCharacters(
+export function countSelectedCharacters(
 	selectedText: string,
 	mode: 'all' | 'no-spaces' | 'letters-only' = 'all',
 	settings?: WordCountPluginSettings,
@@ -751,7 +751,7 @@ function countSelectedCharacters(
  * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns The sentence count as an integer.
  */
-function countSelectedSentences(
+export function countSelectedSentences(
 	selectedText: string,
 	settings?: WordCountPluginSettings,
 	plugin?: CustomSelectedWordCountPlugin,
@@ -929,7 +929,7 @@ function countSelectedSentences(
  * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns Object containing both word and character counts.
  */
-function countSelectedText(
+export function countSelectedText(
 	selectedText: string,
 	excludedExtensions: string[] = [],
 	stripEmojis: boolean = true,
@@ -979,7 +979,7 @@ function countSelectedText(
  * @param disabledExclusions Array of exclusion identifiers to disable for this count.
  * @returns The word count as an integer.
  */
-function countSelectedWords(
+export function countSelectedWords(
 	selectedText: string,
 	excludedExtensions: string[] = [],
 	stripEmojis: boolean = true,
