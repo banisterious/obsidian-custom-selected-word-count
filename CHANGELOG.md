@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.6.7] - 2026-05-12
+
 ### Internal
 - **Vitest characterization test suite (Phase 4 of the audit)**
   - Added `vitest` as a devDependency and `npm test` / `npm run test:watch` scripts. Tests live in `tests/` and run against the source `main.ts`, with a hand-rolled `obsidian` module mock under `tests/mocks/`. The CI release workflow now runs `npm test` between the Lint and Build steps, so a failing test blocks the release.
@@ -391,4 +393,4 @@
 
 ---
 
-*The changelog is maintained with each release. For the latest updates, please check the [releases page](https://github.com/banisterious/obsidian-custom-selected-word-count/releases).*
+*The changelog is maintained with each release. For the latest updates, please check the [releases page](https://github.com/banisterious/obsidian-custom-selected-word-count/releases).*
