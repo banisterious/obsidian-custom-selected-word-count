@@ -11,10 +11,35 @@ export default tseslint.config(
 			".github/**",
 			"**/*.html",
 			"**/*.zip",
+			// Non-source files. eslint-plugin-obsidianmd@0.3.0's recommended
+			// config applies its first rule entry to every file matched by
+			// `eslint .` without a `files:` restriction, and type-aware rules
+			// (e.g. `no-plugin-as-component`) blow up trying to read parser
+			// services for non-TS files. Explicit ignores keep lint focused on
+			// source code.
+			"**/*.json",
+			"**/*.md",
+			"**/*.css",
+			"**/*.svg",
+			"**/*.yml",
+			"**/*.yaml",
+			"**/*.lock",
+			"**/*.log",
+			".nvmrc",
+			"LICENSE.md",
 		],
 	},
 	...tseslint.configs.recommended,
-	...obsidianmd.configs.recommended,
+	// eslint-plugin-obsidianmd@0.3.0's recommended config has one entry that
+	// applies its 61 rules without a `files:` restriction. Some of those rules
+	// require typescript-eslint parser services (e.g. `no-plugin-as-component`)
+	// and crash on non-TS files like `package.json` and `eslint.config.mjs`.
+	// Wrap each unrestricted entry to scope it to TS sources.
+	...obsidianmd.configs.recommended.map((cfg) =>
+		cfg.rules && !cfg.files
+			? { ...cfg, files: ["**/*.ts", "**/*.tsx"] }
+			: cfg
+	),
 	{
 		files: ["**/*.ts"],
 		languageOptions: {
