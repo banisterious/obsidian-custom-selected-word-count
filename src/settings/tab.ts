@@ -2,7 +2,7 @@ import { App, ButtonComponent, DropdownComponent, Notice, Platform, PluginSettin
 import { DEFAULT_WORD_REGEX } from './types';
 import { errorMessage } from '../utils/debug';
 import type { AppWithInternals } from '../obsidian-internals';
-import type CustomSelectedWordCountPlugin from '../../main';
+import type CustomSelectedWordCountPlugin from '../main';
 
 // Settings tab for plugin options.
 export class WordCountSettingTab extends PluginSettingTab {

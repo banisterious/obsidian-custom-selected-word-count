@@ -1,6 +1,6 @@
 import { App, Modal, Notice, setIcon } from 'obsidian';
 import type { CountResult, WordCountHistoryEntry } from '../types';
-import type CustomSelectedWordCountPlugin from '../../main';
+import type CustomSelectedWordCountPlugin from '../main';
 
 // Minimal modal for displaying word count and history
 export class WordCountModal extends Modal {
