@@ -1,6 +1,6 @@
 # Audit Phase 6 — Lower-priority cleanup and forward-compat
 
-**Status:** Active
+**Status:** Complete
 **Branch:** `audit/phase-6-cleanup`
 **Release target:** 1.7.1 (patch; closes out the audit)
 
@@ -85,9 +85,9 @@ The cost/benefit doesn't favor the partial approach right now. Keeping `isDeskto
 
 ## Status
 
-- [ ] Item 1 — Archive planning docs
-- [ ] Item 2 — Sentence abbreviation regex dedup
-- [ ] Item 3 — Canvas polling architecture review
-- [ ] Item 4 — Mobile decision revisit
-- [ ] Item 5 — Architecture documentation
-- [ ] Item 6 — CLAUDE.md rewrite
+- [x] Item 1 — Archive planning docs (commit 9dafb56)
+- [x] Item 2 — Sentence abbreviation regex dedup (commit 0c1dfc6)
+- [x] Item 3 — Canvas polling architecture review — kept polling, documented decision (commit 2335672)
+- [x] Item 4 — Mobile decision revisit — kept isDesktopOnly: true, documented decision (commit 2335672)
+- [x] Item 5 — Architecture documentation (commit 55b2bc9)
+- [x] Item 6 — CLAUDE.md rewrite — local file only (CLAUDE.md is gitignored)

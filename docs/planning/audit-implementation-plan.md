@@ -416,12 +416,18 @@ Phase 6 has no dependencies on Phases 2 through 5 individually, but is best done
 
 ## Status
 
-- [ ] Phase 0 — Release-blocker pass (target: 1.6.3)
-- [ ] Phase 1 — Investigation (no release)
-- [ ] Phase 2 — Hygiene and bug fixes (target: 1.6.4)
-- [ ] Phase 3 — Obsidian API conformance (target: 1.6.5)
-- [ ] Phase 4 — Test infrastructure (no release)
-- [ ] Phase 5 — Single-file split and exclusion-pipeline dedup (target: 1.7.0)
-- [ ] Phase 6 — Lower-priority cleanup (bundled with next release)
+- [x] Phase 0 — Release-blocker pass — shipped 2026-05-12 in 1.6.3 (bundled with Phases 2 + 3)
+- [x] Phase 1 — Investigation — complete (no release; findings folded into subsequent phase plans)
+- [x] Phase 2 — Hygiene and bug fixes — shipped 2026-05-12 in 1.6.3
+- [x] Phase 3 — Obsidian API conformance — shipped 2026-05-12 in 1.6.3
+- [x] Phase 4 — Test infrastructure — shipped 2026-05-12 in 1.6.7 (134 vitest tests)
+- [x] Phase 5 — Single-file split and exclusion-pipeline dedup — shipped 2026-05-13 in 1.7.0
+- [x] Phase 6 — Lower-priority cleanup — shipped 2026-05-13 in 1.7.1 (six items: planning-doc archive, sentence-regex dedup, Canvas polling review + decision, mobile decision, architecture doc, CLAUDE.md rewrite)
 
-Update this checklist as each phase merges to `main`. When all phases are complete, this document and its sibling phase planning docs move to `docs/planning/archive/`.
+Three intermediate patch releases shipped during the audit to fix issues surfaced by the community-site rescan and CI rollout:
+
+- 1.6.4 (2026-05-12) — community-site rescan fixes (CSS brace, timer functions, `no-explicit-any`)
+- 1.6.5 (2026-05-12) — CSS polish (duplicate selectors, `!important` cleanup)
+- 1.6.6 (2026-05-12) — CI release pipeline with `actions/attest-build-provenance@v2`, modal `@media` rule scoping, `no-unsafe-*` narrowing
+
+The audit is complete. This document stays at `docs/planning/` for now as historical reference; will move to `docs/planning/archive/` along with the per-phase planning docs when convenient.
