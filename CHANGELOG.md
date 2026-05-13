@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-05-13
+
 ### Internal
 - **Single-file split + exclusion-pipeline deduplication (Phase 5 of the audit)**
   - The 3260-line `main.ts` is decomposed into 17 focused modules under `src/`. Top-level `main.ts` becomes a 20-line re-export that preserves Obsidian's `main.js` build output and the public surface the characterization test suite imports against. No user-visible behavior changes: same exclusion logic, same processing order, same on-disk settings shape, same frontmatter property name (`cswc-disable`), same inline override markers (`<!-- cswc-disable -->`, `%% cswc-disable %%`), and all 134 Phase 4 tests pass without modification at every commit on the phase branch.
