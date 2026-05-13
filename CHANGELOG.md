@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Internal
+- **Vitest characterization test suite (Phase 4 of the audit)**
+  - Added `vitest` as a devDependency and `npm test` / `npm run test:watch` scripts. Tests live in `tests/` and run against the source `main.ts`, with a hand-rolled `obsidian` module mock under `tests/mocks/`. The CI release workflow now runs `npm test` between the Lint and Build steps, so a failing test blocks the release.
+  - 134 tests across six files lock the current behavior of the three count entry points (`countSelectedWords`, `countSelectedCharacters`, `countSelectedSentences`), the `countSelectedText` aggregator, the seven exclusion processors, frontmatter override parsing (`getDisabledExclusionsFromFrontmatter` with array / string / `"all"` shapes), and the inline `<!-- cswc-disable -->` / `%% cswc-disable %%` markers. Phase 5's planned single-file split now has a safety net.
+  - To support test imports, ~16 top-level functions plus `WordCountPluginSettings`, `DEFAULT_SETTINGS`, `DEFAULT_EXCLUSION_LIST`, and `CountResult` were marked `export` in `main.ts`. No runtime behavior change; the additions are no-ops at the bundler level.
+  - Three pre-existing quirks surfaced during test-writing and are now locked in by `LOCKED quirk:` tests so a later phase can decide whether to fix each: the path-exclusion buffer is greedy (a detected path swallows trailing words to end of input); the sentence-detection abbreviation guard never fires (the period is consumed by the split regex before the guard runs, so `"Mr."`, `"Dr."`, `"etc."` produce false splits today); the sentence-detection file-extension guard discards entire sentences ending with `name.ext` rather than just the in-filename period. Details in `docs/planning/audit-phase-4-tests.md` § Findings.
+- **Bumped `eslint-plugin-obsidianmd` from 0.2.9 to 0.3.0**
+  - Matches the version the Obsidian Community website's automated rescan runs server-side, so local `npm run lint` results stay aligned with what the catalog scanner sees on release tags.
+  - The 0.3.0 recommended config has one entry that applies its rules without a `files:` restriction. Some of those rules (e.g. `no-plugin-as-component`) require typescript-eslint parser services and crash on non-TS files. Worked around by wrapping the unrestricted entry to scope it to `**/*.ts` and `**/*.tsx`, and by extending `eslint.config.mjs`'s `ignores` list to exclude common non-source extensions (`.json`, `.md`, `.css`, etc.).
+- **Bumped `@types/node` from `^16.11.6` to `^22.0.0`**
+  - The previous pin predated the project's Node 22 target (per `.nvmrc`) and blocked installing modern devDependencies (vitest needs `@types/node@^18 || ^20 || >=22`). Types are dev-only and erased at runtime; no production impact.
+- **Removed dead `.eslintignore`**
+  - ESLint 9 no longer reads `.eslintignore`; its two entries (`node_modules/`, `main.js`) were already present in `eslint.config.mjs`'s `ignores` array. Removing the file silences the `ESLintIgnoreWarning` that fired on every lint run.
+
 ## [1.6.6] - 2026-05-12
 ### Changed
 - **Responsive `@media` rule scoped to our modal**
@@ -377,4 +391,4 @@
 
 ---
 
-*The changelog is maintained with each release. For the latest updates, please check the [releases page](https://github.com/banisterious/obsidian-custom-selected-word-count/releases).*
+*The changelog is maintained with each release. For the latest updates, please check the [releases page](https://github.com/banisterious/obsidian-custom-selected-word-count/releases).*
