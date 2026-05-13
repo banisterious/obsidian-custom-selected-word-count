@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Internal
+- **Single-file split + exclusion-pipeline deduplication (Phase 5 of the audit)**
+  - The 3260-line `main.ts` is decomposed into 17 focused modules under `src/`. Top-level `main.ts` becomes a 20-line re-export that preserves Obsidian's `main.js` build output and the public surface the characterization test suite imports against. No user-visible behavior changes: same exclusion logic, same processing order, same on-disk settings shape, same frontmatter property name (`cswc-disable`), same inline override markers (`<!-- cswc-disable -->`, `%% cswc-disable %%`), and all 134 Phase 4 tests pass without modification at every commit on the phase branch.
+  - `applyExclusions` consolidates the three previously-duplicated count pipelines into one orchestrator. `countSelectedWords`, `countSelectedCharacters`, and `countSelectedSentences` each carried roughly 150 lines of identical exclusion-pipeline code; that triplication is now a single function in `src/counting/pipeline.ts`. Each count function now calls `applyExclusions(text, settings, plugin, disabled)` and then runs its own mode-specific post-processing (character mode switch / sentence boundary detection / word-level path and extension handling). Roughly 300 lines of duplication removed.
+  - Module layout: `src/main.ts` (Plugin class), `src/settings/{types,tab}.ts`, `src/types.ts`, `src/utils/debug.ts`, `src/obsidian-internals.ts`, seven `src/processing/*.ts` modules, five `src/counting/*.ts` modules, `src/ui/modal.ts`. The `DEFAULT_WORD_REGEX` Phase 1 dedup also lands as part of `countSelectedWords`'s extraction.
+  - Details and the full pass-by-pass extraction record in `docs/planning/audit-phase-5-split.md`.
+
 ## [1.6.7] - 2026-05-12
 
 ### Internal

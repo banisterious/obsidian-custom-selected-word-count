@@ -1,6 +1,6 @@
 # Audit Phase 5 — Single-file split and exclusion-pipeline deduplication
 
-**Status:** Active
+**Status:** Complete
 **Branch:** `audit/phase-5-split`
 **Release target:** 1.7.0 (minor bump per audit plan; significant internal restructure with no user-visible change)
 
@@ -199,4 +199,83 @@ And similarly for `countSelectedWords` (after which the word-specific path/exten
 
 ## Findings during the refactor
 
-_To be populated as extraction passes complete._
+### Pass results
+
+| Pass | Modules added | main.ts size after | Notes |
+|------|---------------|---------------------|-------|
+| 0 (planning) | — | 3260 | docs commit only |
+| 1 — types + utils | `src/types.ts`, `src/settings/types.ts`, `src/utils/debug.ts` | 3125 | `DebugLoggable` structural interface lets processing modules type their plugin parameter without importing the Plugin class |
+| 2 — processing helpers | seven files under `src/processing/` | 1685 | 458-line shrinkage; all process functions now decoupled from the Plugin class |
+| 3 — applyExclusions + count fns | `src/counting/` (5 files including `pipeline.ts`) | 854 | The behavioral consolidation: `applyExclusions` replaces ~150 lines of triplicated orchestration. Picked up the audit-plan §Phase 1 DEFAULT_WORD_REGEX dedup along the way (both branches in countSelectedWords now build from the constant). |
+| 4 — modal | `src/ui/modal.ts` | 854 | WordCountModal and ConfirmModal moved together since the latter is used only by the former. Used `import type CustomSelectedWordCountPlugin` to keep the runtime dep DAG-clean. |
+| 5 — settings tab | `src/settings/tab.ts`, `src/obsidian-internals.ts` | 854 | The tab is the largest single class. AppInternals/AppWithInternals moved to a small shared module since both the tab (log export) and the Plugin class (settings deep-link) need it. |
+| 6 — Plugin class | `src/main.ts` | 20 | The Plugin class becomes a sibling module under `src/`. Top-level main.ts is a thin re-export keeping the test-suite import surface stable and Obsidian's esbuild entry point unchanged. |
+
+### applyExclusions consolidation
+
+The three count functions previously each carried a roughly-150-line copy of the same exclusion pipeline:
+
+```
+processTextWithOverrides(text, segment => {
+    if (excludeCode && excludeCodeBlocks && !disabled('exclude-code-blocks')) ...
+    if (excludeCode && excludeInlineCode && !disabled('exclude-inline-code')) ...
+    if (excludeComments && !disabled('exclude-comments')) { ... }
+    if (excludeNonVisibleLinkPortions && !disabled('exclude-urls')) ...
+    if (excludeHeadings && !disabled('exclude-headings')) ...
+    if (excludeWordsAndPhrases && !disabled('exclude-words-phrases')) ...
+}, plugin)
+```
+
+Now one definition in `src/counting/pipeline.ts`. The three count functions reduce to:
+
+```ts
+const processed = applyExclusions(selectedText, settings, plugin, disabledExclusions);
+// ...mode-specific post-processing (character mode switch / sentence detection / word path handling)...
+```
+
+Roughly 300 lines of duplication removed. Each count function retains its own mode-specific post-processing because the work after `applyExclusions` is intrinsically different per count type.
+
+### Subtle differences that turned out to NOT be intentional
+
+The audit plan's §Phase 1 brief flagged that `countSelectedSentences` does a "second URL-and-path stripping pass after the override-processing wrapper" and asked whether that was intentional or a vestige. Phase 4's testing concluded it was a safety net for raw URLs not wrapped in markdown link syntax. Phase 5 preserves the second pass as a sentence-specific post-`applyExclusions` step (see `src/counting/sentences.ts`), because removing it would change behavior (test would catch it) and the audit plan's no-behavior-change constraint forbids that.
+
+### Subtle differences that ARE intentional and preserved
+
+- The order of exclusion processing (code -> comments -> links -> headings -> words/phrases) was identical in all three pre-extraction copies, so `applyExclusions` could use that exact order without controversy.
+- The greedy path-extension behavior in countSelectedWords (Phase 4 finding #1) is in the post-`applyExclusions` portion that stays in `src/counting/words.ts`, unchanged.
+- The non-firing abbreviation guard and the over-aggressive file-extension guard in countSelectedSentences (Phase 4 findings #2 and #3) are similarly preserved in the post-`applyExclusions` portion in `src/counting/sentences.ts`.
+
+### Dependency direction
+
+Final import graph (top → bottom, no cycles, value imports only):
+
+```
+top-level main.ts          (entry / re-exports)
+  └── src/main.ts          (Plugin class)
+        ├── src/settings/tab.ts
+        │     ├── src/settings/types.ts
+        │     ├── src/utils/debug.ts
+        │     └── src/obsidian-internals.ts
+        ├── src/ui/modal.ts
+        │     └── src/types.ts
+        ├── src/counting/index.ts
+        │     ├── src/counting/characters.ts ─┐
+        │     ├── src/counting/sentences.ts  │ └─> src/counting/pipeline.ts
+        │     └── src/counting/words.ts    ─┘       ├── src/processing/overrides.ts
+        │                                            ├── src/processing/code.ts
+        │                                            ├── src/processing/comments.ts
+        │                                            ├── src/processing/links.ts
+        │                                            ├── src/processing/headings.ts
+        │                                            └── src/processing/words-and-phrases.ts
+        ├── src/processing/frontmatter.ts
+        ├── src/utils/debug.ts
+        ├── src/settings/types.ts
+        ├── src/types.ts
+        └── src/obsidian-internals.ts
+```
+
+`src/ui/modal.ts` and `src/settings/tab.ts` both `import type CustomSelectedWordCountPlugin from '../main'`. Those are type-only imports (erased at compile time), so the back-edges don't create runtime cycles.
+
+### Lint config interaction
+
+The TypeScript-eslint `no-unused-vars` rule fired repeatedly on each extraction pass as imports became unused. Each pass ended with a trim of the now-unused imports from main.ts. The lint pass is now the canary that catches these.
