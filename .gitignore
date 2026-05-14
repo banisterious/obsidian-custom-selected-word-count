@@ -48,8 +48,6 @@ CLAUDE.md
 
 # UI mockups and temporary files
 docs/ui-mockups/
-*.html
-*.zip
 
 # Obsidian developer documentation (external reference)
 obsidian-developer-docs/

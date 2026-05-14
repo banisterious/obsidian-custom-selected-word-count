@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Internal
+- **Consistency fixes flagged in post-audit review**
+  - `addExcludedHeading` and `addExcludedPhrase` in `src/main.ts` routed their catch blocks through `console.error(...)`, while every other catch in the file uses `this.log(..., errorMessage(error))`. Updated the two outliers to match. Behavior change: the diagnostic message is now visible only when the user has debug logging enabled (the user-facing `Notice('Failed to add ...')` is unchanged). Pre-fix the message printed unconditionally; post-fix it's debug-gated like every other error path in the file.
+  - Removed `*.html` and `*.zip` rules from `.gitignore`. The `*.html` rule was redundant with the `docs/ui-mockups/` directory rule that already catches every HTML file in the working tree; the `*.zip` rule was a Phase-0-era defense-in-depth concern that the CI release pipeline made obsolete (the pipeline produces no zips). Removing both means future intentional HTML or zip files won't be silently swallowed.
+
 ## [1.7.1] - 2026-05-13
 
 ### Internal

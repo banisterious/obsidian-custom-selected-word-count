@@ -751,7 +751,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			(this.app as AppWithInternals).setting.openTabById(this.manifest.id);
 
 		} catch (error) {
-			console.error('Error adding excluded heading:', error);
+			this.log('Error adding excluded heading:', errorMessage(error));
 			new Notice('Failed to add heading to exclusion list');
 		}
 	}
@@ -787,7 +787,7 @@ export default class CustomSelectedWordCountPlugin extends Plugin {
 			(this.app as AppWithInternals).setting.openTabById(this.manifest.id);
 
 		} catch (error) {
-			console.error('Error adding excluded phrase:', error);
+			this.log('Error adding excluded phrase:', errorMessage(error));
 			new Notice('Failed to add phrase to exclusion list');
 		}
 	}
