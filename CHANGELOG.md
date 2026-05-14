@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-05-13
+
 ### Internal
 - **Consistency fixes flagged in post-audit review**
   - `addExcludedHeading` and `addExcludedPhrase` in `src/main.ts` routed their catch blocks through `console.error(...)`, while every other catch in the file uses `this.log(..., errorMessage(error))`. Updated the two outliers to match. Behavior change: the diagnostic message is now visible only when the user has debug logging enabled (the user-facing `Notice('Failed to add ...')` is unchanged). Pre-fix the message printed unconditionally; post-fix it's debug-gated like every other error path in the file.
